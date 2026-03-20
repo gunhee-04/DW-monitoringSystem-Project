@@ -1,4 +1,4 @@
-package com.dwacademy.safetysystem.detection;
+package com.dwacademy.detection;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
