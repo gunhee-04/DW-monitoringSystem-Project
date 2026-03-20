@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <!-- 로그 패턴 설정 -->
+        <!--
+          %d{yyyy-MM-dd HH:mm:ss}: 로그 출력 시간(연-월-일 시:분:초)
+          %-5p: 로그레벨 최대 5글자
+          %c{1}: 클래스 이름
+          %m: 로그 메시지
+          %n: 개행
+          -->
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss} %-5p [%c{3}] - %m%n</Property>
+
+        <!-- 로그 파일 경로 -->
+        <Property name="LOG_PATH">logs</Property>
+
+    </Properties>
+
+    <Appenders>
+        <!-- 콘솔 출력 -->
+        <!-- 로그를 콘솔에 출력하도록 설정. -->
+        <!--
+        name="Console": Appender의 이름(Console) 설정
+        target="SYSTEM_OUT": 콘솔의 표준 출력(System.out)으로 로그를 보냄
+        -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}" />
+        </Console>
+
+        <!-- 로그 파일 기록 -->
+        <File name="FileByInfo" fileName="${LOG_PATH}/spring-info.log">
+            <PatternLayout pattern="${LOG_PATTERN}">
+                <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            </PatternLayout>
+        </File>
+
+    </Appenders>
+
+    <Loggers>
+        <!-- 기본 로거 설정 -->
+        <!-- 기본 로그 레벨을 INFO 이상으로 설정해서 DEBUG 이하 로그는 출력되지 않도록 설정(INFO, WARN, ERROR 레벨 로그는 출력됨). -->
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileByInfo"/>
+        </Root>
+    </Loggers>
+
+</Configuration>
