@@ -1,12 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>실시간 모니터링 시스템</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .video-container { border: 2px solid #333; display: inline-block; min-height: 450px; min-width: 800px; background: #000; }
+        #log-container {
+            height: 300px; overflow-y: auto;
+            background: #2c3e50; color: white;
+            padding: 15px; border-radius: 8px; margin-top: 20px;
+        }
+        ul { list-style: none; padding: 0; }
+        li { border-bottom: 1px solid #444; padding: 8px 0; font-size: 14px; }
+        .danger { color: #ff4d4d; font-weight: bold; }
+        .normal { color: #2ecc71; }
+    </style>
 </head>
 <body>
 
-    This page is HOME.
+<h2>🎥 실시간 보안 모니터링</h2>
+<div class="video-container">
+    <img src="http://127.0.0.1:5000/video" width="800" onerror="this.src='https://via.placeholder.com/800x450?text=Camera+Offline'">
+</div>
 
+<hr>
+<h3>🚨 최신 탐지 로그 (실시간 업데이트)</h3>
+<div id="log-container">
+    <ul id="event-list">
+        <li>데이터를 불러오는 중입니다...</li>
+    </ul>
+</div>
+
+<script>
+    function fetchLogs() {
+        // ✅ Flask 서버(5000번)의 API 주소를 직접 입력
+        fetch('http://127.0.0.1:5000/get_logs')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                const list = document.getElementById('event-list');
+                if(data.error) {
+                    list.innerHTML = `<li>에러 발생: ${data.error}</li>`;
+                    return;
+                }
+
+                list.innerHTML = '';
+                data.forEach(log => {
+                    const li = document.createElement('li');
+                    const statusClass = log.intrusion_now ? 'danger' : 'normal';
+                    const statusText = log.intrusion_now ? '[위험발생]' : '[정상]';
+
+                    li.innerHTML = `
+                        <span class="${statusClass}">${statusText}</span>
+                        인원: ${log.people_count}명 |
+                        시간: ${log.created_at}
+                    `;
+                    list.appendChild(li);
+                });
+            })
+            .catch(error => {
+                const list = document.getElementById('event-list');
+                list.innerHTML = `<li class="danger">Flask 서버 연결 실패: ${error.message}</li>`;
+            });
+    }
+
+    setInterval(fetchLogs, 2000);
+    fetchLogs();
+</script>
 </body>
 </html>
