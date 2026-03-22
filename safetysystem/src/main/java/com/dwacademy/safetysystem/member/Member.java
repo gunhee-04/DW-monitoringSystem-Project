@@ -1,16 +1,18 @@
-package com.dwacademy.member;
+package com.dwacademy.safetysystem.member;
 
-import com.dwacademy.config.RoleType;
+import com.dwacademy.safetysystem.config.RoleType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="USER_MEMBER")
+@Table(name="MEMBER")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,9 +43,11 @@ public class Member {
     @Column(nullable = false)
     private String status; // PENDING, ACTIVE 등
 
-    @Column(name = "created_at", nullable = false)
+    @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt; // 가입일
 
+    @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt; // 수정일
 

@@ -1,7 +1,7 @@
-package com.dwacademy.security;
+package com.dwacademy.safetysystem.security;
 
-import com.dwacademy.member.Member;
-import com.dwacademy.member.MemberRepository;
+import com.dwacademy.safetysystem.member.Member;
+import com.dwacademy.safetysystem.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,7 +22,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        Member member = memberRepository.findByUsername(username)
+        Member member = memberRepository.findByName(username)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
         List<GrantedAuthority> authorities = new ArrayList<>();

@@ -1,4 +1,4 @@
-package com.dwacademy.detection;
+package com.dwacademy.safetysystem.detection;
 
 import lombok.Data;
 

@@ -2,12 +2,172 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Member List</title>
+    <title>회원 목록</title>
 </head>
 <body>
+
+<div style="width: 1100px; margin: 50px auto;">
+    <h2>회원 목록</h2>
+
+    <div style="margin-bottom: 20px;">
+        <button type="button" onclick="location.href='/member/create'">회원 등록</button>
+    </div>
+
+    <h3>가입 대기 회원</h3>
+    <table style="width:100%; border-collapse: collapse; margin-bottom:40px;">
+        <thead>
+        <tr style="border-bottom: 2px solid black;">
+            <th style="padding:10px;">ID</th>
+            <th style="padding:10px;">이름</th>
+            <th style="padding:10px;">이메일</th>
+            <th style="padding:10px;">연락처</th>
+            <th style="padding:10px;">주소</th>
+            <th style="padding:10px;">권한</th>
+            <th style="padding:10px;">상태</th>
+            <th style="padding:10px;">가입일</th>
+            <th style="padding:10px;">관리</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="member : ${memberList.content}"
+            th:if="${member.status == 'PENDING'}"
+            style="border-bottom: 1px solid #ccc;">
+            <td style="padding:10px;" th:text="${member.id}"></td>
+            <td style="padding:10px;" th:text="${member.name}"></td>
+            <td style="padding:10px;" th:text="${member.email}"></td>
+            <td style="padding:10px;" th:text="${member.phone}"></td>
+            <td style="padding:10px;" th:text="${member.address}"></td>
+            <td style="padding:10px;" th:text="${member.role}"></td>
+            <td style="padding:10px;" th:text="${member.status}"></td>
+            <td style="padding:10px;"
+                th:text="${member.createdAt != null ? #temporals.format(member.createdAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
+            <td style="padding:10px;">
+                <button type="button" th:onclick="|approveMember(${member.id})|">승인</button>
+                <button type="button" th:onclick="|location.href='/member/${member.id}/edit'|">수정</button>
+                <button type="button" th:onclick="|withdrawMember(${member.id})|">탈퇴</button>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(memberList.content.?[status == 'PENDING'])}">
+            <td colspan="9" style="padding:10px;">가입 대기 회원이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>승인 회원</h3>
+    <table style="width:100%; border-collapse: collapse; margin-bottom:40px;">
+        <thead>
+        <tr style="border-bottom: 2px solid black;">
+            <th style="padding:10px;">ID</th>
+            <th style="padding:10px;">이름</th>
+            <th style="padding:10px;">이메일</th>
+            <th style="padding:10px;">연락처</th>
+            <th style="padding:10px;">주소</th>
+            <th style="padding:10px;">권한</th>
+            <th style="padding:10px;">상태</th>
+            <th style="padding:10px;">가입일</th>
+            <th style="padding:10px;">관리</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="member : ${memberList.content}"
+            th:if="${member.status == 'ACTIVE'}"
+            style="border-bottom: 1px solid #ccc;">
+            <td style="padding:10px;" th:text="${member.id}"></td>
+            <td style="padding:10px;" th:text="${member.name}"></td>
+            <td style="padding:10px;" th:text="${member.email}"></td>
+            <td style="padding:10px;" th:text="${member.phone}"></td>
+            <td style="padding:10px;" th:text="${member.address}"></td>
+            <td style="padding:10px;" th:text="${member.role}"></td>
+            <td style="padding:10px;" th:text="${member.status}"></td>
+            <td style="padding:10px;"
+                th:text="${member.createdAt != null ? #temporals.format(member.createdAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
+            <td style="padding:10px;">
+                <button type="button" th:onclick="|location.href='/member/${member.id}/edit'|">수정</button>
+                <button type="button" th:onclick="|withdrawMember(${member.id})|">탈퇴</button>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(memberList.content.?[status == 'ACTIVE'])}">
+            <td colspan="9" style="padding:10px;">승인 회원이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>탈퇴 회원</h3>
+    <table style="width:100%; border-collapse: collapse;">
+        <thead>
+        <tr style="border-bottom: 2px solid black;">
+            <th style="padding:10px;">ID</th>
+            <th style="padding:10px;">이름</th>
+            <th style="padding:10px;">이메일</th>
+            <th style="padding:10px;">연락처</th>
+            <th style="padding:10px;">주소</th>
+            <th style="padding:10px;">권한</th>
+            <th style="padding:10px;">상태</th>
+            <th style="padding:10px;">탈퇴일</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="member : ${memberList.content}"
+            th:if="${member.status == 'WITHDRAWN'}"
+            style="border-bottom: 1px solid #ccc;">
+            <td style="padding:10px;" th:text="${member.id}"></td>
+            <td style="padding:10px;" th:text="${member.name}"></td>
+            <td style="padding:10px;" th:text="${member.email}"></td>
+            <td style="padding:10px;" th:text="${member.phone}"></td>
+            <td style="padding:10px;" th:text="${member.address}"></td>
+            <td style="padding:10px;" th:text="${member.role}"></td>
+            <td style="padding:10px;" th:text="${member.status}"></td>
+            <td style="padding:10px;"
+                th:text="${member.withdrawnAt != null ? #temporals.format(member.withdrawnAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(memberList.content.?[status == 'WITHDRAWN'])}">
+            <td colspan="8" style="padding:10px;">탈퇴 회원이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function approveMember(id) {
+        if (!confirm("이 회원을 승인하시겠습니까?")) return;
+
+        try {
+            const response = await fetch(`/api/members/${id}/approve`, {
+                method: "PATCH"
+            });
+
+            const msg = await response.text();
+            alert(msg);
+
+            if (response.ok) {
+                location.href = "/member/list";
+            }
+        } catch (e) {
+            console.error(e);
+            alert("회원 승인 중 오류가 발생했습니다.");
+        }
+    }
+
+    async function withdrawMember(id) {
+        if (!confirm("탈퇴 처리 하시겠습니까?")) return;
+
+        try {
+            const response = await fetch(`/api/members/${id}`, {
+                method: "DELETE"
+            });
+
+            const msg = await response.text();
+            alert(msg);
+
+            if (response.ok) {
+                location.href = "/member/list";
+            }
+        } catch (e) {
+            console.error(e);
+            alert("회원 탈퇴 처리 중 오류가 발생했습니다.");
+        }
+    }
+</script>
 
 </body>
 </html>

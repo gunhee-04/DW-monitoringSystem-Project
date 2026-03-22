@@ -1,6 +1,6 @@
-package com.dwacademy.member;
+package com.dwacademy.safetysystem.member;
 
-import com.dwacademy.config.RoleType;
+import com.dwacademy.safetysystem.config.RoleType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,8 +9,12 @@ import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Integer> {
 
-    Optional<Member> findByUsername(String username);
+    Optional<Member> findByName(String name);
 
     Page<Member> findByRole(RoleType role, Pageable pageable);
+
+    Page<Member> findByStatus(String status, Pageable pageable);
+
+    Optional<Member> findByEmail(String email);
 
 }

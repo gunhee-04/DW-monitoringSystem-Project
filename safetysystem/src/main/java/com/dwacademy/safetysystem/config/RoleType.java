@@ -1,4 +1,4 @@
-package com.dwacademy.config;
+package com.dwacademy.safetysystem.config;
 
 
 import lombok.Getter;

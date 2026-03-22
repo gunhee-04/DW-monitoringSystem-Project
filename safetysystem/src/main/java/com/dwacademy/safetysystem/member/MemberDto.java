@@ -1,7 +1,6 @@
-package com.dwacademy.member;
+package com.dwacademy.safetysystem.member;
 
-import com.dwacademy.config.RoleType;
-import jakarta.persistence.Column;
+import com.dwacademy.safetysystem.config.RoleType;
 import lombok.*;
 
 import java.time.LocalDateTime;
