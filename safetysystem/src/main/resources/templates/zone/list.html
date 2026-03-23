@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>위험구역 목록</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background: #f2f2f2; }
+    </style>
+</head>
+<body>
+<h2>위험구역 목록</h2>
+
+<div style="margin-bottom: 15px;">
+    <a th:href="@{/admin/zone/{cameraId}/create(cameraId=${cameraId})}">위험구역 등록</a>
+    <a th:href="@{/admin/camera/list}">카메라 목록</a>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>구역 이름</th>
+        <th>구역 타입</th>
+        <th>ROI</th>
+        <th>침입 기준 시간</th>
+        <th>활성 여부</th>
+        <th>관리</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="zone : ${list}">
+        <td th:text="${zone.id}"></td>
+        <td th:text="${zone.zoneName}"></td>
+        <td th:text="${zone.zoneType}"></td>
+        <td>
+            <span th:text="${zone.x1}"></span>,
+            <span th:text="${zone.y1}"></span> ~
+            <span th:text="${zone.x2}"></span>,
+            <span th:text="${zone.y2}"></span>
+        </td>
+        <td th:text="${zone.intrusionTimeSec}"></td>
+        <td th:text="${zone.isActive}"></td>
+        <td>
+            <a th:href="@{/admin/zone/detail/{id}(id=${zone.id})}">상세</a>
+            <a th:href="@{/admin/zone/{id}/update(id=${zone.id})}">수정</a>
+
+            <form th:action="@{/admin/zone/{id}/delete(id=${zone.id})}" method="post" style="display:inline;">
+                <input type="hidden" name="cameraId" th:value="${cameraId}">
+                <button type="submit" onclick="return confirm('비활성화하시겠습니까?');">삭제</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

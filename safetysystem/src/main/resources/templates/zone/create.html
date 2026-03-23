@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>위험구역 등록</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        .form-row { margin-bottom: 12px; }
+        label { display: inline-block; width: 160px; }
+        input, select { width: 300px; padding: 6px; }
+
+        .roi-wrap {
+            position: relative;
+            width: 800px;
+            height: 450px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            background: #f8f8f8;
+            overflow: hidden;
+        }
+
+        .roi-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        #roiCanvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            cursor: crosshair;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<h2>위험구역 등록</h2>
+
+<div class="hint">
+    ROI 영역을 마우스로 드래그해서 선택하세요.
+</div>
+
+<div class="roi-wrap" id="roiWrap">
+    <img class="roi-bg" th:src="${streamUrl}" alt="camera">
+    <canvas id="roiCanvas" width="800" height="450"></canvas>
+</div>
+
+<form th:action="@{/admin/zone/createProc}" method="post" th:object="${dto}">
+    <input type="hidden" th:field="*{cameraId}">
+
+    <div class="form-row">
+        <label>구역 이름</label>
+        <input type="text" th:field="*{zoneName}" required>
+    </div>
+
+    <div class="form-row">
+        <label>구역 타입</label>
+        <select th:field="*{zoneType}">
+            <option value="DANGER">DANGER</option>
+            <option value="CROWD">CROWD</option>
+            <option value="WATCH">WATCH</option>
+        </select>
+    </div>
+
+    <div class="form-row">
+        <label>x1</label>
+        <input type="number" th:field="*{x1}" id="x1">
+    </div>
+
+    <div class="form-row">
+        <label>y1</label>
+        <input type="number" th:field="*{y1}" id="y1">
+    </div>
+
+    <div class="form-row">
+        <label>x2</label>
+        <input type="number" th:field="*{x2}" id="x2">
+    </div>
+
+    <div class="form-row">
+        <label>y2</label>
+        <input type="number" th:field="*{y2}" id="y2">
+    </div>
+
+    <div class="form-row">
+        <label>침입 기준 시간(초)</label>
+        <input type="number" th:field="*{intrusionTimeSec}">
+    </div>
+
+    <div class="form-row">
+        <label>활성 여부</label>
+        <select th:field="*{isActive}">
+            <option th:value="true">true</option>
+            <option th:value="false">false</option>
+        </select>
+    </div>
+
+    <button type="submit">등록</button>
+    <a th:href="@{/admin/zone/{cameraId}(cameraId=${dto.cameraId})}">목록</a>
+</form>
+
+<script>
+    const canvas = document.getElementById("roiCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const x1Input = document.getElementById("x1");
+    const y1Input = document.getElementById("y1");
+    const x2Input = document.getElementById("x2");
+    const y2Input = document.getElementById("y2");
+
+    let isDrawing = false;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+
+    function getMousePos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: Math.round(e.clientX - rect.left),
+            y: Math.round(e.clientY - rect.top)
+        };
+    }
+
+    function drawRect(x1, y1, x2, y2) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const left = Math.min(x1, x2);
+        const top = Math.min(y1, y2);
+        const width = Math.abs(x2 - x1);
+        const height = Math.abs(y2 - y1);
+
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(left, top, width, height);
+
+        ctx.fillStyle = "rgba(255, 0, 0, 0.15)";
+        ctx.fillRect(left, top, width, height);
+    }
+
+    canvas.addEventListener("mousedown", (e) => {
+        const pos = getMousePos(e);
+        isDrawing = true;
+        startX = pos.x;
+        startY = pos.y;
+        currentX = pos.x;
+        currentY = pos.y;
+        drawRect(startX, startY, currentX, currentY);
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+        if (!isDrawing) return;
+        const pos = getMousePos(e);
+        currentX = pos.x;
+        currentY = pos.y;
+        drawRect(startX, startY, currentX, currentY);
+    });
+
+    canvas.addEventListener("mouseup", (e) => {
+        if (!isDrawing) return;
+        isDrawing = false;
+
+        const pos = getMousePos(e);
+        currentX = pos.x;
+        currentY = pos.y;
+
+        const left = Math.min(startX, currentX);
+        const top = Math.min(startY, currentY);
+        const right = Math.max(startX, currentX);
+        const bottom = Math.max(startY, currentY);
+
+        x1Input.value = left;
+        y1Input.value = top;
+        x2Input.value = right;
+        y2Input.value = bottom;
+
+        drawRect(left, top, right, bottom);
+    });
+
+    canvas.addEventListener("mouseleave", () => {
+        if (!isDrawing) return;
+        isDrawing = false;
+    });
+</script>
+
+</body>
+</html>

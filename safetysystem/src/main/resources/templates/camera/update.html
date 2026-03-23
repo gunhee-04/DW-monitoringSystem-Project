@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>카메라 수정</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        .form-row { margin-bottom: 12px; }
+        label { display: inline-block; width: 140px; }
+        input, select { width: 300px; padding: 6px; }
+    </style>
+</head>
+<body>
+<h2>카메라 수정</h2>
+
+<form th:action="@{/admin/camera/{id}/updateProc(id=${dto.cameraId})}" method="post" th:object="${dto}">
+    <div class="form-row">
+        <label>카메라 코드</label>
+        <input type="text" th:field="*{cameraCode}" required>
+    </div>
+
+    <div class="form-row">
+        <label>카메라 이름</label>
+        <input type="text" th:field="*{cameraName}" required>
+    </div>
+
+    <div class="form-row">
+        <label>카메라 타입</label>
+        <select th:field="*{cameraType}">
+            <option value="WEBCAM">WEBCAM</option>
+            <option value="DRONE">DRONE</option>
+            <option value="CCTV">CCTV</option>
+        </select>
+    </div>
+
+    <div class="form-row">
+        <label>IP 주소</label>
+        <input type="text" th:field="*{ipAddress}">
+    </div>
+
+    <div class="form-row">
+        <label>스트림 URL</label>
+        <input type="text" th:field="*{streamUrl}">
+    </div>
+
+    <div class="form-row">
+        <label>위치 이름</label>
+        <input type="text" th:field="*{locationName}">
+    </div>
+
+    <div class="form-row">
+        <label>위도</label>
+        <input type="number" step="any" th:field="*{latitude}">
+    </div>
+
+    <div class="form-row">
+        <label>경도</label>
+        <input type="number" step="any" th:field="*{longitude}">
+    </div>
+
+    <div class="form-row">
+        <label>상태</label>
+        <select th:field="*{status}">
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
+            <option value="ERROR">ERROR</option>
+        </select>
+    </div>
+
+    <button type="submit">수정</button>
+    <a th:href="@{/admin/camera/list}">목록</a>
+</form>
+
+</body>
+</html>

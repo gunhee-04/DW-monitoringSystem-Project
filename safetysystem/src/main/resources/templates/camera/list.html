@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>카메라 목록</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background: #f2f2f2; }
+        a, button { margin: 0 3px; }
+    </style>
+</head>
+<body>
+<h2>카메라 목록</h2>
+
+<div style="margin-bottom: 15px;">
+    <a th:href="@{/admin/camera/create}">카메라 등록</a>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>카메라 코드</th>
+        <th>카메라 이름</th>
+        <th>카메라 타입</th>
+        <th>위치</th>
+        <th>상태</th>
+        <th>관리</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="camera : ${list}">
+        <td th:text="${camera.id}"></td>
+        <td th:text="${camera.cameraCode}"></td>
+        <td th:text="${camera.cameraName}"></td>
+        <td th:text="${camera.cameraType}"></td>
+        <td th:text="${camera.locationName}"></td>
+        <td th:text="${camera.status}"></td>
+        <td>
+            <a th:href="@{/admin/camera/detail/{id}(id=${camera.id})}">상세</a>
+            <a th:href="@{/admin/camera/{id}/update(id=${camera.id})}">수정</a>
+            <a th:href="@{/admin/zone/{cameraId}(cameraId=${camera.id})}">위험구역</a>
+
+            <form th:action="@{/admin/camera/{id}/delete(id=${camera.id})}" method="post" style="display:inline;">
+                <button type="submit" onclick="return confirm('비활성화하시겠습니까?');">삭제</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>
