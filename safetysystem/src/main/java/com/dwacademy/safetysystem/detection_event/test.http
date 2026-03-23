@@ -1,0 +1,11 @@
+POST http://localhost:8081/api/events
+Content-Type: application/json
+
+{
+  "cameraId": 101,
+  "eventType": "INTRUSION",
+  "eventLevel": "CRITICAL",
+  "objectType": "PERSON",
+  "message": "A구역 무단 침입 발생!",
+  "eventTime": "2026-03-23T10:30:00"
+}
