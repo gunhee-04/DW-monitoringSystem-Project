@@ -2,73 +2,1105 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>실시간 모니터링 시스템</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 안전 관제 대시보드</title>
+
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=3a617da73b0f244b54d8271ca81260fd&autoload=false"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .video-container { border: 2px solid #333; display: inline-block; min-height: 450px; min-width: 800px; background: #000; }
-        #log-container {
-            height: 300px; overflow-y: auto;
-            background: #2c3e50; color: white;
-            padding: 15px; border-radius: 8px; margin-top: 20px;
+        * {
+            box-sizing: border-box;
         }
-        ul { list-style: none; padding: 0; }
-        li { border-bottom: 1px solid #444; padding: 8px 0; font-size: 14px; }
-        .danger { color: #ff4d4d; font-weight: bold; }
-        .normal { color: #2ecc71; }
+
+        body {
+            margin: 0;
+            font-family: "Malgun Gothic", sans-serif;
+            background: #f4f7fb;
+            color: #1f2937;
+        }
+
+        .topbar {
+            height: 64px;
+            background: #ffffff;
+            border-bottom: 1px solid #dbe2ea;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #1f3b57;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .user-box {
+            font-weight: 600;
+        }
+
+        .alert-icon {
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1.8fr 0.75fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: #ffffff;
+            border: 1px solid #dbe2ea;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .video-panel {
+            padding: 16px;
+        }
+
+        .panel-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .video-frame {
+            width: 100%;
+            height: 400px;
+            min-height: auto;
+            background: #0f172a;
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .side-panel {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            height: 44px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            background: #1f3b57;
+            color: white;
+            border-color: #1f3b57;
+        }
+
+        #map {
+            width: 100%;
+            height: 280px;
+            border-radius: 14px;
+            background: #e5e7eb;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .side-info {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .side-info.active-crowd {
+            border: 2px solid #3b82f6;
+            background: #eff6ff;
+        }
+
+        .side-info.active-danger {
+            border: 2px solid #ef4444;
+            background: #fef2f2;
+        }
+
+        .stats-grid {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid #dbe2ea;
+            border-radius: 16px;
+            padding: 16px 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            transition: transform 0.15s ease;
+            min-height: 132px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 15px;
+            color: #475569;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: #111827;
+            margin-top: 6px;
+        }
+
+        .stat-sub {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .chart-panel {
+            margin-top: 16px;
+            padding: 16px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 260px;
+        }
+
+        .bottom-grid {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 16px;
+        }
+
+        .table-panel,
+        .log-panel {
+            padding: 16px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .toolbar label {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .toolbar input {
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .btn {
+            height: 36px;
+            padding: 0 14px;
+            border: none;
+            background: #1f3b57;
+            color: white;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn.gray {
+            background: #64748b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        th {
+            background: #1f3b57;
+            color: white;
+            font-size: 14px;
+            padding: 12px;
+        }
+
+        td {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .danger-row {
+            background: #ffe5e5;
+            color: #c0392b;
+            font-weight: 700;
+        }
+
+        .warning-row {
+            background: #fff4e5;
+            color: #d97706;
+            font-weight: 700;
+        }
+
+        .safe-row {
+            background: #f8fff8;
+        }
+
+        .log-box {
+            height: 320px;
+            overflow-y: auto;
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 14px;
+            color: white;
+        }
+
+        .log-item {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 14px;
+        }
+
+        .log-danger {
+            color: #ff6b6b;
+            font-weight: 700;
+        }
+
+        .log-normal {
+            color: #4ade80;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            display: inline-block;
+            min-width: 60px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge-crowd {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 9999;
+        }
+
+        .modal {
+            position: relative;
+            width: 100%;
+            max-width: 960px;
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+            z-index: 10000;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .close-btn {
+            border: none;
+            background: transparent;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        .report-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .tab-btn {
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .tab-btn.active {
+            background: #1f3b57;
+            color: white;
+            border-color: #1f3b57;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .report-placeholder {
+            min-height: 280px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            background: #f8fafc;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .video-frame {
+                height: 360px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
 
-<h2>🎥 실시간 보안 모니터링</h2>
-<div class="video-container">
-    <img src="http://127.0.0.1:5000/video" width="800" onerror="this.src='https://via.placeholder.com/800x450?text=Camera+Offline'">
+<div class="topbar">
+    <div class="topbar-left">
+        <div class="logo-box">DW</div>
+        <div class="logo-text">스마트 안전 관제 시스템</div>
+    </div>
+    <div class="topbar-right">
+        <div class="user-box">👤 관리자님</div>
+        <div class="alert-icon">🔔</div>
+    </div>
 </div>
 
-<hr>
-<h3>🚨 최신 탐지 로그 (실시간 업데이트)</h3>
-<div id="log-container">
-    <ul id="event-list">
-        <li>데이터를 불러오는 중입니다...</li>
-    </ul>
+<div class="container">
+    <div class="main-grid">
+        <div class="panel video-panel">
+            <div class="panel-title">🎥 실시간 드론 영상</div>
+            <div class="video-frame">
+                <img id="main-video"
+                     src="http://127.0.0.1:5000/video"
+                     alt="드론 영상"
+                     onerror="this.src='https://dummyimage.com/1200x700/0f172a/ffffff&text=Drone+Offline'">
+            </div>
+        </div>
+
+        <div class="panel side-panel">
+            <div>
+                <div class="panel-title">📡 관제 모드</div>
+                <div class="mode-buttons">
+                    <button id="crowd-btn" class="mode-btn active" onclick="switchMode('crowd')">밀집</button>
+                    <button id="danger-btn" class="mode-btn" onclick="switchMode('danger')">위험</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="panel-title">🗺 드론 위치 지도</div>
+                <div id="map"></div>
+            </div>
+
+            <div class="side-info">
+                <div><strong>선택 모드:</strong> <span id="selected-mode-text">밀집 관제</span></div>
+                <div><strong>선택 드론:</strong> <span id="selected-drone-text">DRONE-01</span></div>
+                <div><strong>현재 상태:</strong> <span id="selected-status-badge" class="status-badge badge-crowd">밀집</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card" onclick="openReportModal('card1')">
+            <div class="stat-label" id="card1-label">평균 밀집</div>
+            <div class="stat-value" id="card1-value">0</div>
+            <div class="stat-sub" id="card1-sub">현재 선택된 드론 기준</div>
+        </div>
+
+        <div class="stat-card" onclick="openReportModal('card2')">
+            <div class="stat-label" id="card2-label">최대 밀집(시간별)</div>
+            <div class="stat-value" id="card2-value">0</div>
+            <div class="stat-sub" id="card2-sub">시간대별 최대값</div>
+        </div>
+
+        <div class="stat-card" onclick="openReportModal('card3')">
+            <div class="stat-label" id="card3-label">밀집도 증가율</div>
+            <div class="stat-value" id="card3-value">0%</div>
+            <div class="stat-sub" id="card3-sub">이전 구간 대비</div>
+        </div>
+    </div>
+
+    <div class="panel chart-panel">
+        <div class="panel-title">📊 실시간 통계 그래프</div>
+        <div class="chart-wrap">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+
+    <div class="bottom-grid">
+        <div class="panel table-panel">
+            <div class="panel-title">📈 시간대별 통계</div>
+
+            <div class="toolbar">
+                <label for="start">시작</label>
+                <input type="datetime-local" id="start">
+
+                <label for="end">종료</label>
+                <input type="datetime-local" id="end">
+
+                <button class="btn" onclick="loadDashboardData()">조회</button>
+                <button class="btn gray" onclick="setTodayRange()">오늘 기준</button>
+            </div>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>시간</th>
+                    <th id="table-col-1">총 인원 수</th>
+                    <th id="table-col-2">평균 밀집도</th>
+                    <th>상태</th>
+                </tr>
+                </thead>
+                <tbody id="hourly-body">
+                <tr>
+                    <td colspan="4">데이터 없음</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel log-panel">
+            <div class="panel-title">🚨 실시간 탐지 로그</div>
+            <div id="log-box" class="log-box">
+                <div class="log-item">데이터를 불러오는 중입니다...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="report-modal-backdrop" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-title">상세 통계</div>
+            <button class="close-btn" onclick="closeReportModal()">&times;</button>
+        </div>
+
+        <div class="report-tabs">
+            <button class="tab-btn active" onclick="setReportTab(this, 'day')">일</button>
+            <button class="tab-btn" onclick="setReportTab(this, 'week')">주</button>
+            <button class="tab-btn" onclick="setReportTab(this, 'month')">월</button>
+            <button class="tab-btn" onclick="setReportTab(this, 'year')">년</button>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn" onclick="downloadPdf()">PDF 다운로드</button>
+            <button class="btn gray" onclick="downloadExcel()">EXCEL 다운로드</button>
+        </div>
+
+        <div class="report-placeholder" id="report-placeholder">
+            상세 통계 영역<br>
+            선택한 카드 기준으로 일/주/월/년 통계, 차트, 다운로드 기능이 들어갈 자리입니다.
+        </div>
+    </div>
 </div>
 
 <script>
-    function fetchLogs() {
-        // ✅ Flask 서버(5000번)의 API 주소를 직접 입력
-        fetch('http://127.0.0.1:5000/get_logs')
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
+    let currentMode = "crowd";
+    let selectedDroneId = "DRONE-01";
+    let selectedReportTab = "day";
+    let map;
+    let markers = [];
+    let mainChart = null;
+
+    const droneData = [
+        {
+            id: "DRONE-01",
+            name: "밀집 드론 1호기",
+            lat: 37.5665,
+            lng: 126.9780,
+            mode: "crowd",
+            videoUrl: "http://127.0.0.1:5000/video",
+            cameraId: 1
+        },
+        {
+            id: "DRONE-02",
+            name: "위험 드론 1호기",
+            lat: 37.5651,
+            lng: 126.9895,
+            mode: "danger",
+            videoUrl: "http://127.0.0.1:5000/video",
+            cameraId: 2
+        }
+    ];
+
+    function formatDateTimeLocal(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mm = String(date.getMinutes()).padStart(2, '0');
+        return `${y}-${m}-${d}T${hh}:${mm}`;
+    }
+
+    function formatDateTimeParam(value) {
+        return value + ":00";
+    }
+
+    function setTodayRange() {
+        const now = new Date();
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+
+        document.getElementById("start").value = formatDateTimeLocal(start);
+        document.getElementById("end").value = formatDateTimeLocal(now);
+    }
+
+    function getRangeParams() {
+        const startValue = document.getElementById("start").value;
+        const endValue = document.getElementById("end").value;
+
+        if (!startValue || !endValue) {
+            alert("시작 시간과 종료 시간을 입력해주세요.");
+            return null;
+        }
+
+        if (startValue > endValue) {
+            alert("시작 시간이 종료 시간보다 늦을 수 없습니다.");
+            return null;
+        }
+
+        return {
+            start: formatDateTimeParam(startValue),
+            end: formatDateTimeParam(endValue)
+        };
+    }
+
+    function switchMode(mode) {
+        currentMode = mode;
+
+        document.getElementById("crowd-btn").classList.remove("active");
+        document.getElementById("danger-btn").classList.remove("active");
+
+        const sideInfo = document.querySelector(".side-info");
+        sideInfo.classList.remove("active-crowd", "active-danger");
+
+        if (mode === "crowd") {
+            document.getElementById("crowd-btn").classList.add("active");
+            document.getElementById("selected-mode-text").innerText = "밀집 관제";
+            document.getElementById("selected-status-badge").innerText = "밀집";
+            document.getElementById("selected-status-badge").className = "status-badge badge-crowd";
+            sideInfo.classList.add("active-crowd");
+        } else {
+            document.getElementById("danger-btn").classList.add("active");
+            document.getElementById("selected-mode-text").innerText = "위험 관제";
+            document.getElementById("selected-status-badge").innerText = "위험";
+            document.getElementById("selected-status-badge").className = "status-badge badge-danger";
+            sideInfo.classList.add("active-danger");
+        }
+
+        updateVideoByMode();
+        updateCardTitles();
+        updateTableHeaders();
+        loadDashboardData();
+    }
+
+    function updateVideoByMode() {
+        const matchedDrone =
+            droneData.find(drone => drone.id === selectedDroneId) ||
+            droneData.find(drone => drone.mode === currentMode) ||
+            droneData[0];
+
+        selectedDroneId = matchedDrone.id;
+        document.getElementById("selected-drone-text").innerText = matchedDrone.id;
+        document.getElementById("main-video").src = matchedDrone.videoUrl;
+    }
+
+    function updateCardTitles() {
+        if (currentMode === "crowd") {
+            document.getElementById("card1-label").innerText = "평균 밀집";
+            document.getElementById("card2-label").innerText = "최대 밀집(시간별)";
+            document.getElementById("card3-label").innerText = "밀집도 증가율";
+            document.getElementById("card1-sub").innerText = "현재 선택된 드론 기준";
+            document.getElementById("card2-sub").innerText = "시간대별 최대값";
+            document.getElementById("card3-sub").innerText = "이전 구간 대비";
+        } else {
+            document.getElementById("card1-label").innerText = "총 침입 수";
+            document.getElementById("card2-label").innerText = "시간당 침입 횟수";
+            document.getElementById("card3-label").innerText = "평균 체류 시간";
+            document.getElementById("card1-sub").innerText = "위험 구역 누적 이벤트";
+            document.getElementById("card2-sub").innerText = "시간 단위 집계";
+            document.getElementById("card3-sub").innerText = "침입 이벤트 기준";
+        }
+    }
+
+    function updateTableHeaders() {
+        if (currentMode === "crowd") {
+            document.getElementById("table-col-1").innerText = "총 인원 수";
+            document.getElementById("table-col-2").innerText = "평균 밀집도";
+        } else {
+            document.getElementById("table-col-1").innerText = "침입 횟수";
+            document.getElementById("table-col-2").innerText = "평균 체류 시간";
+        }
+    }
+
+    function getDensityStatus(value) {
+        if (value >= 0.8) return { text: "위험", rowClass: "danger-row" };
+        if (value >= 0.5) return { text: "주의", rowClass: "warning-row" };
+        return { text: "정상", rowClass: "safe-row" };
+    }
+
+    function getSelectedDrone() {
+        return droneData.find(drone => drone.id === selectedDroneId) || droneData[0];
+    }
+
+    function loadCrowdSummaryByData(data) {
+        const totalCount = data.length;
+        const avgDensity = totalCount > 0
+            ? data.reduce((sum, item) => sum + (item.densityValue || 0), 0) / totalCount
+            : 0;
+
+        const maxPeople = totalCount > 0
+            ? Math.max(...data.map(item => item.peopleCount || 0))
+            : 0;
+
+        let growthRate = 0;
+        if (data.length >= 2) {
+            const first = data[0].densityValue || 0;
+            const last = data[data.length - 1].densityValue || 0;
+            growthRate = first !== 0 ? ((last - first) / first) * 100 : 0;
+        }
+
+        document.getElementById("card1-value").innerText = avgDensity.toFixed(2);
+        document.getElementById("card2-value").innerText = maxPeople;
+        document.getElementById("card3-value").innerText = growthRate.toFixed(1) + "%";
+    }
+
+    function drawCrowdChart(data) {
+        const canvas = document.getElementById("mainChart");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        const labels = data.map(item => item.hour);
+        const densityValues = data.map(item => Number(item.averageDensityValue || 0));
+
+        if (mainChart) {
+            mainChart.destroy();
+        }
+
+        mainChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "평균 밀집도",
+                    data: densityValues,
+                    borderColor: "#2563eb",
+                    backgroundColor: "rgba(37, 99, 235, 0.15)",
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 1
+                    }
+                }
+            }
+        });
+    }
+
+    function drawDangerChart() {
+        const canvas = document.getElementById("mainChart");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+
+        if (mainChart) {
+            mainChart.destroy();
+        }
+
+        mainChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["10:00", "11:00", "12:00"],
+                datasets: [{
+                    label: "시간당 침입 횟수",
+                    data: [2, 4, 1]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function loadCrowdHourly() {
+        const range = getRangeParams();
+        if (!range) return;
+
+        const selectedDrone = getSelectedDrone();
+        let url = `/api/statistics/crowd/hourly?start=${range.start}&end=${range.end}`;
+
+        if (selectedDrone.cameraId) {
+            url += `&cameraId=${selectedDrone.cameraId}`;
+        }
+
+        fetch(url)
+            .then(res => res.json())
             .then(data => {
-                const list = document.getElementById('event-list');
-                if(data.error) {
-                    list.innerHTML = `<li>에러 발생: ${data.error}</li>`;
+                const tbody = document.getElementById("hourly-body");
+                tbody.innerHTML = "";
+
+                if (!data.length) {
+                    tbody.innerHTML = `<tr><td colspan="4">데이터 없음</td></tr>`;
+                    if (mainChart) {
+                        mainChart.destroy();
+                        mainChart = null;
+                    }
                     return;
                 }
 
-                list.innerHTML = '';
-                data.forEach(log => {
-                    const li = document.createElement('li');
-                    const statusClass = log.intrusion_now ? 'danger' : 'normal';
-                    const statusText = log.intrusion_now ? '[위험발생]' : '[정상]';
+                data.forEach(item => {
+                    const density = Number(item.averageDensityValue || 0);
+                    const status = getDensityStatus(density);
 
-                    li.innerHTML = `
-                        <span class="${statusClass}">${statusText}</span>
-                        인원: ${log.people_count}명 |
-                        시간: ${log.created_at}
+                    tbody.innerHTML += `
+                        <tr class="${status.rowClass}">
+                            <td>${item.hour}</td>
+                            <td>${item.totalPeopleCount}</td>
+                            <td>${density.toFixed(2)}</td>
+                            <td>${status.text}</td>
+                        </tr>
                     `;
-                    list.appendChild(li);
                 });
+
+                drawCrowdChart(data);
             })
-            .catch(error => {
-                const list = document.getElementById('event-list');
-                list.innerHTML = `<li class="danger">Flask 서버 연결 실패: ${error.message}</li>`;
+            .catch(() => {
+                document.getElementById("hourly-body").innerHTML =
+                    `<tr><td colspan="4">시간별 통계 조회 실패</td></tr>`;
             });
     }
 
-    setInterval(fetchLogs, 2000);
-    fetchLogs();
+    function loadDangerSummary() {
+        document.getElementById("card1-value").innerText = "14";
+        document.getElementById("card2-value").innerText = "3";
+        document.getElementById("card3-value").innerText = "27분";
+    }
+
+    function loadDangerHourly() {
+        const tbody = document.getElementById("hourly-body");
+        tbody.innerHTML = `
+            <tr class="warning-row">
+                <td>10:00</td>
+                <td>2</td>
+                <td>18분</td>
+                <td>주의</td>
+            </tr>
+            <tr class="danger-row">
+                <td>11:00</td>
+                <td>4</td>
+                <td>31분</td>
+                <td>위험</td>
+            </tr>
+            <tr class="safe-row">
+                <td>12:00</td>
+                <td>1</td>
+                <td>9분</td>
+                <td>정상</td>
+            </tr>
+        `;
+
+        drawDangerChart();
+    }
+
+    function loadLogs() {
+        fetch('http://127.0.0.1:5000/get_logs')
+            .then(response => {
+                if (!response.ok) throw new Error();
+                return response.json();
+            })
+            .then(data => {
+                const box = document.getElementById("log-box");
+
+                if (data.error) {
+                    box.innerHTML = `<div class="log-item log-danger">에러: ${data.error}</div>`;
+                    return;
+                }
+
+                box.innerHTML = "";
+
+                data.forEach(log => {
+                    const statusClass = log.intrusion_now ? "log-danger" : "log-normal";
+                    const statusText = log.intrusion_now ? "[위험발생]" : "[정상]";
+
+                    box.innerHTML += `
+                        <div class="log-item">
+                            <span class="${statusClass}">${statusText}</span>
+                            인원: ${log.people_count}명 |
+                            시간: ${log.created_at}
+                        </div>
+                    `;
+                });
+            })
+            .catch(() => {
+                document.getElementById("log-box").innerHTML =
+                    `<div class="log-item log-danger">Flask 로그 서버 연결 실패</div>`;
+            });
+    }
+
+    function loadDashboardData() {
+        if (currentMode === "crowd") {
+            const selectedDrone = getSelectedDrone();
+            let url = `/api/statistics/crowd`;
+
+            if (selectedDrone.cameraId) {
+                url += `?cameraId=${selectedDrone.cameraId}`;
+            }
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    loadCrowdSummaryByData(data);
+                    loadCrowdHourly();
+                })
+                .catch(() => {
+                    document.getElementById("card1-value").innerText = "-";
+                    document.getElementById("card2-value").innerText = "-";
+                    document.getElementById("card3-value").innerText = "-";
+                });
+        } else {
+            loadDangerSummary();
+            loadDangerHourly();
+        }
+    }
+
+    function openReportModal(cardKey) {
+        const modeText = currentMode === "crowd" ? "밀집" : "위험";
+        document.getElementById("modal-title").innerText = `${modeText} 상세 통계 - ${cardKey}`;
+        document.getElementById("report-placeholder").innerHTML = `
+            현재 선택 모드: <strong>${modeText}</strong><br>
+            선택 드론: <strong>${selectedDroneId}</strong><br>
+            선택 탭: <strong>${selectedReportTab}</strong><br><br>
+            여기에 일 / 주 / 월 / 년 통계 그래프와 표를 넣고<br>
+            PDF, Excel 다운로드 기능을 연결하면 됩니다.
+        `;
+        document.getElementById("report-modal-backdrop").style.display = "flex";
+    }
+
+    function closeReportModal() {
+        document.getElementById("report-modal-backdrop").style.display = "none";
+    }
+
+    function setReportTab(button, tab) {
+        selectedReportTab = tab;
+        document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+        button.classList.add("active");
+    }
+
+    function downloadPdf() {
+        alert("PDF 다운로드 기능 연결 예정");
+    }
+
+    function downloadExcel() {
+        alert("EXCEL 다운로드 기능 연결 예정");
+    }
+
+    function initKakaoMap() {
+        const mapContainer = document.getElementById("map");
+
+        const mapOption = {
+            center: new kakao.maps.LatLng(37.5665, 126.9780),
+            level: 4
+        };
+
+        map = new kakao.maps.Map(mapContainer, mapOption);
+        markers = [];
+
+        droneData.forEach(drone => {
+            const position = new kakao.maps.LatLng(drone.lat, drone.lng);
+
+            const markerImageSrc = drone.mode === "crowd"
+                ? "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"
+                : "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png";
+
+            const markerImage = new kakao.maps.MarkerImage(
+                markerImageSrc,
+                new kakao.maps.Size(24, 35)
+            );
+
+            const marker = new kakao.maps.Marker({
+                position: position,
+                title: drone.id,
+                image: markerImage
+            });
+
+            marker.setMap(map);
+            markers.push(marker);
+
+            kakao.maps.event.addListener(marker, "click", function () {
+                selectedDroneId = drone.id;
+                currentMode = drone.mode;
+
+                markers.forEach(m => m.setZIndex(1));
+                marker.setZIndex(999);
+                map.panTo(position);
+
+                document.getElementById("selected-drone-text").innerText = drone.id;
+                switchMode(drone.mode);
+                document.getElementById("main-video").src = drone.videoUrl;
+            });
+        });
+    }
+
+    kakao.maps.load(function () {
+        setTodayRange();
+        initKakaoMap();
+        updateVideoByMode();
+        updateCardTitles();
+        updateTableHeaders();
+        loadDashboardData();
+        loadLogs();
+
+        setInterval(loadLogs, 2000);
+        setInterval(loadDashboardData, 5000);
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeReportModal();
+        }
+    });
+
+    document.getElementById("report-modal-backdrop").addEventListener("click", function (event) {
+        if (event.target === this) {
+            closeReportModal();
+        }
+    });
 </script>
 </body>
 </html>
