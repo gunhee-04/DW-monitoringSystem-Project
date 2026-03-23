@@ -3,7 +3,7 @@ package com.dwacademy.safetysystem.detection;
 import lombok.Data;
 
 @Data
-public class DetectionRequestDto {
+public class MembersRequestDto {
 
     private String cameraId;          // 카메라 코드 (CAM-01)
     private String eventType;         // INTRUSION, CROWD

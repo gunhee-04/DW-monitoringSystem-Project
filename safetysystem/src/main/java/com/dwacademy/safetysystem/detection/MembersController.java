@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/detection")
-public class DetectionController {
+public class MembersController {
 
     @PostMapping
-    public ResponseEntity<String> receiveDetection(@RequestBody DetectionRequestDto request) {
+    public ResponseEntity<String> receiveDetection(@RequestBody MembersRequestDto request) {
 
         System.out.println("===== Detection API 호출됨 =====");
 
