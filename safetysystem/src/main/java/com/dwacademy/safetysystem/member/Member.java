@@ -2,6 +2,10 @@ package com.dwacademy.safetysystem.member;
 
 import com.dwacademy.safetysystem.config.RoleType;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +16,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="MEMBER")
+@Table(name="members")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,6 +28,7 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int  id;       // 회원 고유 ID
 
+    @Email
     @Column(nullable = false, unique = true)
     private String email; // 로그인 이메일
 
@@ -37,6 +42,7 @@ public class Member {
 
     private String address; // 주소
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoleType role; // USER, ADMIN
 
@@ -60,5 +66,12 @@ public class Member {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt; // 마지막 로그인
 
+    // 반려 사유 저장
+    @Column(name = "rejected_at")
+    private LocalDateTime rejectedAt;
+
+    @Column(name = "reject_reason", length = 100)
+    @Size(max = 100, message = "반려 사유는 100자 이하로 입력하세요.")
+    private String rejectReason;
 
 }

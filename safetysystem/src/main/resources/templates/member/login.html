@@ -2,12 +2,153 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Sign in</title>
+    <title>로그인</title>
 </head>
-<body>
+<body style="margin:0; background-color:#f3f3f3; font-family:'맑은 고딕', sans-serif; color:#111;">
+
+<!-- 상단 헤더 -->
+<div style="width:100%; height:82px; background:#dddddd; display:flex; align-items:center;">
+    <div style="margin-left:90px; font-size:24px; font-weight:500;">
+        로고
+    </div>
+</div>
+
+<!-- 본문 -->
+<div style="width:100%; display:flex; justify-content:center; margin-top:90px;">
+    <div style="width:430px; text-align:center;">
+
+        <!-- 중앙 로고 -->
+        <div style="font-size:52px; font-weight:700; margin-bottom:35px;">
+            로고
+        </div>
+
+        <!-- 로그인 박스 -->
+        <div style="
+                border:1px solid #777;
+                border-radius:14px;
+                padding:40px 26px 34px 26px;
+                background:#f6f6f6;
+            ">
+
+            <form th:action="@{/member/login}" method="post">
+
+                <!-- 아이디 / 비밀번호 입력 -->
+                <div style="
+                        border:1px solid #777;
+                        border-radius:12px;
+                        overflow:hidden;
+                        background:#f9f9f9;
+                    ">
+                    <input
+                            type="text"
+                            name="email"
+                            placeholder="아이디"
+                            style="
+                                    width:100%;
+                                    height:50px;
+                                    border:none;
+                                    outline:none;
+                                    padding:0 14px;
+                                    font-size:18px;
+                                    box-sizing:border-box;
+                                    background:transparent;
+                                "
+                    >
+
+                    <div style="border-top:1px solid #777;"></div>
+
+                    <input
+                            type="password"
+                            name="password"
+                            placeholder="비밀번호"
+                            style="
+                                    width:100%;
+                                    height:50px;
+                                    border:none;
+                                    outline:none;
+                                    padding:0 14px;
+                                    font-size:18px;
+                                    box-sizing:border-box;
+                                    background:transparent;
+                                "
+                    >
+                </div>
+
+                <!-- 로그인 버튼 -->
+                <div style="margin-top:26px;">
+                    <button
+                            type="submit"
+                            style="
+                                    width:100%;
+                                    height:46px;
+                                    border:1px solid #777;
+                                    border-radius:12px;
+                                    background:#f9f9f9;
+                                    font-size:22px;
+                                    cursor:pointer;
+                                "
+                    >
+                        로그인
+                    </button>
+                </div>
+
+                <!-- 구분선 -->
+                <div style="
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        margin:34px 0 26px 0;
+                        color:#444;
+                        font-size:14px;
+                    ">
+                    <div style="flex:1; height:1px; background:#777;"></div>
+                    <div style="padding:0 14px;">계정이 없다면</div>
+                    <div style="flex:1; height:1px; background:#777;"></div>
+                </div>
+
+                <!-- 회원가입 버튼 -->
+                <div>
+                    <button
+                            type="button"
+                            onclick="location.href='/member/create'"
+                            style="
+                                    width:100%;
+                                    height:46px;
+                                    border:1px solid #777;
+                                    border-radius:12px;
+                                    background:#f9f9f9;
+                                    font-size:22px;
+                                    cursor:pointer;
+                                "
+                    >
+                        회원가입
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- 하단 링크 -->
+        <div style="margin-top:24px; font-size:14px; color:#444;">
+            <a href="#" style="text-decoration:none; color:#444;">비밀번호 찾기</a>
+            <span style="margin:0 10px;">|</span>
+            <a href="#" style="text-decoration:none; color:#444;">아이디 찾기</a>
+            <span style="margin:0 10px;">|</span>
+            <a href="/member/create" style="text-decoration:none; color:#444;">회원가입</a>
+        </div>
+
+        <!-- 로그인 실패 메시지 -->
+        <div th:if="${param.error}" style="margin-top:18px; color:red; font-size:15px;">
+            이메일 또는 비밀번호가 올바르지 않습니다.
+        </div>
+
+        <!-- 로그아웃 메시지 -->
+        <div th:if="${param.logout}" style="margin-top:18px; color:blue; font-size:15px;">
+            로그아웃되었습니다.
+        </div>
+
+    </div>
+</div>
 
 </body>
 </html>

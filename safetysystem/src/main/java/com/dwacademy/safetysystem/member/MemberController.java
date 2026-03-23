@@ -24,6 +24,7 @@ public class MemberController {
             Model model,
             @PageableDefault(size = 50, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
+        log.info("--- [MemberController] list() ---");
         Page<Member> memberList = memberService.getMembers(pageable);
         model.addAttribute("memberList", memberList);
 
@@ -33,6 +34,7 @@ public class MemberController {
     // 등록 페이지
     @GetMapping("/create")
     public String createPage() {
+        log.info("--- [MemberController] createPage() ---");
         return "member/createMember";
     }
 
@@ -42,6 +44,7 @@ public class MemberController {
             Model model,
             MemberDto memberDto
     ) {
+        log.info("--- [MemberController] createMember() ---");
         int result = memberService.createMember(memberDto);
 
         if (result > 0) {
@@ -58,6 +61,8 @@ public class MemberController {
             @PathVariable int id,
             Model model
     ) {
+        log.info("--- [MemberController] editPage() ---");
+
         Member member = memberService.getMemberById(id);
         model.addAttribute("member", member);
 
@@ -71,6 +76,8 @@ public class MemberController {
             Model model,
             MemberDto memberDto
     ) {
+        log.info("--- [MemberController] updateMember() ---");
+
         memberDto.setId(id);
 
         int result = memberService.updateMember(memberDto);
@@ -87,6 +94,8 @@ public class MemberController {
     // 로그인 페이지
     @GetMapping("/login")
     public String login() {
+        log.info("--- [MemberController] login() ---");
+
         return "member/login";
     }
 }

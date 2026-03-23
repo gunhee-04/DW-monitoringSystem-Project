@@ -43,8 +43,7 @@
                 th:text="${member.createdAt != null ? #temporals.format(member.createdAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
             <td style="padding:10px;">
                 <button type="button" th:onclick="|approveMember(${member.id})|">승인</button>
-                <button type="button" th:onclick="|location.href='/member/${member.id}/edit'|">수정</button>
-                <button type="button" th:onclick="|withdrawMember(${member.id})|">탈퇴</button>
+                <button type="button" th:onclick="|rejectMember(${member.id})|">반려</button>
             </td>
         </tr>
         <tr th:if="${#lists.isEmpty(memberList.content.?[status == 'PENDING'])}">
@@ -125,6 +124,42 @@
         </tr>
         </tbody>
     </table>
+    <h3>반려 회원</h3>
+    <table style="width:100%; border-collapse: collapse; margin-bottom:40px;">
+        <thead>
+        <tr style="border-bottom: 2px solid black;">
+            <th style="padding:10px;">ID</th>
+            <th style="padding:10px;">이름</th>
+            <th style="padding:10px;">이메일</th>
+            <th style="padding:10px;">연락처</th>
+            <th style="padding:10px;">주소</th>
+            <th style="padding:10px;">권한</th>
+            <th style="padding:10px;">상태</th>
+            <th style="padding:10px;">반려일시</th>
+            <th style="padding:10px;">반려사유</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="member : ${memberList.content}"
+            th:if="${member.status == 'REJECTED'}"
+            style="border-bottom: 1px solid #ccc;">
+            <td style="padding:10px;" th:text="${member.id}"></td>
+            <td style="padding:10px;" th:text="${member.name}"></td>
+            <td style="padding:10px;" th:text="${member.email}"></td>
+            <td style="padding:10px;" th:text="${member.phone}"></td>
+            <td style="padding:10px;" th:text="${member.address}"></td>
+            <td style="padding:10px;" th:text="${member.role}"></td>
+            <td style="padding:10px;" th:text="${member.status}"></td>
+            <td style="padding:10px;"
+                th:text="${member.rejectedAt != null ? #temporals.format(member.rejectedAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
+            <td style="padding:10px;" th:text="${member.rejectReason}"></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(memberList.content.?[status == 'REJECTED'])}">
+            <td colspan="9" style="padding:10px;">반려 회원이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
 </div>
 
 <script>
@@ -147,6 +182,40 @@
             alert("회원 승인 중 오류가 발생했습니다.");
         }
     }
+
+
+    async function rejectMember(id) {
+        const reason = prompt("반려 사유를 입력하세요.");
+
+        if (reason === null) return; // 취소 누른 경우
+        if (reason.trim() === "") {
+            alert("반려 사유를 입력해야 합니다.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/members/${id}/reject`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    rejectReason: reason
+                })
+            });
+
+            const msg = await response.text();
+            alert(msg);
+
+            if (response.ok) {
+                location.href = "/member/list";
+            }
+        } catch (e) {
+            console.error(e);
+            alert("회원 반려 처리 중 오류가 발생했습니다.");
+        }
+    }
+
 
     async function withdrawMember(id) {
         if (!confirm("탈퇴 처리 하시겠습니까?")) return;
