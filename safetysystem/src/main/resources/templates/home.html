@@ -13,21 +13,97 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-main: #f4f7fb;
+            --bg-panel: #ffffff;
+            --bg-soft: #f8fafc;
+            --bg-soft-2: #eff6ff;
+            --bg-danger-soft: #fef2f2;
+            --text-main: #1f2937;
+            --text-sub: #475569;
+            --text-muted: #64748b;
+            --border-color: #dbe2ea;
+            --border-soft: #e2e8f0;
+            --primary: #1f3b57;
+            --primary-hover: #163047;
+            --video-bg: #0f172a;
+            --log-bg: #0f172a;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --table-head-bg: #1f3b57;
+            --table-head-text: #ffffff;
+            --table-cell-bg: #ffffff;
+            --modal-bg: #ffffff;
+            --backdrop-bg: rgba(15, 23, 42, 0.55);
+            --input-bg: #ffffff;
+            --danger-row-bg: #ffe5e5;
+            --danger-row-text: #c0392b;
+            --warning-row-bg: #fff4e5;
+            --warning-row-text: #d97706;
+            --safe-row-bg: #f8fff8;
+            --badge-crowd-bg: #dbeafe;
+            --badge-crowd-text: #1d4ed8;
+            --badge-danger-bg: #fee2e2;
+            --badge-danger-text: #dc2626;
+            --chart-grid: rgba(148, 163, 184, 0.25);
+            --chart-tick: #475569;
+            --chart-line: #2563eb;
+            --chart-fill: rgba(37, 99, 235, 0.15);
+        }
+
+        body.dark-mode {
+            --bg-main: #020617;
+            --bg-panel: #0f172a;
+            --bg-soft: #111c31;
+            --bg-soft-2: #172554;
+            --bg-danger-soft: #3b1118;
+            --text-main: #e5edf8;
+            --text-sub: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #22314d;
+            --border-soft: #2a3b5d;
+            --primary: #1d4ed8;
+            --primary-hover: #1e40af;
+            --video-bg: #020617;
+            --log-bg: #020617;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+            --table-head-bg: #172554;
+            --table-head-text: #e5edf8;
+            --table-cell-bg: #0f172a;
+            --modal-bg: #0f172a;
+            --backdrop-bg: rgba(2, 6, 23, 0.75);
+            --input-bg: #0b1220;
+            --danger-row-bg: rgba(185, 28, 28, 0.18);
+            --danger-row-text: #fca5a5;
+            --warning-row-bg: rgba(217, 119, 6, 0.18);
+            --warning-row-text: #fdba74;
+            --safe-row-bg: rgba(34, 197, 94, 0.10);
+            --badge-crowd-bg: rgba(37, 99, 235, 0.18);
+            --badge-crowd-text: #93c5fd;
+            --badge-danger-bg: rgba(239, 68, 68, 0.18);
+            --badge-danger-text: #fca5a5;
+            --chart-grid: rgba(148, 163, 184, 0.18);
+            --chart-tick: #cbd5e1;
+            --chart-line: #60a5fa;
+            --chart-fill: rgba(96, 165, 250, 0.18);
+        }
+
         body {
             margin: 0;
             font-family: "Malgun Gothic", sans-serif;
-            background: #f4f7fb;
-            color: #1f2937;
+            background: var(--bg-main);
+            color: var(--text-main);
+            transition: background 0.25s ease, color 0.25s ease;
         }
 
         .topbar {
             height: 64px;
-            background: #ffffff;
-            border-bottom: 1px solid #dbe2ea;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
+            transition: background 0.25s ease, border-color 0.25s ease;
         }
 
         .topbar-left {
@@ -40,12 +116,13 @@
             width: 40px;
             height: 40px;
             border-radius: 10px;
-            background: #1f3b57;
+            background: var(--primary);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            transition: background 0.25s ease;
         }
 
         .logo-text {
@@ -56,7 +133,7 @@
         .topbar-right {
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 12px;
         }
 
         .user-box {
@@ -66,6 +143,25 @@
         .alert-icon {
             font-size: 22px;
             cursor: pointer;
+        }
+
+        .theme-toggle-btn {
+            height: 40px;
+            padding: 0 14px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-soft);
+            color: var(--text-main);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
 
         .container {
@@ -81,10 +177,11 @@
         }
 
         .panel {
-            background: #ffffff;
-            border: 1px solid #dbe2ea;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
             border-radius: 16px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            box-shadow: var(--shadow);
+            transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
         }
 
         .video-panel {
@@ -101,7 +198,7 @@
             width: 100%;
             height: 400px;
             min-height: auto;
-            background: #0f172a;
+            background: var(--video-bg);
             border-radius: 14px;
             overflow: hidden;
             display: flex;
@@ -131,8 +228,9 @@
         .mode-btn {
             flex: 1;
             height: 44px;
-            border: 1px solid #cbd5e1;
-            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            background: var(--bg-soft);
+            color: var(--text-main);
             border-radius: 10px;
             font-size: 15px;
             font-weight: 700;
@@ -141,38 +239,40 @@
         }
 
         .mode-btn.active {
-            background: #1f3b57;
+            background: var(--primary);
             color: white;
-            border-color: #1f3b57;
+            border-color: var(--primary);
         }
 
         #map {
             width: 100%;
             height: 280px;
             border-radius: 14px;
-            background: #e5e7eb;
+            background: #1e293b;
             overflow: hidden;
             position: relative;
             z-index: 1;
+            border: 1px solid var(--border-color);
         }
 
         .side-info {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-soft);
+            border: 1px solid var(--border-soft);
             border-radius: 12px;
             padding: 12px 14px;
             font-size: 14px;
             line-height: 1.8;
+            transition: all 0.25s ease;
         }
 
         .side-info.active-crowd {
             border: 2px solid #3b82f6;
-            background: #eff6ff;
+            background: var(--bg-soft-2);
         }
 
         .side-info.active-danger {
             border: 2px solid #ef4444;
-            background: #fef2f2;
+            background: var(--bg-danger-soft);
         }
 
         .stats-grid {
@@ -184,13 +284,13 @@
         }
 
         .stat-card {
-            background: #ffffff;
-            border: 1px solid #dbe2ea;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 16px 18px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            box-shadow: var(--shadow);
             cursor: pointer;
-            transition: transform 0.15s ease;
+            transition: transform 0.15s ease, background 0.25s ease, border-color 0.25s ease;
             min-height: 132px;
         }
 
@@ -200,7 +300,7 @@
 
         .stat-label {
             font-size: 15px;
-            color: #475569;
+            color: var(--text-sub);
             margin-bottom: 10px;
             font-weight: 700;
         }
@@ -208,14 +308,14 @@
         .stat-value {
             font-size: 26px;
             font-weight: 800;
-            color: #111827;
+            color: var(--text-main);
             margin-top: 6px;
         }
 
         .stat-sub {
             margin-top: 10px;
             font-size: 13px;
-            color: #64748b;
+            color: var(--text-muted);
         }
 
         .chart-panel {
@@ -256,24 +356,42 @@
 
         .toolbar input {
             padding: 8px 10px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            background: white;
+            background: var(--input-bg);
+            color: var(--text-main);
+        }
+
+        .toolbar input::-webkit-calendar-picker-indicator {
+            filter: invert(0);
+        }
+
+        body.dark-mode .toolbar input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
         }
 
         .btn {
             height: 36px;
             padding: 0 14px;
             border: none;
-            background: #1f3b57;
+            background: var(--primary);
             color: white;
             border-radius: 8px;
             font-weight: 700;
             cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
         }
 
         .btn.gray {
             background: #64748b;
+        }
+
+        .btn.gray:hover {
+            background: #475569;
         }
 
         table {
@@ -284,43 +402,45 @@
         }
 
         th {
-            background: #1f3b57;
-            color: white;
+            background: var(--table-head-bg);
+            color: var(--table-head-text);
             font-size: 14px;
             padding: 12px;
         }
 
         td {
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
+            background: var(--table-cell-bg);
+            border-bottom: 1px solid var(--border-soft);
             padding: 12px;
             text-align: center;
             font-size: 14px;
+            color: var(--text-main);
         }
 
-        .danger-row {
-            background: #ffe5e5;
-            color: #c0392b;
+        .danger-row td {
+            background: var(--danger-row-bg);
+            color: var(--danger-row-text);
             font-weight: 700;
         }
 
-        .warning-row {
-            background: #fff4e5;
-            color: #d97706;
+        .warning-row td {
+            background: var(--warning-row-bg);
+            color: var(--warning-row-text);
             font-weight: 700;
         }
 
-        .safe-row {
-            background: #f8fff8;
+        .safe-row td {
+            background: var(--safe-row-bg);
         }
 
         .log-box {
             height: 320px;
             overflow-y: auto;
-            background: #0f172a;
+            background: var(--log-bg);
             border-radius: 12px;
             padding: 14px;
             color: white;
+            border: 1px solid var(--border-color);
         }
 
         .log-item {
@@ -349,19 +469,19 @@
         }
 
         .badge-crowd {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: var(--badge-crowd-bg);
+            color: var(--badge-crowd-text);
         }
 
         .badge-danger {
-            background: #fee2e2;
-            color: #dc2626;
+            background: var(--badge-danger-bg);
+            color: var(--badge-danger-text);
         }
 
         .modal-backdrop {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.55);
+            background: var(--backdrop-bg);
             display: none;
             align-items: center;
             justify-content: center;
@@ -373,7 +493,8 @@
             position: relative;
             width: 100%;
             max-width: 960px;
-            background: white;
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
             border-radius: 18px;
             padding: 24px;
             box-shadow: 0 16px 40px rgba(0,0,0,0.2);
@@ -397,6 +518,7 @@
             background: transparent;
             font-size: 28px;
             cursor: pointer;
+            color: var(--text-main);
         }
 
         .report-tabs {
@@ -407,17 +529,18 @@
 
         .tab-btn {
             padding: 10px 14px;
-            border: 1px solid #cbd5e1;
-            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            background: var(--bg-soft);
+            color: var(--text-main);
             border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
         }
 
         .tab-btn.active {
-            background: #1f3b57;
+            background: var(--primary);
             color: white;
-            border-color: #1f3b57;
+            border-color: var(--primary);
         }
 
         .modal-actions {
@@ -428,13 +551,13 @@
 
         .report-placeholder {
             min-height: 280px;
-            border: 1px dashed #cbd5e1;
+            border: 1px dashed var(--border-color);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #64748b;
-            background: #f8fafc;
+            color: var(--text-muted);
+            background: var(--bg-soft);
             text-align: center;
             padding: 20px;
         }
@@ -461,6 +584,20 @@
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+
+            .topbar {
+                height: auto;
+                padding: 14px 16px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .topbar-right {
+                width: 100%;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+            }
         }
     </style>
 </head>
@@ -472,6 +609,7 @@
         <div class="logo-text">스마트 안전 관제 시스템</div>
     </div>
     <div class="topbar-right">
+        <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()">🌙 다크네이비</button>
         <div class="user-box">👤 관리자님</div>
         <div class="alert-icon">🔔</div>
     </div>
@@ -613,7 +751,7 @@
     let markers = [];
     let mainChart = null;
 
-    const droneData = [
+        const droneData = [
         {
             id: "DRONE-01",
             name: "밀집 드론 1호기",
@@ -631,15 +769,89 @@
             mode: "danger",
             videoUrl: "http://127.0.0.1:5000/video",
             cameraId: 2
+        },
+        {
+            id: "DRONE-03",
+            name: "밀집 드론 2호기",
+            lat: 37.5702,
+            lng: 126.9823,
+            mode: "crowd",
+            videoUrl: "http://127.0.0.1:5000/video",
+            cameraId: 3
+        },
+        {
+            id: "DRONE-04",
+            name: "위험 드론 2호기",
+            lat: 37.5638,
+            lng: 126.9754,
+            mode: "danger",
+            videoUrl: "http://127.0.0.1:5000/video",
+            cameraId: 4
+        },
+        {
+            id: "DRONE-05",
+            name: "밀집 드론 3호기",
+            lat: 37.5687,
+            lng: 126.9912,
+            mode: "crowd",
+            videoUrl: "http://127.0.0.1:5000/video",
+            cameraId: 5
         }
     ];
 
+    function applySavedTheme() {
+        const savedTheme = localStorage.getItem("dashboard-theme");
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark-mode");
+        } else {
+            document.body.classList.remove("dark-mode");
+        }
+        updateThemeButtonText();
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle("dark-mode");
+        const isDark = document.body.classList.contains("dark-mode");
+        localStorage.setItem("dashboard-theme", isDark ? "dark" : "light");
+        updateThemeButtonText();
+        refreshChartTheme();
+    }
+
+    function updateThemeButtonText() {
+        const btn = document.getElementById("theme-toggle-btn");
+        if (!btn) return;
+
+        if (document.body.classList.contains("dark-mode")) {
+            btn.innerText = "☀️ 라이트모드";
+        } else {
+            btn.innerText = "🌙 다크네이비";
+        }
+    }
+
+    function getChartColors() {
+        const style = getComputedStyle(document.body);
+        return {
+            grid: style.getPropertyValue("--chart-grid").trim() || "rgba(148, 163, 184, 0.25)",
+            tick: style.getPropertyValue("--chart-tick").trim() || "#475569",
+            line: style.getPropertyValue("--chart-line").trim() || "#2563eb",
+            fill: style.getPropertyValue("--chart-fill").trim() || "rgba(37, 99, 235, 0.15)"
+        };
+    }
+
+    function refreshChartTheme() {
+        if (currentMode === "crowd") {
+            loadCrowdHourly();
+        } else {
+            drawDangerChart();
+        }
+    }
+
     function formatDateTimeLocal(date) {
         const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        const hh = String(date.getHours()).padStart(2, '0');
-        const mm = String(date.getMinutes()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        const hh = String(date.getHours()).padStart(2, "0");
+        const mm = String(date.getMinutes()).padStart(2, "0");
         return `${y}-${m}-${d}T${hh}:${mm}`;
     }
 
@@ -754,20 +966,44 @@
         return droneData.find(drone => drone.id === selectedDroneId) || droneData[0];
     }
 
+    function getCrowdDensityValue(item) {
+        return Number(
+            item.averageDensityValue ??
+            item.densityValue ??
+            item.averageDensity ??
+            item.density ??
+            0
+        );
+    }
+
+    function getCrowdPeopleCount(item) {
+        return Number(
+            item.totalPeopleCount ??
+            item.peopleCount ??
+            item.detectedCount ??
+            0
+        );
+    }
+
+    function getCrowdLabel(item) {
+        return item.hour ?? item.time ?? item.label ?? "-";
+    }
+
     function loadCrowdSummaryByData(data) {
         const totalCount = data.length;
+
         const avgDensity = totalCount > 0
-            ? data.reduce((sum, item) => sum + (item.densityValue || 0), 0) / totalCount
+            ? data.reduce((sum, item) => sum + getCrowdDensityValue(item), 0) / totalCount
             : 0;
 
         const maxPeople = totalCount > 0
-            ? Math.max(...data.map(item => item.peopleCount || 0))
+            ? Math.max(...data.map(item => getCrowdPeopleCount(item)))
             : 0;
 
         let growthRate = 0;
         if (data.length >= 2) {
-            const first = data[0].densityValue || 0;
-            const last = data[data.length - 1].densityValue || 0;
+            const first = getCrowdDensityValue(data[0]);
+            const last = getCrowdDensityValue(data[data.length - 1]);
             growthRate = first !== 0 ? ((last - first) / first) * 100 : 0;
         }
 
@@ -781,8 +1017,9 @@
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
-        const labels = data.map(item => item.hour);
-        const densityValues = data.map(item => Number(item.averageDensityValue || 0));
+        const labels = data.map(item => getCrowdLabel(item));
+        const densityValues = data.map(item => getCrowdDensityValue(item));
+        const colors = getChartColors();
 
         if (mainChart) {
             mainChart.destroy();
@@ -795,8 +1032,8 @@
                 datasets: [{
                     label: "평균 밀집도",
                     data: densityValues,
-                    borderColor: "#2563eb",
-                    backgroundColor: "rgba(37, 99, 235, 0.15)",
+                    borderColor: colors.line,
+                    backgroundColor: colors.fill,
                     borderWidth: 2,
                     fill: true,
                     tension: 0.3,
@@ -809,13 +1046,30 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: true
+                        display: true,
+                        labels: {
+                            color: colors.tick
+                        }
                     }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            color: colors.tick
+                        },
+                        grid: {
+                            color: colors.grid
+                        }
+                    },
                     y: {
                         beginAtZero: true,
-                        suggestedMax: 1
+                        suggestedMax: 1,
+                        ticks: {
+                            color: colors.tick
+                        },
+                        grid: {
+                            color: colors.grid
+                        }
                     }
                 }
             }
@@ -827,6 +1081,7 @@
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
+        const colors = getChartColors();
 
         if (mainChart) {
             mainChart.destroy();
@@ -838,7 +1093,10 @@
                 labels: ["10:00", "11:00", "12:00"],
                 datasets: [{
                     label: "시간당 침입 횟수",
-                    data: [2, 4, 1]
+                    data: [2, 4, 1],
+                    backgroundColor: colors.fill,
+                    borderColor: colors.line,
+                    borderWidth: 2
                 }]
             },
             options: {
@@ -846,12 +1104,29 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: true
+                        display: true,
+                        labels: {
+                            color: colors.tick
+                        }
                     }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            color: colors.tick
+                        },
+                        grid: {
+                            color: colors.grid
+                        }
+                    },
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            color: colors.tick
+                        },
+                        grid: {
+                            color: colors.grid
+                        }
                     }
                 }
             }
@@ -872,10 +1147,12 @@
         fetch(url)
             .then(res => res.json())
             .then(data => {
+                console.log("밀집 시간별 데이터:", data);
+
                 const tbody = document.getElementById("hourly-body");
                 tbody.innerHTML = "";
 
-                if (!data.length) {
+                if (!data || !data.length) {
                     tbody.innerHTML = `<tr><td colspan="4">데이터 없음</td></tr>`;
                     if (mainChart) {
                         mainChart.destroy();
@@ -885,13 +1162,15 @@
                 }
 
                 data.forEach(item => {
-                    const density = Number(item.averageDensityValue || 0);
+                    const density = getCrowdDensityValue(item);
+                    const peopleCount = getCrowdPeopleCount(item);
+                    const hourText = getCrowdLabel(item);
                     const status = getDensityStatus(density);
 
                     tbody.innerHTML += `
                         <tr class="${status.rowClass}">
-                            <td>${item.hour}</td>
-                            <td>${item.totalPeopleCount}</td>
+                            <td>${hourText}</td>
+                            <td>${peopleCount}</td>
                             <td>${density.toFixed(2)}</td>
                             <td>${status.text}</td>
                         </tr>
@@ -900,7 +1179,8 @@
 
                 drawCrowdChart(data);
             })
-            .catch(() => {
+            .catch((error) => {
+                console.error("밀집 시간별 통계 조회 실패:", error);
                 document.getElementById("hourly-body").innerHTML =
                     `<tr><td colspan="4">시간별 통계 조회 실패</td></tr>`;
             });
@@ -939,7 +1219,7 @@
     }
 
     function loadLogs() {
-        fetch('http://127.0.0.1:5000/get_logs')
+        fetch("http://127.0.0.1:5000/get_logs")
             .then(response => {
                 if (!response.ok) throw new Error();
                 return response.json();
@@ -1078,6 +1358,7 @@
     }
 
     kakao.maps.load(function () {
+        applySavedTheme();
         setTodayRange();
         initKakaoMap();
         updateVideoByMode();
@@ -1101,6 +1382,43 @@
             closeReportModal();
         }
     });
+
+    function loadCrowdHourly() {
+    const data = [
+        { hour: "09:00", averageDensityValue: 0.22, totalPeopleCount: 5 },
+        { hour: "10:00", averageDensityValue: 0.35, totalPeopleCount: 8 },
+        { hour: "11:00", averageDensityValue: 0.48, totalPeopleCount: 11 },
+        { hour: "12:00", averageDensityValue: 0.62, totalPeopleCount: 15 },
+        { hour: "13:00", averageDensityValue: 0.78, totalPeopleCount: 20 },
+        { hour: "14:00", averageDensityValue: 0.83, totalPeopleCount: 24 },
+        { hour: "15:00", averageDensityValue: 0.67, totalPeopleCount: 18 },
+        { hour: "16:00", averageDensityValue: 0.51, totalPeopleCount: 13 },
+        { hour: "17:00", averageDensityValue: 0.39, totalPeopleCount: 9 }
+    ];
+
+    const tbody = document.getElementById("hourly-body");
+    tbody.innerHTML = "";
+
+    data.forEach(item => {
+        const density = Number(item.averageDensityValue || 0);
+        const peopleCount = Number(item.totalPeopleCount || 0);
+        const status = getDensityStatus(density);
+
+        tbody.innerHTML += `
+            <tr class="${status.rowClass}">
+                <td>${item.hour}</td>
+                <td>${peopleCount}</td>
+                <td>${density.toFixed(2)}</td>
+                <td>${status.text}</td>
+            </tr>
+        `;
+    });
+
+    loadCrowdSummaryByData(data);
+    drawCrowdChart(data);
+}
+
 </script>
+
 </body>
 </html>
