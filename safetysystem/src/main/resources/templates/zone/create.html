@@ -3,45 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>위험구역 등록</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <script th:src="@{/js/theme.js}"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        .form-row { margin-bottom: 12px; }
-        label { display: inline-block; width: 160px; }
-        input, select { width: 300px; padding: 6px; }
-
-        .roi-wrap {
-            position: relative;
-            width: 800px;
-            height: 450px;
-            border: 1px solid #ccc;
-            margin-bottom: 20px;
-            background: #f8f8f8;
-            overflow: hidden;
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: 4px;
         }
-
-        .roi-bg {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            user-select: none;
-            pointer-events: none;
-        }
-
-        #roiCanvas {
-            position: absolute;
-            left: 0;
-            top: 0;
-            cursor: crosshair;
-        }
-
-        .hint {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 10px;
+        .global-error {
+            color: red;
+            margin-bottom: 12px;
         }
     </style>
 </head>
+<div th:replace="fragments/header :: header('위험구역 등록')"></div>
 <body>
 <h2>위험구역 등록</h2>
 
@@ -57,51 +33,81 @@
 <form th:action="@{/admin/zone/createProc}" method="post" th:object="${dto}">
     <input type="hidden" th:field="*{cameraId}">
 
+    <div class="global-error" th:if="${#fields.hasAnyErrors()}">
+        입력값을 다시 확인하세요.
+    </div>
+
     <div class="form-row">
         <label>구역 이름</label>
-        <input type="text" th:field="*{zoneName}" required>
+        <input type="text" th:field="*{zoneName}">
+        <div class="error"
+             th:if="${#fields.hasErrors('zoneName')}"
+             th:errors="*{zoneName}"></div>
     </div>
 
     <div class="form-row">
         <label>구역 타입</label>
         <select th:field="*{zoneType}">
+            <option value="">선택하세요</option>
             <option value="DANGER">DANGER</option>
             <option value="CROWD">CROWD</option>
             <option value="WATCH">WATCH</option>
         </select>
+        <div class="error"
+             th:if="${#fields.hasErrors('zoneType')}"
+             th:errors="*{zoneType}"></div>
     </div>
 
     <div class="form-row">
         <label>x1</label>
         <input type="number" th:field="*{x1}" id="x1">
+        <div class="error"
+             th:if="${#fields.hasErrors('x1')}"
+             th:errors="*{x1}"></div>
     </div>
 
     <div class="form-row">
         <label>y1</label>
         <input type="number" th:field="*{y1}" id="y1">
+        <div class="error"
+             th:if="${#fields.hasErrors('y1')}"
+             th:errors="*{y1}"></div>
     </div>
 
     <div class="form-row">
         <label>x2</label>
         <input type="number" th:field="*{x2}" id="x2">
+        <div class="error"
+             th:if="${#fields.hasErrors('x2')}"
+             th:errors="*{x2}"></div>
     </div>
 
     <div class="form-row">
         <label>y2</label>
         <input type="number" th:field="*{y2}" id="y2">
+        <div class="error"
+             th:if="${#fields.hasErrors('y2')}"
+             th:errors="*{y2}"></div>
     </div>
 
     <div class="form-row">
         <label>침입 기준 시간(초)</label>
         <input type="number" th:field="*{intrusionTimeSec}">
+        <div class="error"
+             th:if="${#fields.hasErrors('intrusionTimeSec')}"
+             th:errors="*{intrusionTimeSec}"></div>
     </div>
 
     <div class="form-row">
         <label>활성 여부</label>
         <select th:field="*{isActive}">
+            <option value="">선택하세요</option>
             <option th:value="true">true</option>
             <option th:value="false">false</option>
         </select>
+        <div class="error"
+             th:if="${#fields.hasErrors('isActive')}"
+             th:errors="*{isActive}"></div>
     </div>
 
     <button type="submit">등록</button>

@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>카메라 목록</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-        th { background: #f2f2f2; }
-        a, button { margin: 0 3px; }
-    </style>
+    <!--    CSS 연결    -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <!--    //JS 연결   -->
+    <script th:src="@{/js/theme.js}"></script>
 </head>
+<div th:replace="fragments/header :: header('카메라 목록')"></div>
 <body>
 <h2>카메라 목록</h2>
 
@@ -28,6 +26,7 @@
         <th>위치</th>
         <th>상태</th>
         <th>관리</th>
+
     </tr>
     </thead>
     <tbody>
@@ -37,19 +36,55 @@
         <td th:text="${camera.cameraName}"></td>
         <td th:text="${camera.cameraType}"></td>
         <td th:text="${camera.locationName}"></td>
-        <td th:text="${camera.status}"></td>
+        <td>
+            <span th:id="'status-' + ${camera.id}" th:text="${camera.status}"></span>
+            <button type="button"
+                    th:attr="onclick=|toggleCameraStatus(${camera.id})|">
+                상태변경
+            </button>
+        </td>
+
         <td>
             <a th:href="@{/admin/camera/detail/{id}(id=${camera.id})}">상세</a>
             <a th:href="@{/admin/camera/{id}/update(id=${camera.id})}">수정</a>
             <a th:href="@{/admin/zone/{cameraId}(cameraId=${camera.id})}">위험구역</a>
 
-            <form th:action="@{/admin/camera/{id}/delete(id=${camera.id})}" method="post" style="display:inline;">
+            <form th:action="@{/admin/camera/{id}/delete(id=${camera.id})}" method="post" >
                 <button type="submit" onclick="return confirm('비활성화하시겠습니까?');">삭제</button>
             </form>
         </td>
+
+
     </tr>
     </tbody>
 </table>
 
 </body>
+
+<script>
+    async function toggleCameraStatus(id) {
+        try {
+            const response = await fetch(`/api/cameras/${id}/status`, {
+                method: 'PATCH'
+            });
+
+            if (!response.ok) {
+                alert("상태 변경 실패");
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById(`status-${id}`).innerText = data.status;
+            } else {
+                alert("상태 변경 실패");
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert("서버 오류");
+        }
+    }
+</script>
 </html>

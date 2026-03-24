@@ -24,17 +24,24 @@ public class Camera {
     @Column(nullable = false)
     private String cameraName;
 
+    @Column(nullable = false)
     private String cameraType;   // WEBCAM DRONE CCTV
 
+    @Column(nullable = false)
     private String ipAddress;
 
+    @Column(nullable = false)
     private String streamUrl;
 
+    @Column(nullable = false)
     private String locationName;
 
+    @Column(nullable = false)
     private Double latitude;
 
+    @Column(nullable = false)
     private Double longitude;
+
 
     @Column(nullable = false)
     private String status; // ACTIVE INACTIVE ERROR
