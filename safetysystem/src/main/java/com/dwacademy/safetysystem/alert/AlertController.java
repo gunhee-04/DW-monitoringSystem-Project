@@ -26,5 +26,10 @@ public class AlertController {
         alertService.markAsRead(id);
     }
 
+    //최근 경고 로그 관련 필터도 아직 안됨
+    @GetMapping("/recent-warnings")
+    public List<AlertLog> getRecentWarnings() {
+        return alertService.getRecentWarnings();
+    }
 
 }

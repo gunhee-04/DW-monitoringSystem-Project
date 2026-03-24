@@ -13,13 +13,17 @@ public class SseController {
 
     @GetMapping("/api/sse/connect")
     public SseEmitter connect() {
-        SseEmitter emitter = new SseEmitter(60 * 1000L); // 1분간 연결 유지
+        // 30분 동안 연결 유지 (사용자 친화적 설정)
+        SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
         emitters.add(emitter);
 
+        // 연결 종료 및 타임아웃 시 리스트에서 제거 (메모리 관리)
         emitter.onCompletion(() -> emitters.remove(emitter));
         emitter.onTimeout(() -> emitters.remove(emitter));
+        emitter.onError((e) -> emitters.remove(emitter));
 
         try {
+            // 첫 연결 시 더미 데이터 전송 (연결 확인용)
             emitter.send(SseEmitter.event().name("connect").data("connected!"));
         } catch (IOException e) {
             emitters.remove(emitter);

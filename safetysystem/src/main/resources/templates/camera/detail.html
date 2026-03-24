@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>카메라 상세보기</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        table { border-collapse: collapse; width: 700px; }
-        th, td { border: 1px solid #ccc; padding: 10px; }
-        th { width: 180px; background: #f2f2f2; text-align: left; }
-    </style>
+    <!--    CSS 연결    -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <!--    //JS 연결   -->
+    <script th:src="@{/js/theme.js}"></script>
 </head>
+<div th:replace="fragments/header :: header('카메라 상세보기')"></div>
 <body>
 <h2>카메라 상세보기</h2>
 
@@ -28,7 +27,7 @@
 
 <div style="margin-top: 20px;">
     <a th:href="@{/admin/camera/{id}/update(id=${dto.cameraId})}">수정</a>
-    <a th:href="@{/admin/zone/{cameraId}(cameraId=${dto.cameraId})}">위험구역 목록</a>
+    <a th:href="@{/admin/zone/{cameraId}(cameraId=${dto.cameraId})}">위험구역 리스트</a>
     <a th:href="@{/admin/camera/list}">목록</a>
 </div>
 

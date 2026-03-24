@@ -5,7 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import lombok.Getter;
 import lombok.Setter;
-import jakarta.persistence.Id;
+import org.springframework.data.annotation.Id;
 import java.time.LocalDateTime;
 
 @Entity

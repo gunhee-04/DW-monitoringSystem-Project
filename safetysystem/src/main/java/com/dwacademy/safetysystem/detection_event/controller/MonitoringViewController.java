@@ -1,9 +1,8 @@
 package com.dwacademy.safetysystem.detection_event.controller;
 
-import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
-import com.dwacademy.safetysystem.detection_event.repository.DetectionEventRepository;
-import com.dwacademy.safetysystem.detection_event.service.DetectionService;
 import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
+import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
+import com.dwacademy.safetysystem.detection_event.service.DetectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,22 +15,24 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MonitoringViewController {
 
-    // 🚩 1. 변수명을 detectionService로 변경
     private final DetectionService detectionService;
 
+    /**
+     * 모니터링 메인 페이지 (초기 데이터 로딩)
+     */
     @GetMapping("/monitoring")
-    public String monitoringPage(@RequestParam(value = "level", required = false) String level, Model model) {
-        List<DetectionEntity> eventList;
+    public String monitoringPage(@RequestParam(value = "level", required = false) EventLevel level,
+                                 Model model) {
 
-        if (level != null && !level.isEmpty()) {
-            // 이제 아래의 detectionService와 이름이 일치합니다!
-            eventList = detectionService.getEventsByLevel(EventLevel.valueOf(level));
-        } else {
-            eventList = detectionService.getAllEvents();
-        }
+        // 1. 서비스에 위임하여 필터링된 리스트 또는 전체 리스트 확보
+        List<DetectionEntity> eventList = (level != null)
+                ? detectionService.getEventsByLevel(level)
+                : detectionService.getAllEvents();
 
+        // 2. 뷰(test.html)로 데이터 전달
         model.addAttribute("eventList", eventList);
-        model.addAttribute("selectedLevel", level);
-        return "test";
+        model.addAttribute("selectedLevel", level); // 현재 선택된 필터값 유지용
+
+        return "test"; // resources/templates/test.html 호출
     }
 }

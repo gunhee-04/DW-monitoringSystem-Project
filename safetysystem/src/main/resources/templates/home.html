@@ -941,8 +941,13 @@
         drawDangerChart();
     }
 
+<<<<<<< HEAD
     function loadLogs() {
         fetch("http://127.0.0.1:5000/get_logs")
+=======
+        function loadLogs() {
+        fetch("http://127.0.0.1:8081/get_logs")
+>>>>>>> e1ff7880ed4ccfcecc710c67ce6c83a903a12ebf
             .then(response => {
                 if (!response.ok) throw new Error();
                 return response.json();

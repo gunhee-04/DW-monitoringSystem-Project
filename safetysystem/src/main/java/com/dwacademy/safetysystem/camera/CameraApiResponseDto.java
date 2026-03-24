@@ -12,6 +12,7 @@ public class CameraApiResponseDto {
     private Integer intrusionSeconds;
     private RoiDto roi;
 
+    //roi객체에 순서 제대로 들어갈 수 있게 build
     @Getter
     @AllArgsConstructor
     @Builder
