@@ -1,11 +1,10 @@
 package com.dwacademy.safetysystem.alert;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,6 +20,7 @@ public class AlertLog {
 
     private String alertType;
 
+
     private String severity;
 
     private String alertMessage;
@@ -30,4 +30,13 @@ public class AlertLog {
     private LocalDateTime createdAt;
 
     private LocalDateTime readAt;
+
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        if (this.isRead == null) {
+            this.isRead = false;
+        }
+    }
 }

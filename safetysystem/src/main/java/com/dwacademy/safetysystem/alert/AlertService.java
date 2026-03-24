@@ -1,5 +1,7 @@
 package com.dwacademy.safetysystem.alert;
 
+import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,25 +22,32 @@ public class AlertService {
     }
 
     //읽음 처리 할 때
+    @Transactional
     public void markAsRead(long id){
         AlertLog alert = alertRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("해당 알림 없음: " + id));
 
         alert.setIsRead(true);
         alert.setReadAt(LocalDateTime.now());
     }
 
+    //최근 경고 로그 관련 필터도 아직 안됨
+    public List<AlertLog> getRecentWarnings(){
+        return alertRepository.findTop10BySeverityInOrderByCreatedAtDesc(
+                List.of(EventLevel.WARNING, EventLevel.ALERT)
+        );
+    }
+
     //이벤트 알림 생성
-    public void createAlert(Long detectionEventId, String alertType, String severity, String message) {
+    public void createAlert(Long detectionEventId, String alertType, String severityStr, String message) {
+        // 문자열 -> Enum 변환
+        EventLevel severity = EventLevel.valueOf(severityStr);
 
         AlertLog alert = new AlertLog();
-
         alert.setDetectionEventId(detectionEventId);
         alert.setAlertType(alertType);
-        alert.setSeverity(severity);
+        alert.setSeverity(severityStr);
         alert.setAlertMessage(message);
-        alert.setIsRead(false);
-        alert.setCreatedAt(LocalDateTime.now());
 
         alertRepository.save(alert);
     }
