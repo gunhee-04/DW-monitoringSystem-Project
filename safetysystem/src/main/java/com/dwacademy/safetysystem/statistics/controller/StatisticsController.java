@@ -2,6 +2,7 @@ package com.dwacademy.safetysystem.statistics.controller;
 
 import com.dwacademy.safetysystem.statistics.dto.ChartDataDto;
 import com.dwacademy.safetysystem.statistics.dto.HourlyStatDto;
+import com.dwacademy.safetysystem.statistics.dto.SummaryStatDto;
 import com.dwacademy.safetysystem.statistics.entity.CrowdStat;
 import com.dwacademy.safetysystem.statistics.service.StatisticsService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -83,4 +84,18 @@ public class StatisticsController {
     ) {
         return statisticsService.getChartData(start, end);
     }
+
+    @GetMapping("/crowd/summary")
+    public SummaryStatDto getSummaryStatistics(
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime start,
+
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime end
+    ) {
+        return statisticsService.getSummaryStatistics(start, end);
+    }
+
 }

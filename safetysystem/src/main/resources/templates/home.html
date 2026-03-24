@@ -53,11 +53,11 @@
             justify-content: center;
         }
 
+        .video-frame video,
         .video-frame img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block;
         }
 
         /* =========================
@@ -298,6 +298,21 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .side-info div {
+            display: flex;
+            align-items: center;   /* 세로 가운데 정렬 */
+            justify-content: flex-start; /* 양쪽 정렬 (깔끔) */
+            gap: 10px;
+        }
+
+        .side-info div:last-child {
+            justify-content: flex-start; /* 이것만 바꿔 */
+        }
+
+        .side-info strong {
+            min-width: 30px;
+        }
     </style>
 
 
@@ -313,10 +328,15 @@
         <div class="panel video-panel">
             <div class="panel-title">🎥 실시간 드론 영상</div>
             <div class="video-frame">
-                <img id="main-video"
+                <!-- 🔵 스트림용 (기존) -->
+                <img id="stream-video"
                      src="http://127.0.0.1:5000/video"
-                     alt="드론 영상"
-                     onerror="this.src='https://dummyimage.com/1200x700/0f172a/ffffff&text=Drone+Offline'">
+                     alt="드론 영상">
+
+                <!-- 🔴 테스트 영상용 -->
+                <video id="file-video" autoplay muted loop controls style="display:none;">
+                    <source src="/videos/test1.mp4" type="video/mp4">
+                </video>
             </div>
         </div>
 
@@ -466,51 +486,33 @@
     let mainChart = null;
     let reportChart = null;
 
-    const droneData = [
+   const droneData = [
         {
             id: "DRONE-01",
-            name: "밀집 드론 1호기",
             lat: 37.5665,
             lng: 126.9780,
+            switchUrl: "http://127.0.0.1:5001/switch/webcam",
+            videoUrl: "http://127.0.0.1:5001/video",
             mode: "crowd",
-            videoUrl: "http://127.0.0.1:5000/video",
             cameraId: 1
         },
         {
             id: "DRONE-02",
-            name: "위험 드론 1호기",
             lat: 37.5651,
             lng: 126.9895,
-            mode: "danger",
-            videoUrl: "http://127.0.0.1:5000/video",
+            switchUrl: "http://127.0.0.1:5001/switch/drone1",
+            videoUrl: "http://127.0.0.1:5001/video",
+            mode: "crowd",
             cameraId: 2
         },
         {
             id: "DRONE-03",
-            name: "밀집 드론 2호기",
-            lat: 37.5702,
-            lng: 126.9823,
-            mode: "crowd",
-            videoUrl: "http://127.0.0.1:5000/video",
-            cameraId: 3
-        },
-        {
-            id: "DRONE-04",
-            name: "위험 드론 2호기",
-            lat: 37.5638,
-            lng: 126.9754,
+            lat: 37.5700,
+            lng: 126.9820,
+            switchUrl: "http://127.0.0.1:5001/switch/drone2",
+            videoUrl: "http://127.0.0.1:5001/video",
             mode: "danger",
-            videoUrl: "http://127.0.0.1:5000/video",
-            cameraId: 4
-        },
-        {
-            id: "DRONE-05",
-            name: "밀집 드론 3호기",
-            lat: 37.5687,
-            lng: 126.9912,
-            mode: "crowd",
-            videoUrl: "http://127.0.0.1:5000/video",
-            cameraId: 5
+            cameraId: 3
         }
     ];
 
@@ -611,7 +613,26 @@
 
         selectedDroneId = matchedDrone.id;
         document.getElementById("selected-drone-text").innerText = matchedDrone.id;
-        document.getElementById("main-video").src = matchedDrone.videoUrl;
+
+        const stream = document.getElementById("stream-video");
+        const video = document.getElementById("file-video");
+
+        // 👉 테스트 영상이면
+        if (matchedDrone.videoUrl.endsWith(".mp4")) {
+            stream.style.display = "none";
+            video.style.display = "block";
+
+            video.src = matchedDrone.videoUrl;
+            video.load();
+            video.play();
+        }
+        // 👉 Flask 스트림이면
+        else {
+            video.style.display = "none";
+            stream.style.display = "block";
+
+            stream.src = matchedDrone.videoUrl;
+        }
     }
 
     function updateCardTitles() {
@@ -920,7 +941,7 @@
         drawDangerChart();
     }
 
-        function loadLogs() {
+    function loadLogs() {
         fetch("http://127.0.0.1:5000/get_logs")
             .then(response => {
                 if (!response.ok) throw new Error();
@@ -935,18 +956,18 @@
                 }
 
                 updateAlertPanel(data);
-
                 box.innerHTML = "";
 
                 data.forEach(log => {
-                    const statusClass = log.intrusion_now ? "log-danger" : "log-normal";
-                    const statusText = log.intrusion_now ? "[위험발생]" : "[정상]";
+                    const isDanger = !!log.intrusion_now;
+                    const statusClass = isDanger ? "log-danger" : "log-normal";
+                    const statusText = isDanger ? "[위험]" : "[정상]";
 
                     box.innerHTML += `
                         <div class="log-item">
                             <span class="${statusClass}">${statusText}</span>
-                            인원: ${log.people_count}명 |
-                            시간: ${log.created_at}
+                            인원: ${log.people_count ?? 0}명 |
+                            시간: ${log.created_at ?? "-"}
                         </div>
                     `;
                 });
@@ -954,14 +975,6 @@
             .catch(() => {
                 document.getElementById("log-box").innerHTML =
                     `<div class="log-item log-danger">Flask 로그 서버 연결 실패</div>`;
-
-                const badge = document.getElementById("alert-badge");
-                const list = document.getElementById("alert-list");
-
-                if (badge) badge.innerText = "!";
-                if (list) {
-                    list.innerHTML = `<div class="alert-empty">로그 서버 연결 실패</div>`;
-                }
             });
     }
 
@@ -1227,17 +1240,34 @@
             markers.push(marker);
 
             kakao.maps.event.addListener(marker, "click", function () {
-                selectedDroneId = drone.id;
-                currentMode = drone.mode;
+                fetch(drone.switchUrl)
+                    .then(() => {
+                        selectedDroneId = drone.id;
+                        currentMode = drone.mode;
 
-                markers.forEach(m => m.setZIndex(1));
-                marker.setZIndex(999);
-                map.panTo(position);
+                        markers.forEach(m => m.setZIndex(1));
+                        marker.setZIndex(999);
+                        map.panTo(position);
 
-                document.getElementById("selected-drone-text").innerText = drone.id;
-                switchMode(drone.mode);
-                document.getElementById("main-video").src = drone.videoUrl;
+                        document.getElementById("selected-drone-text").innerText = drone.id;
+
+                        const stream = document.getElementById("stream-video");
+                        const video = document.getElementById("file-video");
+
+                        video.style.display = "none";
+                        stream.style.display = "block";
+
+                        // 캐시 방지용
+                        stream.src = drone.videoUrl + "?t=" + new Date().getTime();
+
+                        switchMode(drone.mode);
+                    })
+                    .catch(err => {
+                        console.error("영상 전환 실패:", err);
+                    });
             });
+
+
         });
     }
 
@@ -1289,9 +1319,9 @@
             return;
         }
 
-        list.innerHTML = importantLogs.slice(0, 5).map(log => `
-            <div class="alert-item danger">
-                <strong>[위험발생]</strong><br>
+        list.innerHTML = importantLogs.slice().map(log => `
+            <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px;">
+            <strong style="color: ${log.level_color};">${log.status_text}</strong><br>
                 인원: ${log.people_count}명<br>
                 시간: ${log.created_at}
             </div>

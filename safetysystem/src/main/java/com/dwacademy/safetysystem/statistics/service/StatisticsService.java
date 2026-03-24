@@ -2,6 +2,7 @@ package com.dwacademy.safetysystem.statistics.service;
 
 import com.dwacademy.safetysystem.statistics.dto.ChartDataDto;
 import com.dwacademy.safetysystem.statistics.dto.HourlyStatDto;
+import com.dwacademy.safetysystem.statistics.dto.SummaryStatDto;
 import com.dwacademy.safetysystem.statistics.entity.CrowdStat;
 import com.dwacademy.safetysystem.statistics.repository.CrowdStatRepository;
 import org.springframework.stereotype.Service;
@@ -96,4 +97,36 @@ public class StatisticsService {
 
         return result;
     }
+
+    public SummaryStatDto getSummaryStatistics(LocalDateTime start, LocalDateTime end) {
+        List<CrowdStat> stats = crowdStatRepository.findByMeasuredAtBetween(start, end);
+
+        int totalPeopleCount = stats.stream()
+                .mapToInt(CrowdStat::getPeopleCount)
+                .sum();
+
+        double averageDensityValue = stats.stream()
+                .mapToDouble(CrowdStat::getDensityValue)
+                .average()
+                .orElse(0.0);
+
+        int maxPeopleCount = stats.stream()
+                .mapToInt(CrowdStat::getPeopleCount)
+                .max()
+                .orElse(0);
+
+        double averageIncreaseRate = stats.stream()
+                .filter(stat -> stat.getIncreaseRate() != null)
+                .mapToDouble(CrowdStat::getIncreaseRate)
+                .average()
+                .orElse(0.0);
+
+        return new SummaryStatDto(
+                totalPeopleCount,
+                averageDensityValue,
+                maxPeopleCount,
+                averageIncreaseRate
+        );
+    }
+
 }

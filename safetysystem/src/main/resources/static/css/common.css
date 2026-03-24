@@ -397,9 +397,11 @@ td {
    [공통] 상태 배지
 ========================= */
 .status-badge {
-    display: inline-block;
+    display: inline-flex;   /* inline-block → inline-flex로 변경 */
+    align-items: center;    /* 세로 가운데 */
+    justify-content: center;/* 가로 가운데 */
     min-width: 60px;
-    padding: 4px 8px;
+    padding: 4px 10px;      /* 좌우 padding 조금 늘리는게 좋음 */
     border-radius: 999px;
     font-size: 12px;
     font-weight: 700;
