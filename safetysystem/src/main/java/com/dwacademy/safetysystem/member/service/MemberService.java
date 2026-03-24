@@ -1,6 +1,9 @@
-package com.dwacademy.safetysystem.member;
+package com.dwacademy.safetysystem.member.service;
 
 import com.dwacademy.safetysystem.config.RoleType;
+import com.dwacademy.safetysystem.member.dto.MemberDto;
+import com.dwacademy.safetysystem.member.entity.Member;
+import com.dwacademy.safetysystem.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

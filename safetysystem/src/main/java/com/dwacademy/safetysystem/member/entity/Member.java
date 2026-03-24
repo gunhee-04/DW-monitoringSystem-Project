@@ -1,10 +1,8 @@
-package com.dwacademy.safetysystem.member;
+package com.dwacademy.safetysystem.member.entity;
 
 import com.dwacademy.safetysystem.config.RoleType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

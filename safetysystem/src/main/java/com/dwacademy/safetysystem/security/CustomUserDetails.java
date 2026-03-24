@@ -1,6 +1,6 @@
 package com.dwacademy.safetysystem.security;
 
-import com.dwacademy.safetysystem.member.Member;
+import com.dwacademy.safetysystem.member.entity.Member;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;

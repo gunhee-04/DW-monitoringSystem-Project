@@ -1,5 +1,8 @@
-package com.dwacademy.safetysystem.member;
+package com.dwacademy.safetysystem.member.controller;
 
+import com.dwacademy.safetysystem.member.dto.MemberDto;
+import com.dwacademy.safetysystem.member.service.MemberService;
+import com.dwacademy.safetysystem.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,7 +38,7 @@ public class MemberController {
     @GetMapping("/create")
     public String createPage() {
         log.info("--- [MemberController] createPage() ---");
-        return "member/createMember";
+        return "member/create";
     }
 
     // 등록 처리
@@ -49,7 +52,7 @@ public class MemberController {
 
         if (result > 0) {
             model.addAttribute("errorMsg", "회원 등록 중 오류가 발생했습니다.");
-            return "member/createMember";
+            return "member/create";
         }
 
         return "redirect:/member/list";
@@ -66,7 +69,7 @@ public class MemberController {
         Member member = memberService.getMemberById(id);
         model.addAttribute("member", member);
 
-        return "member/updateMember";
+        return "member/update";
     }
 
     // 수정 처리

@@ -1,6 +1,7 @@
-package com.dwacademy.safetysystem.member;
+package com.dwacademy.safetysystem.member.repository;
 
 import com.dwacademy.safetysystem.config.RoleType;
+import com.dwacademy.safetysystem.member.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
