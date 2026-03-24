@@ -1,38 +1,54 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <body>
+
 <div th:fragment="header(title)">
     <div class="topbar">
+
+        <!-- 왼쪽 -->
         <div class="topbar-left">
             <a th:href="@{/}" class="logo-link">
-                <img th:src="@{/images/logo-light.png}"
+                <img id="main-logo"
+                     th:src="@{/images/logo-light.png}"
                      data-light="/images/logo-light.png"
                      data-dark="/images/logo-dark.png"
-                     class="logo-img"
-                     id="main-logo">
+                     class="logo-img">
                 <div class="logo-text" th:text="${title}">스마트 안전 관제 시스템</div>
             </a>
         </div>
 
+        <!-- 오른쪽 -->
         <div class="topbar-right">
-            <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()">🌙 다크네이비</button>
 
+            <!-- 다크모드 -->
+            <button id="theme-toggle-btn"
+                    class="theme-toggle-btn"
+                    onclick="toggleTheme()">
+                🌙 다크네이비
+            </button>
+
+            <!-- 알림 -->
             <div class="alert-wrapper">
-                <button type="button" class="alert-btn" onclick="toggleAlertPanel()">🔔
+                <button class="alert-btn" onclick="toggleAlertPanel()">
+                    🔔
                     <span id="alert-badge" class="alert-badge">0</span>
                 </button>
 
                 <div id="alert-panel" class="alert-panel">
                     <div class="alert-panel-title">중요 알림</div>
                     <div id="alert-list" class="alert-list">
-                        <div class="alert-empty">중요 로그가 없습니다.</div>
+                        <div class="alert-empty">로그 없음</div>
                     </div>
                 </div>
             </div>
 
+            <!-- 사용자 -->
             <div class="user-box">👤 관리자님</div>
+
         </div>
+
     </div>
 </div>
+
 </body>
 </html>
