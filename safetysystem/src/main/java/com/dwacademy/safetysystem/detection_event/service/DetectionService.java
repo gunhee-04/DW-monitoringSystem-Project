@@ -1,11 +1,14 @@
 package com.dwacademy.safetysystem.detection_event.service;
 
-import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
+import com.dwacademy.safetysystem.alert.AlertService;
 import com.dwacademy.safetysystem.detection_event.controller.SseController;
 import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
 import com.dwacademy.safetysystem.detection_event.dto.DetectionRequestDto;
+import com.dwacademy.safetysystem.detection_event.dto.EventResponseDto;
+import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
 import com.dwacademy.safetysystem.detection_event.repository.DetectionEventRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -16,72 +19,93 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class DetectionService {
 
     private final DetectionEventRepository repository;
+    private final AlertService alertService; // 주입된 서비스 활용
 
-    // 1. 판단 기준 상수 설정
+    // 판단 기준 상수
     private static final int CROWD_WARNING_THRESHOLD = 5;
     private static final int CROWD_CRITICAL_THRESHOLD = 20;
 
-    /**
-     * 실시간 탐지 이벤트를 처리하고 DB 저장 및 SSE 알림을 전송합니다.
-     */
     @Transactional
     public void processEvent(DetectionRequestDto dto) {
-        int count = (dto.getDetectedCount() != null) ? dto.getDetectedCount() : 0;
+        // 1. 위험도 및 메시지 판단 로직 실행
+        Object[] analysis = analyzeEvent(dto);
+        EventLevel level = (EventLevel) analysis[0];
+        String message = (String) analysis[1];
 
-        // 1. 기본값은 NORMAL
-        EventLevel determinedLevel = EventLevel.NORMAL;
-        String detailMessage = String.format("카메라 %d번 정상 모니터링 중", dto.getCameraId());
-
-        // 2. 3단계 판단 로직
-        // [ALERT] - 가장 위험한 상황 (인파 밀집 또는 야간 감지)
-        int hour = LocalTime.now().getHour();
-        boolean isNight = (hour >= 22 || hour <= 5);
-
-        if (count >= CROWD_CRITICAL_THRESHOLD || (isNight && count > 0)) {
-            determinedLevel = EventLevel.ALERT;
-            detailMessage = isNight ? "🌙 [야간경계] 심야 구역 내 인원 감지!"
-                    : String.format("🚨 [위험] %d명 감지! 즉시 확인 요망.", count);
-        }
-        // [WARNING] - 주의 단계
-        else if (count >= CROWD_WARNING_THRESHOLD) {
-            determinedLevel = EventLevel.WARNING;
-            detailMessage = String.format("⚠️ [주의] %d명 감지. 혼잡도가 증가하고 있습니다.", count);
-        }
-
-        // [D] 엔티티 생성 및 저장 (변수명을 entity로 선언하여 하단 SSE와 맞춤)
-        DetectionEntity entity = dto.toEntity(detailMessage);
-        entity.setEventLevel(determinedLevel); // 최종 판단된 등급 세팅
-
+        // 2. 엔티티 생성 및 DB 저장 (detection_event 테이블)
+        DetectionEntity entity = dto.toEntity(message);
+        entity.setEventLevel(level);
         DetectionEntity saved = repository.save(entity);
 
-        // [E] 실시간 SSE 알림 전송 (가장 중요한 하이라이트!)
+        // 🚩 3. [팀원 코드 연동] 알림 로그 생성 (alert_log 테이블)
+        // 저장된 엔티티의 정보를 팀원이 만든 createAlert 메서드에 전달합니다.
+        alertService.createAlert(
+                saved.getId().longValue(),    // detectionEventId (Long 타입 변환)
+                saved.getEventType().name(),         // alertType
+                saved.getEventLevel().name(), // severity (위험 등급 문자열)
+                saved.getMessage()            // alertMessage
+        );
+
+        // 4. 생성된 데이터를 DTO로 변환하여 실시간 전송 (SSE)
+        EventResponseDto response = new EventResponseDto(saved);
+
         for (SseEmitter emitter : SseController.emitters) {
             try {
                 emitter.send(SseEmitter.event()
                         .name("newDetection")
-                        .data(saved)); // 저장된 최신 데이터를 실시간으로 전송
+                        .data(response));
             } catch (Exception e) {
-                SseController.emitters.remove(emitter); // 연결 끊긴 클라이언트 제거
+                SseController.emitters.remove(emitter);
             }
         }
     }
 
-    // 모든 이벤트 조회 (최신순)
+    /**
+     * 상황별 위험도와 메시지를 결정하는 내부 로직
+     */
+    private Object[] analyzeEvent(DetectionRequestDto dto) {
+        int count = (dto.getDetectedCount() != null) ? dto.getDetectedCount() : 0;
+        int hour = LocalTime.now().getHour();
+        boolean isNight = (hour >= 22 || hour <= 5);
+
+        EventLevel level = EventLevel.NORMAL;
+        String message = "실시간 정상 모니터링 중입니다.";
+
+        if ("INTRUSION".equals(dto.getEventType())) {
+            level = EventLevel.ALERT;
+            message = "🚨 [긴급] 허가되지 않은 구역에 침입자가 감지되었습니다!";
+        } else if (count >= CROWD_CRITICAL_THRESHOLD || (isNight && count > 0)) {
+            level = EventLevel.ALERT;
+            message = isNight ? "🌙 [야간경계] 심야 구역 내 미확인 인원 감지!"
+                    : String.format("🚨 [위험] 현재 %d명 감지! 밀집도가 매우 높습니다.", count);
+        } else if (count >= CROWD_WARNING_THRESHOLD) {
+            level = EventLevel.WARNING;
+            message = String.format("⚠️ [주의] 인원이 %d명으로 증가했습니다. 모니터링을 강화하세요.", count);
+        }
+
+        return new Object[]{level, message};
+    }
+
+    // --- 조회 메서드 ---
     public List<DetectionEntity> getAllEvents() {
         return repository.findAllByOrderByIdDesc();
     }
 
-    // 특정 등급별로 최신순 조회
+    public List<EventResponseDto> getAllEventsForFront() {
+        return repository.findAllByOrderByIdDesc().stream()
+                .map(EventResponseDto::new)
+                .toList();
+    }
+
     public List<DetectionEntity> getEventsByLevel(EventLevel level) {
         return repository.findByEventLevelOrderByIdDesc(level);
     }
 
-    // 특정 카메라별 이벤트 목록을 최신순으로 조회
     public List<DetectionEntity> getEventsByCamera(Integer cameraId) {
-        // 🚩 레포지토리에 이 메서드가 있어야 합니다.
         return repository.findByCameraIdOrderByIdDesc(cameraId);
     }
 }

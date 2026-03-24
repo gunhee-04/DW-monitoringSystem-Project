@@ -11,32 +11,49 @@ import java.time.format.DateTimeFormatter;
 public class EventResponseDto {
     private Integer id;
     private Integer cameraId;
-    private String eventType;  // JSON으로 나갈 때는 문자열로 출력됨
-    private String eventLevel; // JSON으로 나갈 때는 문자열로 출력됨
-    private String eventTime;
-    private Integer detectedCount;
-    private Integer intrusionNow;
-    private String message;    // 메시지 필드 추가
+
+    // 🚩 프론트엔드 JS 변수명과 100% 일치시킴
+    private Integer people_count;
+    private String created_at;
+    private boolean intrusion_now;
+
+    private String eventLevel;
+    private String message;
+
+    // 🚩 추가: 위험도별 색상 필드
+    private String level_color;
 
     public EventResponseDto(DetectionEntity entity) {
         this.id = entity.getId();
         this.cameraId = entity.getCameraId();
+        this.message = entity.getMessage();
+        this.eventLevel = (entity.getEventLevel() != null) ? entity.getEventLevel().name() : "NORMAL";
 
-        // ✅ 수정 포인트: Enum 객체 뒤에 .name()을 붙여서 String으로 변환
-        // 만약 entity에서 타입을 Enum으로 바꿨다면 .name()이 필요합니다.
-        this.eventType = (entity.getEventType() != null) ? entity.getEventType().name() : null;
-        this.eventLevel = (entity.getEventLevel() != null) ? entity.getEventLevel().name() : null;
+        // 1. people_count 매칭
+        this.people_count = (entity.getDetectedCount() != null) ? entity.getDetectedCount() : 0;
 
-        this.detectedCount = entity.getDetectedCount();
-        this.intrusionNow = entity.getIntrusionNow();
-        this.message = entity.getMessage(); // 엔티티에 추가한 메시지도 함께 전달
+        // 2. intrusion_now 판단
+        this.intrusion_now = true;
 
-        // ✅ 시간 변환 로직 (기존 유지)
+        // 3. 🚩 추가: 위험도별 색상 할당 (초록, 주황, 빨강)
+        if (entity.getEventLevel() != null) {
+            switch (entity.getEventLevel()) {
+                case ALERT -> this.level_color = "#FF4D4F";   // 빨강
+                case WARNING -> this.level_color = "#FAAD14"; // 주황
+                default -> this.level_color = "#52C41A";      // 초록 (NORMAL 등)
+            }
+        } else {
+            this.level_color = "#52C41A";
+        }
+
+        // 4. created_at 시간 포맷
         if (entity.getEventTime() != null) {
-            this.eventTime = LocalDateTime.ofInstant(
+            this.created_at = LocalDateTime.ofInstant(
                     Instant.ofEpochSecond(entity.getEventTime()),
                     ZoneId.systemDefault()
             ).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } else {
+            this.created_at = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         }
     }
 }
