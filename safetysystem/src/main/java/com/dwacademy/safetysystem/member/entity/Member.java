@@ -38,7 +38,15 @@ public class Member {
 
     private String phone; // 연락처
 
+    @Column(name = "postcode")
+    private String postcode;  // 우편 번호
+
     private String address; // 주소
+
+    @Column(name = "detail_address")
+    private String detailAddress;  // 상세 주소
+
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

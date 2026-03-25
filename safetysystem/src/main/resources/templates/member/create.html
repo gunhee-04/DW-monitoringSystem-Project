@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <title>회원 등록</title>
 
-    <div th:replace="fragments/header :: header('회원 등록')"></div>
-
     <link rel="stylesheet" th:href="@{/css/common.css}">
-
+    <link rel="stylesheet" th:href="@{/css/member.css}">
     <script th:src="@{/js/theme.js}"></script>
 
+    <!-- 다음 우편번호 API -->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 </head>
 <body>
+
+    <div th:replace="fragments/header :: header('회원 등록')"></div>
 
     <div class="signup-page">
         <div class="signup-wrap">
@@ -43,9 +45,27 @@
                         <input type="text" name="phone" class="signup-input" required>
                     </div>
 
+                    <!-- 우편번호 -->
                     <div class="signup-field">
-                        <label class="signup-label">주소</label>
-                        <input type="text" name="address" class="signup-input" required>
+                        <label class="signup-label">우편번호</label>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="postcode" name="postcode" class="signup-input" readonly required>
+                            <button type="button" class="signup-list-btn" onclick="execDaumPostcode()">
+                                주소 검색
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 기본주소 -->
+                    <div class="signup-field">
+                        <label class="signup-label">기본주소</label>
+                        <input type="text" id="address" name="address" class="signup-input" readonly required>
+                    </div>
+
+                    <!-- 상세주소 -->
+                    <div class="signup-field">
+                        <label class="signup-label">상세주소</label>
+                        <input type="text" id="detailAddress" name="detailAddress" class="signup-input" placeholder="상세주소를 입력하세요">
                     </div>
 
                     <div class="signup-btn-area">
@@ -61,6 +81,44 @@
 
         </div>
     </div>
+
+    <script>
+        function execDaumPostcode() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    let addr = "";
+                    let extraAddr = "";
+
+                    // 도로명 주소 우선
+                    if (data.userSelectedType === 'R') {
+                        addr = data.roadAddress;
+                    } else {
+                        addr = data.jibunAddress;
+                    }
+
+                    // 참고항목 조합 (도로명 주소일 때)
+                    if (data.userSelectedType === 'R') {
+                        if (data.bname !== '' && /[동|로|가]$/g.test(data.bname)) {
+                            extraAddr += data.bname;
+                        }
+                        if (data.buildingName !== '' && data.apartment === 'Y') {
+                            extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                        }
+                        if (extraAddr !== '') {
+                            extraAddr = ' (' + extraAddr + ')';
+                        }
+                    }
+
+                    // 값 넣기
+                    document.getElementById("postcode").value = data.zonecode;
+                    document.getElementById("address").value = addr + extraAddr;
+
+                    // 상세주소로 포커스
+                    document.getElementById("detailAddress").focus();
+                }
+            }).open();
+        }
+    </script>
 
 </body>
 </html>
