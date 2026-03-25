@@ -1127,3 +1127,585 @@ td {
 .logout-btn {
     font-family: inherit;
 }
+/* =========================
+   로그인 페이지
+========================= */
+.login-page {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    justify-content: center;
+    align-items: center;   /* 👈 중앙 정렬로 변경 */
+}
+
+.login-wrap {
+    width: 100%;
+    max-width: 430px;
+    text-align: center;
+}
+
+.login-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 26px;
+}
+
+.login-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 36px 24px 30px;
+    box-shadow: var(--shadow);
+}
+
+.login-input-group {
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--input-bg);
+}
+
+.login-input-group input {
+    width: 100%;
+    height: 56px;
+    border: none;
+    outline: none;
+    padding: 0 16px;
+    font-size: 16px;
+    background: var(--input-bg);
+    color: var(--text-main);
+}
+
+.login-input-group input::placeholder {
+    color: var(--text-muted);
+}
+
+.login-input-divider {
+    height: 1px;
+    background: var(--border-color);
+}
+
+.login-btn,
+.signup-btn {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.2s ease;
+}
+
+.login-btn {
+    border: none;
+    background: var(--primary);
+    color: #fff;
+}
+
+.login-btn:hover {
+    background: var(--primary-hover);
+}
+
+.signup-btn {
+    border: 1px solid var(--border-color);
+    background: var(--bg-soft);
+    color: var(--text-main);
+}
+
+.signup-btn:hover {
+    background: var(--bg-soft-2);
+}
+
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 28px 0 20px;
+    color: var(--text-sub);
+    font-size: 14px;
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.login-links {
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.login-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.login-links a:hover {
+    color: var(--text-main);
+    text-decoration: underline;
+}
+
+.login-links span {
+    margin: 0 10px;
+    color: var(--border-color);
+}
+
+.login-error {
+    margin-top: 18px;
+    color: #ff4d4f;
+    font-size: 14px;
+}
+
+.login-logout {
+    margin-top: 18px;
+    color: #4da3ff;
+    font-size: 14px;
+}
+
+/* =========================
+   회원등록 페이지
+========================= */
+
+.signup-page {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-main);
+}
+
+.signup-wrap {
+    width: 100%;
+    max-width: 620px;
+    transform: translateY(-20px);
+}
+
+.signup-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+.signup-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px 26px;
+    box-shadow: var(--shadow);
+}
+
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.signup-field {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.signup-label {
+    width: 110px;              /* 라벨 폭 넓힘 */
+    text-align: left;          /* 시작 위치 통일 */
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-sub);
+    flex-shrink: 0;
+}
+
+.signup-input {
+    flex: 1;
+    height: 46px;              /* 입력칸 높이 키움 */
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0 14px;
+    font-size: 15px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.signup-input::placeholder {
+    color: var(--text-muted);
+}
+
+.signup-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.signup-btn-area {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+    padding-left: 128px; /* 라벨폭 + gap 맞춰 버튼 시작선 정리 */
+}
+
+.signup-submit-btn,
+.signup-list-btn {
+    min-width: 90px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.signup-submit-btn {
+    border: none;
+    background: var(--primary);
+    color: #fff;
+}
+
+.signup-submit-btn:hover {
+    background: var(--primary-hover);
+}
+
+.signup-list-btn {
+    border: 1px solid var(--border-color);
+    background: var(--bg-soft);
+    color: var(--text-main);
+}
+
+.signup-list-btn:hover {
+    background: var(--bg-soft-2);
+}
+
+.signup-error {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 77, 79, 0.12);
+    color: #ff4d4f;
+    font-size: 13px;
+    border: 1px solid rgba(255, 77, 79, 0.25);
+}
+
+/* =========================
+   회원목록 페이지
+========================= */
+
+.member-list-page {
+    min-height: calc(100vh - 64px);
+    background: var(--bg-main);
+    padding: 42px 24px 70px;
+}
+
+.member-list-wrap {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.member-list-title {
+    text-align: center;
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 26px;
+}
+
+.member-list-top {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 26px;
+}
+
+.member-create-btn {
+    min-width: 120px;
+    height: 44px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.member-create-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.member-section {
+    margin-bottom: 42px;
+}
+
+.member-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 14px;
+}
+
+/* =========================
+   회원 목록 테이블
+========================= */
+
+.member-table-box {
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    background: var(--bg-panel);
+    box-shadow: var(--shadow);
+}
+
+.member-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.member-table thead tr {
+    background: var(--bg-soft-2);
+}
+
+.member-table thead th {
+    color: #fff;
+    padding: 14px 8px;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.member-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+    color: var(--text-sub);
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.member-table tbody tr {
+    background: transparent;
+}
+
+.member-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.member-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.member-empty {
+    padding: 24px 12px !important;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.member-manage-col {
+    width: 150px;
+}
+
+.member-reason-col {
+    width: 120px;
+}
+
+/* =========================
+   버튼
+========================= */
+
+.member-action-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.member-action-btn {
+    min-width: 54px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.approve-btn {
+    border: none;
+    background: var(--primary);
+    color: #fff;
+}
+
+.approve-btn:hover {
+    background: var(--primary-hover);
+}
+
+.reject-btn,
+.withdraw-btn {
+    border: 1px solid rgba(255, 77, 79, 0.35);
+    background: rgba(255, 77, 79, 0.12);
+    color: #ff6b6b;
+}
+
+.reject-btn:hover,
+.withdraw-btn:hover {
+    background: rgba(255, 77, 79, 0.18);
+}
+
+.edit-btn,
+.detail-btn {
+    border: 1px solid var(--border-color);
+    background: var(--bg-soft);
+    color: var(--text-main);
+}
+
+.edit-btn:hover,
+.detail-btn:hover {
+    background: var(--bg-soft-2);
+}
+
+/* =========================
+   반려사유 모달
+========================= */
+
+.custom-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.45);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.custom-modal-content {
+    width: 100%;
+    max-width: 460px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.custom-modal-close {
+    border: none;
+    background: transparent;
+    color: var(--text-sub);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.custom-modal-body {
+    padding: 20px 18px;
+    font-size: 14px;
+    color: var(--text-sub);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* =========================
+   헤더 사용자 드롭다운 / 로그인 버튼
+========================= */
+
+.user-dropdown {
+    position: relative;
+}
+
+.user-box,
+.login-link-btn {
+    min-width: 110px;
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-panel);
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+.user-box:hover,
+.login-link-btn:hover {
+    background: var(--bg-soft);
+}
+
+.user-menu {
+    display: none;
+    position: absolute;
+    top: 48px;
+    right: 0;
+    min-width: 150px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    z-index: 999;
+}
+
+.user-menu.show {
+    display: block;
+}
+
+.user-menu-item {
+    display: block;
+    width: 100%;
+    padding: 12px 14px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    color: var(--text-main);
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.user-menu-item:hover {
+    background: var(--bg-soft-2);
+}
+
+.logout-form {
+    margin: 0;
+}
+
+.logout-btn {
+    font-family: inherit;
+}
