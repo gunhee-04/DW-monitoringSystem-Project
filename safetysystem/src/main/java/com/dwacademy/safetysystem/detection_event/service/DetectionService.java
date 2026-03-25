@@ -23,50 +23,34 @@ import java.util.List;
 public class DetectionService {
 
     private final DetectionEventRepository repository;
-    private final AlertService alertService; // 주입된 서비스 활용
+    private final AlertService alertService;
 
-    // 판단 기준 상수
     private static final int CROWD_WARNING_THRESHOLD = 5;
     private static final int CROWD_CRITICAL_THRESHOLD = 20;
 
     @Transactional
     public void processEvent(DetectionRequestDto dto) {
-        // 1. 위험도 및 메시지 판단 로직 실행
+        // 1. 자바에서 직접 위험도 분석
         Object[] analysis = analyzeEvent(dto);
         EventLevel level = (EventLevel) analysis[0];
         String message = (String) analysis[1];
 
-        // 2. 엔티티 생성 및 DB 저장 (detection_event 테이블)
-        DetectionEntity entity = dto.toEntity(message);
-        entity.setEventLevel(level);
+        // 2. 분석된 결과로 엔티티 생성 및 저장
+        DetectionEntity entity = dto.toEntity(message, level);
         DetectionEntity saved = repository.save(entity);
 
-        // 🚩 3. [팀원 코드 연동] 알림 로그 생성 (alert_log 테이블)
-        // 저장된 엔티티의 정보를 팀원이 만든 createAlert 메서드에 전달합니다.
+        // 3. 팀원 알림 로그 연동
         alertService.createAlert(
-                saved.getId().longValue(),    // detectionEventId (Long 타입 변환)
-                saved.getEventType().name(),         // alertType
-                saved.getEventLevel().name(), // severity (위험 등급 문자열)
-                saved.getMessage()            // alertMessage
+                saved.getId().longValue(),
+                saved.getEventType().name(),
+                saved.getEventLevel().name(),
+                saved.getMessage()
         );
 
-        // 4. 생성된 데이터를 DTO로 변환하여 실시간 전송 (SSE)
-        EventResponseDto response = new EventResponseDto(saved);
-
-        for (SseEmitter emitter : SseController.emitters) {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("newDetection")
-                        .data(response));
-            } catch (Exception e) {
-                SseController.emitters.remove(emitter);
-            }
-        }
+        // 4. SSE 실시간 브로드캐스트
+        broadcast(saved);
     }
 
-    /**
-     * 상황별 위험도와 메시지를 결정하는 내부 로직
-     */
     private Object[] analyzeEvent(DetectionRequestDto dto) {
         int count = (dto.getDetectedCount() != null) ? dto.getDetectedCount() : 0;
         int hour = LocalTime.now().getHour();
@@ -77,35 +61,58 @@ public class DetectionService {
 
         if ("INTRUSION".equals(dto.getEventType())) {
             level = EventLevel.ALERT;
-            message = "🚨 [긴급] 허가되지 않은 구역에 침입자가 감지되었습니다!";
+            message = "🚨 [긴급] 구역 내 침입자 감지!";
         } else if (count >= CROWD_CRITICAL_THRESHOLD || (isNight && count > 0)) {
             level = EventLevel.ALERT;
-            message = isNight ? "🌙 [야간경계] 심야 구역 내 미확인 인원 감지!"
-                    : String.format("🚨 [위험] 현재 %d명 감지! 밀집도가 매우 높습니다.", count);
+            message = isNight ? "🌙 [야간경계] 미확인 인원 감지!" : String.format("🚨 [위험] %d명 감지!", count);
         } else if (count >= CROWD_WARNING_THRESHOLD) {
             level = EventLevel.WARNING;
-            message = String.format("⚠️ [주의] 인원이 %d명으로 증가했습니다. 모니터링을 강화하세요.", count);
+            message = String.format("⚠️ [주의] 인원 %d명 감지!", count);
         }
 
         return new Object[]{level, message};
     }
 
-    // --- 조회 메서드 ---
+    private void broadcast(DetectionEntity saved) {
+        EventResponseDto response = new EventResponseDto(saved);
+        SseController.emitters.forEach(emitter -> {
+            try {
+                emitter.send(SseEmitter.event().name("newDetection").data(response));
+            } catch (Exception e) {
+                SseController.emitters.remove(emitter);
+            }
+        });
+    }
+
+    // --- 조회 메서드 (MonitoringViewController에서 사용) ---
+
+    /**
+     * 전체 이벤트 엔티티 조회
+     */
     public List<DetectionEntity> getAllEvents() {
         return repository.findAllByOrderByIdDesc();
     }
 
-    public List<EventResponseDto> getAllEventsForFront() {
-        return repository.findAllByOrderByIdDesc().stream()
-                .map(EventResponseDto::new)
-                .toList();
-    }
-
+    /**
+     * 위험도 레벨별 엔티티 조회
+     */
     public List<DetectionEntity> getEventsByLevel(EventLevel level) {
         return repository.findByEventLevelOrderByIdDesc(level);
     }
 
+    /**
+     * 카메라별 엔티티 조회
+     */
     public List<DetectionEntity> getEventsByCamera(Integer cameraId) {
         return repository.findByCameraIdOrderByIdDesc(cameraId);
+    }
+
+    /**
+     * 대시보드 API용 (EventResponseDto 반환)
+     */
+    public List<EventResponseDto> getAllEventsForFront() {
+        return repository.findAllByOrderByIdDesc().stream()
+                .map(EventResponseDto::new)
+                .toList();
     }
 }
