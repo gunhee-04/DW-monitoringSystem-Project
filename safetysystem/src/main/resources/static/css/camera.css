@@ -199,15 +199,19 @@ body {
     box-shadow: 0 10px 22px rgba(47, 99, 255, 0.12);
 }
 
-.btn-primary {
-    background: var(--primary);
-    border-color: var(--primary);
+a.btn.btn-primary,
+button.btn.btn-primary,
+input.btn.btn-primary {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
     color: #fff !important;
 }
 
-.btn-primary:hover {
-    background: var(--primary-hover);
-    border-color: var(--primary-hover);
+a.btn.btn-primary:hover,
+button.btn.btn-primary:hover,
+input.btn.btn-primary:hover {
+    background: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
 }
 
 .btn-secondary {
