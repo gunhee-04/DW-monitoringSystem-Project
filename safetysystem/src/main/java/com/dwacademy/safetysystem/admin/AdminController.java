@@ -36,7 +36,10 @@ public class AdminController {
     @GetMapping("/camera/detail/{id}")
     public String cameraDetail(@PathVariable Long id, Model model) {
         Camera camera = cameraService.findById(id);
+
         model.addAttribute("dto", cameraService.toDto(camera));
+
+
         return "camera/detail";
     }
 

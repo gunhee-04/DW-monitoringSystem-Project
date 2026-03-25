@@ -2,36 +2,79 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>위험구역 상세보기</title>
+    <title>카메라 상세</title>
+
+    <!-- 공통 CSS -->
     <link rel="stylesheet" th:href="@{/css/common.css}">
+    <!-- 커스텀 CSS -->
     <link rel="stylesheet" th:href="@{/css/camera.css}">
+
     <script th:src="@{/js/theme.js}"></script>
 </head>
+
+<div th:replace="fragments/header :: header('카메라 상세')"></div>
+
 <body>
-<div th:replace="~{fragments/header :: header('위험구역 상세보기')}"></div>
 
-<div class="page-wrap narrow">
-    <h2 class="page-title">위험구역 상세보기</h2>
+<div class="page-container">
 
-    <div class="detail-card">
-        <table class="detail-table">
-            <tr><th>구역 ID</th><td th:text="${dto.zoneId}"></td></tr>
-            <tr><th>카메라 ID</th><td th:text="${dto.cameraId}"></td></tr>
-            <tr><th>구역 이름</th><td th:text="${dto.zoneName}"></td></tr>
-            <tr><th>구역 타입</th><td th:text="${dto.zoneType}"></td></tr>
-            <tr><th>x1</th><td th:text="${dto.x1}"></td></tr>
-            <tr><th>y1</th><td th:text="${dto.y1}"></td></tr>
-            <tr><th>x2</th><td th:text="${dto.x2}"></td></tr>
-            <tr><th>y2</th><td th:text="${dto.y2}"></td></tr>
-            <tr><th>침입 기준 시간</th><td th:text="${dto.intrusionTimeSec} + '초'"></td></tr>
-            <tr><th>활성 여부</th><td th:text="${dto.isActive ? '활성' : '비활성'}"></td></tr>
-        </table>
+    <h2 class="page-title">카메라 상세</h2>
+
+    <div class="form-card">
+
+        <div class="form-row">
+            <label>카메라 코드</label>
+            <input type="text" th:value="${dto.cameraCode}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>카메라 이름</label>
+            <input type="text" th:value="${dto.cameraName}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>카메라 타입</label>
+            <input type="text" th:value="${dto.cameraType}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>IP 주소</label>
+            <input type="text" th:value="${dto.ipAddress}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>스트림 URL</label>
+            <input type="text" th:value="${dto.streamUrl}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>위치 이름</label>
+            <input type="text" th:value="${dto.locationName}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>위도</label>
+            <input type="text" th:value="${dto.latitude}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>경도</label>
+            <input type="text" th:value="${dto.longitude}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>상태</label>
+            <input type="text" th:value="${dto.status}" readonly>
+        </div>
+
+        <div class="camera-detail-actions">
+            <a th:href="@{/admin/camera/{id}/update(id=${dto.cameraId})}" class="btn btn-primary">수정</a>
+            <a th:href="@{/admin/camera/list}" class="btn btn-secondary">목록</a>
+        </div>
+
     </div>
 
-    <div class="detail-actions">
-        <a class="btn" th:href="@{/admin/zone/{id}/update(id=${dto.zoneId})}">수정</a>
-        <a class="btn btn-secondary" th:href="@{/admin/zone/{cameraId}(cameraId=${dto.cameraId})}">목록</a>
-    </div>
 </div>
+
 </body>
 </html>
