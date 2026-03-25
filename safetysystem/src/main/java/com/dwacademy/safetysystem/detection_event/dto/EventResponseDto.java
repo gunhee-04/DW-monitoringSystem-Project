@@ -1,59 +1,54 @@
 package com.dwacademy.safetysystem.detection_event.dto;
 
+import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
 import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
 import lombok.Getter;
+
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Getter
 public class EventResponseDto {
-    private Integer id;
-    private Integer cameraId;
-
-    // 🚩 프론트엔드 JS 변수명과 100% 일치시킴
-    private Integer people_count;
-    private String created_at;
-    private boolean intrusion_now;
-
-    private String eventLevel;
-    private String message;
-
-    // 🚩 추가: 위험도별 색상 필드
+    private Long id;
+    private String status_text;
     private String level_color;
+    private Integer people_count;
+    private String created_at; // 🚩 프론트의 log.created_at과 매칭
 
     public EventResponseDto(DetectionEntity entity) {
-        this.id = entity.getId();
-        this.cameraId = entity.getCameraId();
-        this.message = entity.getMessage();
-        this.eventLevel = (entity.getEventLevel() != null) ? entity.getEventLevel().name() : "NORMAL";
+        this.id = entity.getId().longValue();
+        this.status_text = entity.getMessage(); // "실시간 정상..." 또는 "🚨 [위험]..."
+        this.people_count = entity.getDetectedCount();
 
-        // 1. people_count 매칭
-        this.people_count = (entity.getDetectedCount() != null) ? entity.getDetectedCount() : 0;
-
-        // 2. intrusion_now 판단
-        this.intrusion_now = true;
-
-        // 3. 🚩 추가: 위험도별 색상 할당 (초록, 주황, 빨강)
-        if (entity.getEventLevel() != null) {
-            switch (entity.getEventLevel()) {
-                case ALERT -> this.level_color = "#FF4D4F";   // 빨강
-                case WARNING -> this.level_color = "#FAAD14"; // 주황
-                default -> this.level_color = "#52C41A";      // 초록 (NORMAL 등)
-            }
+        // 1. 위험도별 색상 설정 (프론트 log.level_color 대응)
+        if (entity.getEventLevel() == EventLevel.ALERT) {
+            this.level_color = "#ff4d4f"; // 빨강
+        } else if (entity.getEventLevel() == EventLevel.WARNING) {
+            this.level_color = "#faad14"; // 주황
         } else {
-            this.level_color = "#52C41A";
+            this.level_color = "#52c41a"; // 초록
         }
 
-        // 4. created_at 시간 포맷
-        if (entity.getEventTime() != null) {
-            this.created_at = LocalDateTime.ofInstant(
-                    Instant.ofEpochSecond(entity.getEventTime()),
-                    ZoneId.systemDefault()
-            ).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        // 2. [핵심] 시간 단위 자동 감별 및 한국 시간 변환
+        if (entity.getEventTime() != null && entity.getEventTime() > 0) {
+            long timeVal = entity.getEventTime();
+            Instant instant;
+
+            // 값이 10^12보다 크면 밀리초(13자리), 작으면 초(10자리)로 판단
+            if (timeVal > 1_000_000_000_000L) {
+                instant = Instant.ofEpochMilli(timeVal);
+            } else {
+                instant = Instant.ofEpochSecond(timeVal);
+            }
+
+            // 한국 시간(Asia/Seoul)으로 포맷팅
+            this.created_at = instant.atZone(ZoneId.of("Asia/Seoul"))
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         } else {
-            this.created_at = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            // 시간 데이터가 없으면 현재 시간 출력
+            this.created_at = java.time.LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         }
     }
 }

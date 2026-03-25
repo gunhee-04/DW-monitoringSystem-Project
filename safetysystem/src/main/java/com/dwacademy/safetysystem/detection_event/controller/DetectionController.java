@@ -4,43 +4,35 @@ import com.dwacademy.safetysystem.detection_event.dto.DetectionRequestDto;
 import com.dwacademy.safetysystem.detection_event.dto.EventResponseDto;
 import com.dwacademy.safetysystem.detection_event.service.DetectionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-public class DetectionController { // 🚩 @RequestMapping("/api/events")를 제거했습니다.
+public class DetectionController {
 
     private final DetectionService detectionService;
 
-    /**
-     * 1. 데이터 수신 (YOLO AI 서버용)
-     * 이 주소는 외부에서 던지는 주소이므로 그대로 둡니다.
-     */
     @PostMapping("/api/events")
-    public ResponseEntity<String> createEvent(@RequestBody DetectionRequestDto dto) {
+    public ResponseEntity<String> createEvent(@RequestBody(required = false) DetectionRequestDto dto) {
+        if (dto == null) return ResponseEntity.badRequest().body("Payload is missing");
         detectionService.processEvent(dto);
-        return ResponseEntity.ok("Event processed and broadcasted successfully");
+        return ResponseEntity.ok("Success");
     }
 
-    /**
-     * 2. 모든 이벤트 목록 조회 (대시보드 home.html용)
-     * 🚩 프론트엔드가 fetch("/get_logs")를 호출하므로 주소를 똑같이 맞춥니다.
-     */
     @GetMapping("/get_logs")
     public ResponseEntity<List<EventResponseDto>> getAllEvents() {
-        // 방금 만드신 필드명(people_count 등)이 담긴 DTO 리스트를 반환합니다.
         return ResponseEntity.ok(detectionService.getAllEventsForFront());
     }
 
-    /**
-     * 3. 특정 카메라별 조회 (필요한 경우 사용)
-     */
     @GetMapping("/api/events/camera/{cameraId}")
-    public ResponseEntity<List<EventResponseDto>> getEventsByCamera(@PathVariable Integer cameraId) {
+    public ResponseEntity<List<EventResponseDto>> getEventsByCamera(@PathVariable("cameraId") Integer cameraId) {
+        // 🚩 빨간 줄 해결: Entity 리스트를 DTO 리스트로 변환
         List<EventResponseDto> dtoList = detectionService.getEventsByCamera(cameraId)
                 .stream()
                 .map(EventResponseDto::new)
