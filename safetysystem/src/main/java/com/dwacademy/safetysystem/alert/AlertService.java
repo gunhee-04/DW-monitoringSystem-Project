@@ -25,7 +25,11 @@ public class AlertService {
     @Transactional
     public void markAsRead(long id){
         AlertLog alert = alertRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("해당 알림 없음: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("해당 알림 없음: " + id));
+
+        if (Boolean.TRUE.equals(alert.getIsRead())) {
+            return;
+        }
 
         alert.setIsRead(true);
         alert.setReadAt(LocalDateTime.now());
@@ -50,15 +54,15 @@ public class AlertService {
     public void createAlert(Long detectionEventId, String alertType, String severityStr, String message) {
 
         // 1. 문자열 -> Enum 변환
-        if (severityStr == null || severityStr.isEmpty()) {
-            throw new RuntimeException("severity 값은 필수입니다.");
+        if (severityStr == null || severityStr.isBlank()) {
+            throw new IllegalArgumentException("severity 값은 필수입니다.");
         }
 
         EventLevel severity;
         try {
-            severity = EventLevel.valueOf(severityStr);
+            severity = EventLevel.valueOf(severityStr.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("잘못된 severity 값: " + severityStr);
+            throw new IllegalArgumentException("잘못된 severity 값: " + severityStr);
         }
 
         // 2. 메시지 기본 생성 (전달받은 메시지가 null 또는 빈 문자열이면)
@@ -74,7 +78,7 @@ public class AlertService {
         AlertLog alert = new AlertLog();
         alert.setDetectionEventId(detectionEventId);
         alert.setAlertType(alertType);
-        alert.setSeverity(severityStr);
+        alert.setSeverity(severity);
         alert.setAlertMessage(message);
         alert.setIsRead(false);
 
