@@ -17,7 +17,9 @@ public class MemberDto {
     private String password; // 암호화된 비밀번호
     private String name; // 사용자 이름
     private String phone; // 연락처
+    private String postcode; // 우편 번호
     private String address; // 주소
+    private String detailAddress; // 상세주소
     private RoleType role; // USER, ADMIN
     private String status; // PENDING, ACTIVE 등
     private LocalDateTime createdAt; // 가입일

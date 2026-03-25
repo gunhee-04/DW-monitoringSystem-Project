@@ -54,7 +54,9 @@ public class MemberService {
             member.setEmail(memberDto.getEmail());
             member.setPassword(passwordEncoder.encode(memberDto.getPassword()));
             member.setPhone(memberDto.getPhone());
+            member.setPostcode(memberDto.getPostcode());
             member.setAddress(memberDto.getAddress());
+            member.setDetailAddress(memberDto.getDetailAddress());
             member.setRole(RoleType.USER);
             member.setStatus("PENDING");
             member.setCreatedAt(LocalDateTime.now());
@@ -83,7 +85,9 @@ public class MemberService {
             member.setName(memberDto.getName());
             member.setEmail(memberDto.getEmail());
             member.setPhone(memberDto.getPhone());
+            member.setPostcode(memberDto.getPostcode());
             member.setAddress(memberDto.getAddress());
+            member.setDetailAddress(memberDto.getDetailAddress());
 
             if (memberDto.getRole() != null) {
                 member.setRole(memberDto.getRole());
