@@ -39,17 +39,45 @@ public class AlertService {
     }
 
     //이벤트 알림 생성
+    /**
+     * 이벤트 발생 시 알림 생성
+     * @param detectionEventId detection_event 테이블 ID
+     * @param alertType 이벤트 타입 (예: INTRUSION)
+     * @param severityStr 위험도 문자열 (예: "NORMAL", "WARNING", "ALERT")
+     * @param message 전달받은 메시지 (null이면 기본 메시지 생성)
+     */
+    @Transactional
     public void createAlert(Long detectionEventId, String alertType, String severityStr, String message) {
-        // 문자열 -> Enum 변환
-        EventLevel severity = EventLevel.valueOf(severityStr);
 
+        // 1. 문자열 -> Enum 변환
+        if (severityStr == null || severityStr.isEmpty()) {
+            throw new RuntimeException("severity 값은 필수입니다.");
+        }
+
+        EventLevel severity;
+        try {
+            severity = EventLevel.valueOf(severityStr);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("잘못된 severity 값: " + severityStr);
+        }
+
+        // 2. 메시지 기본 생성 (전달받은 메시지가 null 또는 빈 문자열이면)
+        if (message == null || message.isBlank()) {
+            message = switch (severity) {
+                case NORMAL -> "실시간 정상 모니터링 중입니다.";
+                case WARNING -> "⚠️ 주의: 위험 상태가 감지되었습니다.";
+                case ALERT -> "🚨 긴급: 위험 상태가 감지되었습니다!";
+            };
+        }
+
+        // 3. 알림 객체 생성 후 저장
         AlertLog alert = new AlertLog();
         alert.setDetectionEventId(detectionEventId);
         alert.setAlertType(alertType);
         alert.setSeverity(severityStr);
         alert.setAlertMessage(message);
+        alert.setIsRead(false);
 
         alertRepository.save(alert);
     }
-
 }
