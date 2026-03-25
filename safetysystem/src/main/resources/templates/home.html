@@ -956,12 +956,14 @@
                 }
 
                 updateAlertPanel(data);
-                box.innerHTML = "";
-
-                data.forEach(log => {
-                    const isDanger = !!log.intrusion_now;
-                    const statusClass = isDanger ? "log-danger" : "log-normal";
-                    const statusText = isDanger ? "[위험]" : "[정상]";
+                box.innerHTML += `
+                        <div class="log-item" style="border-left: 4px solid ${log.level_color}; margin-bottom: 5px; padding-left: 8px;">
+                            <span style="color: ${log.level_color}; font-weight: bold;">
+                                ${log.status_text}
+                            </span>
+                            인원: ${log.people_count}명 |
+                            시간: ${log.created_at}
+                        </div>
 
                     box.innerHTML += `
                         <div class="log-item">
@@ -1304,29 +1306,125 @@
         }
     }
 
-    function updateAlertPanel(data) {
-        const badge = document.getElementById("alert-badge");
-        const list = document.getElementById("alert-list");
+    let lastDismissedTime = "";
 
-        if (!badge || !list) return;
 
-        const importantLogs = data.filter(log => log.intrusion_now);
 
-        badge.innerText = importantLogs.length;
+function updateAlertPanel(data) {
 
-        if (importantLogs.length === 0) {
-            list.innerHTML = `<div class="alert-empty">중요 로그가 없습니다.</div>`;
-            return;
-        }
+    const badge = document.getElementById("alert-badge");
 
-        list.innerHTML = importantLogs.slice().map(log => `
-            <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px;">
+    const list = document.getElementById("alert-list");
+
+    if (!badge || !list) return;
+
+
+
+    // 1. 종 모양 리스트는 모든 데이터를 보여줌 (기존 유지)
+
+    badge.innerText = data.length;
+
+    list.innerHTML = data.slice().map(log => `
+
+        <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px;">
+
             <strong style="color: ${log.level_color};">${log.status_text}</strong><br>
-                인원: ${log.people_count}명<br>
-                시간: ${log.created_at}
-            </div>
-        `).join("");
+
+            인원: ${log.people_count}명<br>
+
+            시간: ${log.created_at}
+
+        </div>
+
+    `).join("");
+
+
+
+    // 2. 팝업 조건 확인 (최소 수정)
+
+    const latestLog = data[0];
+
+
+
+    // 🚩 수정 포인트: status_text에 "위험"이 포함되어 있을 때만 팝업 실행
+
+    if (latestLog &&
+
+        latestLog.showAlertText === true &&
+
+        latestLog.status_text.includes("위험") && // ← 이 조건만 추가됨
+
+        latestLog.created_at !== lastDismissedTime) {
+
+
+
+        showDangerPopup(latestLog);
+
     }
+
+}
+
+
+
+// showDangerPopup 함수는 수정 없이 그대로 사용하시면 됩니다.
+
+function showDangerPopup(log) {
+
+    const oldPopup = document.getElementById("dynamic-danger-alert");
+
+    if (oldPopup) return;
+
+
+
+    const popup = document.createElement("div");
+
+    popup.id = "dynamic-danger-alert";
+
+
+
+    Object.assign(popup.style, {
+
+        position: "fixed", top: "50%", left: "50%",
+
+        transform: "translate(-50%, -50%)", zIndex: "10000",
+
+        width: "350px", padding: "25px",
+
+        backgroundColor: log.level_color, color: "white",
+
+        borderRadius: "15px", boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
+
+        textAlign: "center", fontWeight: "bold", border: "2px solid white"
+
+    });
+
+
+
+    popup.innerHTML = `
+
+        <div style="font-size: 24px; margin-bottom: 10px;">🚨 ${log.status_text} 🚨</div>
+
+        <div style="font-size: 18px;">현재 인원: ${log.people_count}명</div>
+
+        <div style="font-size: 14px; margin-top: 15px; opacity: 0.9;">${log.created_at}</div>
+
+        <button onclick="lastDismissedTime='${log.created_at}'; this.parentElement.remove();"
+
+                style="margin-top: 20px; padding: 8px 20px; border: none; cursor: pointer; background: white; color: ${log.level_color}; font-weight: bold;">
+
+            닫기
+
+        </button>
+
+    `;
+
+
+
+    document.body.appendChild(popup);
+
+    setTimeout(() => { if(document.getElementById("dynamic-danger-alert")) popup.remove(); }, 5000);
+
+}
 
 </script>
 
