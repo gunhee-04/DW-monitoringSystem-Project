@@ -74,7 +74,7 @@ public class AlertService {
         AlertLog alert = new AlertLog();
         alert.setDetectionEventId(detectionEventId);
         alert.setAlertType(alertType);
-        alert.setSeverity(severityStr);
+        alert.setSeverity(severity);
         alert.setAlertMessage(message);
         alert.setIsRead(false);
 
