@@ -24,9 +24,16 @@ public class AlertLog {
 
     private String alertMessage;
 
+    @Column(nullable = false)
     private Boolean isRead;
 
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     private LocalDateTime readAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }
