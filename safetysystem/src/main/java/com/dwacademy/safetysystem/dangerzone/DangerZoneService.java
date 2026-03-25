@@ -1,6 +1,5 @@
 package com.dwacademy.safetysystem.dangerzone;
 
-import com.dwacademy.safetysystem.admin.AdminConfigDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,7 +31,7 @@ public class DangerZoneService {
 
     // 등록
     @Transactional
-    public void save(AdminConfigDto dto){
+    public void save(DangerZoneDto dto){
         log.info("--- [DangerZoneService] save() ---");
         DangerZone zone = DangerZone.builder()
                 .cameraId(dto.getCameraId())
@@ -52,7 +51,7 @@ public class DangerZoneService {
 
     // 수정
     @Transactional
-    public void update(Long id, AdminConfigDto dto){
+    public void update(Long id, DangerZoneDto dto){
         log.info("--- [DangerZoneService] update() ---");
         DangerZone zone = zoneRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("수정할 위험구역을 찾을 수 없습니다."));
@@ -85,8 +84,8 @@ public class DangerZoneService {
     }
 
     // Entity → DTO
-    public AdminConfigDto toDto(DangerZone dangerZone){
-        return AdminConfigDto.builder()
+    public DangerZoneDto toDto(DangerZone dangerZone){
+        return DangerZoneDto.builder()
                 .zoneId(dangerZone.getId())
                 .cameraId(dangerZone.getCameraId())
                 .zoneName(dangerZone.getZoneName())

@@ -3,73 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <title>위험구역 수정</title>
-    <!--    CSS 연결    -->
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <!--    //JS 연결   -->
+    <link rel="stylesheet" th:href="@{/css/dangerzone.css}">
     <script th:src="@{/js/theme.js}"></script>
 </head>
-<div th:replace="fragments/header :: header('위험구역 수정')"></div>
 <body>
-<h2>위험구역 수정</h2>
+<div th:replace="~{fragments/header :: header('위험구역 수정')}"></div>
 
-<div class="roi-wrap">
-    <img class="roi-bg" th:src="${streamUrl}" alt="camera">
-    <canvas id="roiCanvas" width="800" height="450"></canvas>
+<div class="page-wrap narrow">
+    <h2 class="page-title">위험구역 수정</h2>
+
+    <div class="hint-box">
+        ROI 영역을 다시 드래그하면 좌표가 새로 반영됩니다.
+    </div>
+
+    <div class="roi-card">
+        <div class="roi-wrap">
+            <img class="roi-bg" th:src="${streamUrl}" alt="camera">
+            <canvas id="roiCanvas" width="800" height="450"></canvas>
+        </div>
+    </div>
+
+    <form class="form-card" th:action="@{/admin/zone/{id}/updateProc(id=${dto.zoneId})}" method="post" th:object="${dto}">
+        <input type="hidden" th:field="*{cameraId}">
+
+        <div class="global-error" th:if="${#fields.hasAnyErrors()}">
+            입력값을 다시 확인하세요.
+        </div>
+
+        <div class="form-row">
+            <label>구역 이름</label>
+            <div>
+                <input type="text" th:field="*{zoneName}">
+                <div class="error" th:if="${#fields.hasErrors('zoneName')}" th:errors="*{zoneName}"></div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label>구역 타입</label>
+            <div>
+                <select th:field="*{zoneType}">
+                    <option value="">선택하세요</option>
+                    <option value="DANGER">DANGER</option>
+                    <option value="CROWD">CROWD</option>
+                    <option value="WATCH">WATCH</option>
+                </select>
+                <div class="error" th:if="${#fields.hasErrors('zoneType')}" th:errors="*{zoneType}"></div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label>x1</label>
+            <div>
+                <input type="number" th:field="*{x1}" id="x1">
+                <div class="error" th:if="${#fields.hasErrors('x1')}" th:errors="*{x1}"></div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label>y1</label>
+            <div>
+                <input type="number" th:field="*{y1}" id="y1">
+                <div class="error" th:if="${#fields.hasErrors('y1')}" th:errors="*{y1}"></div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label>x2</label>
+            <div>
+                <input type="number" th:field="*{x2}" id="x2">
+                <div class="error" th:if="${#fields.hasErrors('x2')}" th:errors="*{x2}"></div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label>y2</label>
+            <div>
+                <input type="number" th:field="*{y2}" id="y2">
+                <div class="error" th:if="${#fields.hasErrors('y2')}" th:errors="*{y2}"></div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label>침입 기준 시간(초)</label>
+            <div>
+                <input type="number" th:field="*{intrusionTimeSec}">
+                <div class="error" th:if="${#fields.hasErrors('intrusionTimeSec')}" th:errors="*{intrusionTimeSec}"></div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label>활성 여부</label>
+            <div>
+                <select th:field="*{isActive}">
+                    <option value="">선택하세요</option>
+                    <option th:value="true">true</option>
+                    <option th:value="false">false</option>
+                </select>
+                <div class="error" th:if="${#fields.hasErrors('isActive')}" th:errors="*{isActive}"></div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">수정</button>
+            <a class="btn btn-secondary" th:href="@{/admin/zone/{cameraId}(cameraId=${dto.cameraId})}">목록</a>
+        </div>
+    </form>
 </div>
-
-<form th:action="@{/admin/zone/{id}/updateProc(id=${dto.zoneId})}" method="post" th:object="${dto}">
-    <input type="hidden" th:field="*{cameraId}">
-
-    <div class="form-row">
-        <label>구역 이름</label>
-        <input type="text" th:field="*{zoneName}" required>
-    </div>
-
-    <div class="form-row">
-        <label>구역 타입</label>
-        <select th:field="*{zoneType}">
-            <option value="DANGER">DANGER</option>
-            <option value="CROWD">CROWD</option>
-            <option value="WATCH">WATCH</option>
-        </select>
-    </div>
-
-    <div class="form-row">
-        <label>x1</label>
-        <input type="number" th:field="*{x1}" id="x1">
-    </div>
-
-    <div class="form-row">
-        <label>y1</label>
-        <input type="number" th:field="*{y1}" id="y1">
-    </div>
-
-    <div class="form-row">
-        <label>x2</label>
-        <input type="number" th:field="*{x2}" id="x2">
-    </div>
-
-    <div class="form-row">
-        <label>y2</label>
-        <input type="number" th:field="*{y2}" id="y2">
-    </div>
-
-    <div class="form-row">
-        <label>침입 기준 시간(초)</label>
-        <input type="number" th:field="*{intrusionTimeSec}">
-    </div>
-
-    <div class="form-row">
-        <label>활성 여부</label>
-        <select th:field="*{isActive}">
-            <option th:value="true">true</option>
-            <option th:value="false">false</option>
-        </select>
-    </div>
-
-    <button type="submit">수정</button>
-    <a th:href="@{/admin/zone/{cameraId}(cameraId=${dto.cameraId})}">목록</a>
-</form>
 
 <script>
     const canvas = document.getElementById("roiCanvas");
@@ -162,6 +202,5 @@
         }
     });
 </script>
-
 </body>
 </html>

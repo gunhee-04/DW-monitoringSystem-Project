@@ -2,34 +2,36 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>카메라 상세보기</title>
-    <!--    CSS 연결    -->
+    <title>위험구역 상세보기</title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <!--    //JS 연결   -->
+    <link rel="stylesheet" th:href="@{/css/camera.css}">
     <script th:src="@{/js/theme.js}"></script>
 </head>
-<div th:replace="fragments/header :: header('카메라 상세보기')"></div>
 <body>
-<h2>카메라 상세보기</h2>
+<div th:replace="~{fragments/header :: header('위험구역 상세보기')}"></div>
 
-<table>
-    <tr><th>ID</th><td th:text="${dto.cameraId}"></td></tr>
-    <tr><th>카메라 코드</th><td th:text="${dto.cameraCode}"></td></tr>
-    <tr><th>카메라 이름</th><td th:text="${dto.cameraName}"></td></tr>
-    <tr><th>카메라 타입</th><td th:text="${dto.cameraType}"></td></tr>
-    <tr><th>IP 주소</th><td th:text="${dto.ipAddress}"></td></tr>
-    <tr><th>스트림 URL</th><td th:text="${dto.streamUrl}"></td></tr>
-    <tr><th>위치 이름</th><td th:text="${dto.locationName}"></td></tr>
-    <tr><th>위도</th><td th:text="${dto.latitude}"></td></tr>
-    <tr><th>경도</th><td th:text="${dto.longitude}"></td></tr>
-    <tr><th>상태</th><td th:text="${dto.status}"></td></tr>
-</table>
+<div class="page-wrap narrow">
+    <h2 class="page-title">위험구역 상세보기</h2>
 
-<div style="margin-top: 20px;">
-    <a th:href="@{/admin/camera/{id}/update(id=${dto.cameraId})}">수정</a>
-    <a th:href="@{/admin/zone/{cameraId}(cameraId=${dto.cameraId})}">위험구역 리스트</a>
-    <a th:href="@{/admin/camera/list}">목록</a>
+    <div class="detail-card">
+        <table class="detail-table">
+            <tr><th>구역 ID</th><td th:text="${dto.zoneId}"></td></tr>
+            <tr><th>카메라 ID</th><td th:text="${dto.cameraId}"></td></tr>
+            <tr><th>구역 이름</th><td th:text="${dto.zoneName}"></td></tr>
+            <tr><th>구역 타입</th><td th:text="${dto.zoneType}"></td></tr>
+            <tr><th>x1</th><td th:text="${dto.x1}"></td></tr>
+            <tr><th>y1</th><td th:text="${dto.y1}"></td></tr>
+            <tr><th>x2</th><td th:text="${dto.x2}"></td></tr>
+            <tr><th>y2</th><td th:text="${dto.y2}"></td></tr>
+            <tr><th>침입 기준 시간</th><td th:text="${dto.intrusionTimeSec} + '초'"></td></tr>
+            <tr><th>활성 여부</th><td th:text="${dto.isActive ? '활성' : '비활성'}"></td></tr>
+        </table>
+    </div>
+
+    <div class="detail-actions">
+        <a class="btn" th:href="@{/admin/zone/{id}/update(id=${dto.zoneId})}">수정</a>
+        <a class="btn btn-secondary" th:href="@{/admin/zone/{cameraId}(cameraId=${dto.cameraId})}">목록</a>
+    </div>
 </div>
-
 </body>
 </html>

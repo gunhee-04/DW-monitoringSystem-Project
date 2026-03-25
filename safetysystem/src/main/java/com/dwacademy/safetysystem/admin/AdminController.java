@@ -1,8 +1,10 @@
 package com.dwacademy.safetysystem.admin;
 
 import com.dwacademy.safetysystem.camera.Camera;
+import com.dwacademy.safetysystem.camera.CameraDto;
 import com.dwacademy.safetysystem.camera.CameraService;
 import com.dwacademy.safetysystem.dangerzone.DangerZone;
+import com.dwacademy.safetysystem.dangerzone.DangerZoneDto;
 import com.dwacademy.safetysystem.dangerzone.DangerZoneService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,19 +42,27 @@ public class AdminController {
 
     @GetMapping("/camera/create")
     public String cameraCreate(Model model) {
-        model.addAttribute("dto", new AdminConfigDto());
+        model.addAttribute("dto", new CameraDto());
         return "camera/create";
     }
 
     @PostMapping("/camera/createProc")
-    public String cameraCreateProc(@Valid @ModelAttribute("dto") AdminConfigDto dto,
+    public String cameraCreateProc(@Valid @ModelAttribute("dto") CameraDto dto,
                                    BindingResult result) {
 
+        System.out.println("===== 카메라 등록 요청 들어옴 =====");
+        System.out.println("dto = " + dto);
+
         if (result.hasErrors()) {
+            System.out.println("===== 검증 오류 발생 =====");
+            System.out.println(result.getAllErrors());
             return "camera/create";
         }
 
+        System.out.println("===== 저장 시작 =====");
         cameraService.save(dto);
+        System.out.println("===== 저장 완료 =====");
+
         return "redirect:/admin/camera/list";
     }
 
@@ -65,7 +75,7 @@ public class AdminController {
 
     @PostMapping("/camera/{id}/updateProc")
     public String cameraUpdateProc(@PathVariable Long id,
-                                   @Valid @ModelAttribute("dto") AdminConfigDto dto,
+                                   @Valid @ModelAttribute("dto") CameraDto dto,
                                    BindingResult result) {
 
         if (result.hasErrors()) {
@@ -103,7 +113,7 @@ public class AdminController {
     @GetMapping("/zone/{cameraId}/create")
     public String zoneCreate(@PathVariable Long cameraId, Model model) {
 
-        AdminConfigDto dto = new AdminConfigDto();
+        DangerZoneDto dto = new DangerZoneDto();
         dto.setCameraId(cameraId);
 
         Camera camera = cameraService.findById(cameraId);
@@ -115,7 +125,7 @@ public class AdminController {
     }
 
     @PostMapping("/zone/createProc")
-    public String zoneCreateProc(@Valid @ModelAttribute("dto") AdminConfigDto dto,
+    public String zoneCreateProc(@Valid @ModelAttribute("dto") DangerZoneDto dto,
                                  BindingResult result,
                                  Model model) {
 
@@ -130,7 +140,7 @@ public class AdminController {
     }
 
     @GetMapping("/zone/{id}/update")
-    public String zoneUpdate(@PathVariable Long id, Model model){
+    public String zoneUpdate(@PathVariable Long id, Model model) {
 
         DangerZone zone = zoneService.findById(id);
         Camera camera = cameraService.findById(zone.getCameraId());
@@ -143,7 +153,7 @@ public class AdminController {
 
     @PostMapping("/zone/{id}/updateProc")
     public String zoneUpdateProc(@PathVariable Long id,
-                                 @Valid @ModelAttribute("dto") AdminConfigDto dto,
+                                 @Valid @ModelAttribute("dto") DangerZoneDto dto,
                                  BindingResult result,
                                  Model model) {
 
