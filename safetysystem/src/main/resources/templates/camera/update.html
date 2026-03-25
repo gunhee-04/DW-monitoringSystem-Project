@@ -3,72 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <title>카메라 수정</title>
-    <!--    CSS 연결    -->
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <!--    //JS 연결   -->
+    <link rel="stylesheet" th:href="@{/css/camera.css}">
     <script th:src="@{/js/theme.js}"></script>
 </head>
-<div th:replace="fragments/header :: header('카메라 수정')"></div>
 <body>
-<h2>카메라 수정</h2>
+<div th:replace="~{fragments/header :: header('카메라 수정')}"></div>
 
-<form th:action="@{/admin/camera/{id}/updateProc(id=${dto.cameraId})}" method="post" th:object="${dto}">
-    <div class="form-row">
-        <label>카메라 코드</label>
-        <input type="text" th:field="*{cameraCode}" required>
-    </div>
+<main class="camera-page camera-page--narrow">
+    <h2 class="camera-page__title">카메라 수정</h2>
 
-    <div class="form-row">
-        <label>카메라 이름</label>
-        <input type="text" th:field="*{cameraName}" required>
-    </div>
+    <section class="camera-form-card">
+        <form class="camera-form" th:action="@{/admin/camera/{id}/updateProc(id=${dto.cameraId})}" method="post" th:object="${dto}">
+            <div class="global-error" th:if="${#fields.hasAnyErrors()}">
+                입력값을 다시 확인하세요.
+            </div>
 
-    <div class="form-row">
-        <label>카메라 타입</label>
-        <select th:field="*{cameraType}">
-            <option value="WEBCAM">WEBCAM</option>
-            <option value="DRONE">DRONE</option>
-            <option value="CCTV">CCTV</option>
-        </select>
-    </div>
+            <div class="form-row">
+                <label>카메라 코드</label>
+                <div class="form-field">
+                    <input type="text" th:field="*{cameraCode}">
+                    <div class="error" th:if="${#fields.hasErrors('cameraCode')}" th:errors="*{cameraCode}"></div>
+                </div>
+            </div>
 
-    <div class="form-row">
-        <label>IP 주소</label>
-        <input type="text" th:field="*{ipAddress}">
-    </div>
+            <div class="form-row">
+                <label>카메라 이름</label>
+                <div class="form-field">
+                    <input type="text" th:field="*{cameraName}">
+                    <div class="error" th:if="${#fields.hasErrors('cameraName')}" th:errors="*{cameraName}"></div>
+                </div>
+            </div>
 
-    <div class="form-row">
-        <label>스트림 URL</label>
-        <input type="text" th:field="*{streamUrl}">
-    </div>
+            <div class="form-row">
+                <label>카메라 타입</label>
+                <div class="form-field">
+                    <select th:field="*{cameraType}">
+                        <option value="">선택하세요</option>
+                        <option value="WEBCAM">WEBCAM</option>
+                        <option value="DRONE">DRONE</option>
+                        <option value="CCTV">CCTV</option>
+                    </select>
+                    <div class="error" th:if="${#fields.hasErrors('cameraType')}" th:errors="*{cameraType}"></div>
+                </div>
+            </div>
 
-    <div class="form-row">
-        <label>위치 이름</label>
-        <input type="text" th:field="*{locationName}">
-    </div>
+            <div class="form-row">
+                <label>IP 주소</label>
+                <div class="form-field">
+                    <input type="text" th:field="*{ipAddress}">
+                    <div class="error" th:if="${#fields.hasErrors('ipAddress')}" th:errors="*{ipAddress}"></div>
+                </div>
+            </div>
 
-    <div class="form-row">
-        <label>위도</label>
-        <input type="number" step="any" th:field="*{latitude}">
-    </div>
+            <div class="form-row">
+                <label>스트림 URL</label>
+                <div class="form-field">
+                    <input type="text" th:field="*{streamUrl}">
+                    <div class="error" th:if="${#fields.hasErrors('streamUrl')}" th:errors="*{streamUrl}"></div>
+                </div>
+            </div>
 
-    <div class="form-row">
-        <label>경도</label>
-        <input type="number" step="any" th:field="*{longitude}">
-    </div>
+            <div class="form-row">
+                <label>위치 이름</label>
+                <div class="form-field">
+                    <input type="text" th:field="*{locationName}">
+                    <div class="error" th:if="${#fields.hasErrors('locationName')}" th:errors="*{locationName}"></div>
+                </div>
+            </div>
 
-    <div class="form-row">
-        <label>상태</label>
-        <select th:field="*{status}">
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
-            <option value="ERROR">ERROR</option>
-        </select>
-    </div>
+            <div class="form-row">
+                <label>위도</label>
+                <div class="form-field">
+                    <input type="number" step="any" th:field="*{latitude}">
+                    <div class="error" th:if="${#fields.hasErrors('latitude')}" th:errors="*{latitude}"></div>
+                </div>
+            </div>
 
-    <button type="submit">수정</button>
-    <a th:href="@{/admin/camera/list}">목록</a>
-</form>
+            <div class="form-row">
+                <label>경도</label>
+                <div class="form-field">
+                    <input type="number" step="any" th:field="*{longitude}">
+                    <div class="error" th:if="${#fields.hasErrors('longitude')}" th:errors="*{longitude}"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>상태</label>
+                <div class="form-field">
+                    <select th:field="*{status}">
+                        <option value="">선택하세요</option>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="INACTIVE">INACTIVE</option>
+                        <option value="ERROR">ERROR</option>
+                    </select>
+                    <div class="error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+                </div>
+            </div>
+
+            <div class="camera-form-actions">
+                <button type="submit" class="btn btn-primary">수정</button>
+                <a class="btn btn-secondary" th:href="@{/admin/camera/list}">목록</a>
+            </div>
+        </form>
+    </section>
+</main>
 
 </body>
 </html>

@@ -1,6 +1,5 @@
 package com.dwacademy.safetysystem.camera;
 
-import com.dwacademy.safetysystem.admin.AdminConfigDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,7 +31,7 @@ public class CameraService {
 
     // 등록
     @Transactional
-    public void save(AdminConfigDto dto){
+    public void save(CameraDto dto){
         log.info("--- [CameraService] save() ---");
         Camera camera = Camera.builder()
                 .cameraCode(dto.getCameraCode())
@@ -52,7 +51,7 @@ public class CameraService {
 
     // 수정
     @Transactional
-    public void update(Long id, AdminConfigDto dto){
+    public void update(Long id, CameraDto dto){
         log.info("--- [CameraService] update() ---");
         Camera camera = cameraRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("수정할 카메라를 찾을 수 없습니다."));
@@ -84,11 +83,11 @@ public class CameraService {
         camera.deactivate();
     }
 
-    //카메라 상태변경
+    // 카메라 상태변경
     @Transactional
     public String toggleStatus(Long id){
         Camera camera = cameraRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new IllegalArgumentException("카메라를 찾을 수 없습니다."));
 
         if ("ACTIVE".equals(camera.getStatus())) {
             camera.setStatus("INACTIVE");
@@ -102,8 +101,8 @@ public class CameraService {
     }
 
     // Entity → DTO
-    public AdminConfigDto toDto(Camera camera){
-        return AdminConfigDto.builder()
+    public CameraDto toDto(Camera camera){
+        return CameraDto.builder()
                 .cameraId(camera.getId())
                 .cameraCode(camera.getCameraCode())
                 .cameraName(camera.getCameraName())

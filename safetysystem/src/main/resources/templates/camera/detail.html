@@ -2,33 +2,78 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>카메라 상세보기</title>
-    <!--    CSS 연결    -->
+    <title>카메라 상세</title>
+
+    <!-- 공통 CSS -->
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <!--    //JS 연결   -->
+    <!-- 커스텀 CSS -->
+    <link rel="stylesheet" th:href="@{/css/camera.css}">
+
     <script th:src="@{/js/theme.js}"></script>
 </head>
-<div th:replace="fragments/header :: header('카메라 상세보기')"></div>
+
+<div th:replace="fragments/header :: header('카메라 상세')"></div>
+
 <body>
-<h2>카메라 상세보기</h2>
 
-<table>
-    <tr><th>ID</th><td th:text="${dto.cameraId}"></td></tr>
-    <tr><th>카메라 코드</th><td th:text="${dto.cameraCode}"></td></tr>
-    <tr><th>카메라 이름</th><td th:text="${dto.cameraName}"></td></tr>
-    <tr><th>카메라 타입</th><td th:text="${dto.cameraType}"></td></tr>
-    <tr><th>IP 주소</th><td th:text="${dto.ipAddress}"></td></tr>
-    <tr><th>스트림 URL</th><td th:text="${dto.streamUrl}"></td></tr>
-    <tr><th>위치 이름</th><td th:text="${dto.locationName}"></td></tr>
-    <tr><th>위도</th><td th:text="${dto.latitude}"></td></tr>
-    <tr><th>경도</th><td th:text="${dto.longitude}"></td></tr>
-    <tr><th>상태</th><td th:text="${dto.status}"></td></tr>
-</table>
+<div class="page-container">
 
-<div style="margin-top: 20px;">
-    <a th:href="@{/admin/camera/{id}/update(id=${dto.cameraId})}">수정</a>
-    <a th:href="@{/admin/zone/{cameraId}(cameraId=${dto.cameraId})}">위험구역 리스트</a>
-    <a th:href="@{/admin/camera/list}">목록</a>
+    <h2 class="page-title">카메라 상세</h2>
+
+    <div class="form-card">
+
+        <div class="form-row">
+            <label>카메라 코드</label>
+            <input type="text" th:value="${dto.cameraCode}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>카메라 이름</label>
+            <input type="text" th:value="${dto.cameraName}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>카메라 타입</label>
+            <input type="text" th:value="${dto.cameraType}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>IP 주소</label>
+            <input type="text" th:value="${dto.ipAddress}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>스트림 URL</label>
+            <input type="text" th:value="${dto.streamUrl}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>위치 이름</label>
+            <input type="text" th:value="${dto.locationName}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>위도</label>
+            <input type="text" th:value="${dto.latitude}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>경도</label>
+            <input type="text" th:value="${dto.longitude}" readonly>
+        </div>
+
+        <div class="form-row">
+            <label>상태</label>
+            <input type="text" th:value="${dto.status}" readonly>
+        </div>
+
+        <div class="camera-detail-actions">
+            <a th:href="@{/admin/camera/{id}/update(id=${dto.cameraId})}" class="btn btn-primary">수정</a>
+            <a th:href="@{/admin/camera/list}" class="btn btn-secondary">목록</a>
+        </div>
+
+    </div>
+
 </div>
 
 </body>

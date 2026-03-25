@@ -3,63 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <title>카메라 목록</title>
-    <!--    CSS 연결    -->
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <!--    //JS 연결   -->
+    <link rel="stylesheet" th:href="@{/css/camera.css}">
     <script th:src="@{/js/theme.js}"></script>
 </head>
-<div th:replace="fragments/header :: header('카메라 목록')"></div>
 <body>
-<h2>카메라 목록</h2>
+<div th:replace="~{fragments/header :: header('카메라 목록')}"></div>
 
-<div style="margin-bottom: 15px;">
-    <a th:href="@{/admin/camera/create}">카메라 등록</a>
-</div>
+<main class="camera-page">
+    <h2 class="camera-page__title">카메라 목록</h2>
 
-<table>
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>카메라 코드</th>
-        <th>카메라 이름</th>
-        <th>카메라 타입</th>
-        <th>위치</th>
-        <th>상태</th>
-        <th>관리</th>
+    <div class="camera-toolbar">
+        <a class="btn btn-primary" th:href="@{/admin/camera/create}">카메라 등록</a>
+    </div>
 
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="camera : ${list}">
-        <td th:text="${camera.id}"></td>
-        <td th:text="${camera.cameraCode}"></td>
-        <td th:text="${camera.cameraName}"></td>
-        <td th:text="${camera.cameraType}"></td>
-        <td th:text="${camera.locationName}"></td>
-        <td>
-            <span th:id="'status-' + ${camera.id}" th:text="${camera.status}"></span>
-            <button type="button"
-                    th:attr="onclick=|toggleCameraStatus(${camera.id})|">
-                상태변경
-            </button>
-        </td>
+    <section class="camera-card">
+        <div class="camera-table-wrap">
+            <table class="camera-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>카메라 코드</th>
+                    <th>카메라 이름</th>
+                    <th>카메라 타입</th>
+                    <th>위치</th>
+                    <th>상태</th>
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(list)}">
+                    <td class="camera-empty" colspan="7">등록된 카메라가 없습니다.</td>
+                </tr>
+                <tr th:each="camera : ${list}">
+                    <td th:text="${camera.id}"></td>
+                    <td th:text="${camera.cameraCode}"></td>
+                    <td th:text="${camera.cameraName}"></td>
+                    <td th:text="${camera.cameraType}"></td>
+                    <td th:text="${camera.locationName}"></td>
+                    <td>
+                        <span class="status-badge" th:id="'status-' + ${camera.id}" th:text="${camera.status}"></span>
+                        <button type="button" class="btn btn-secondary" th:attr="onclick=|toggleCameraStatus(${camera.id})|">상태변경</button>
+                    </td>
+                    <td>
+                        <div class="camera-actions">
+                            <a class="btn btn-secondary" th:href="@{/admin/camera/detail/{id}(id=${camera.id})}">상세</a>
+                            <a class="btn btn-secondary" th:href="@{/admin/camera/{id}/update(id=${camera.id})}">수정</a>
+                            <a class="btn btn-secondary" th:href="@{/admin/zone/{cameraId}(cameraId=${camera.id})}">위험구역</a>
 
-        <td>
-            <a th:href="@{/admin/camera/detail/{id}(id=${camera.id})}">상세</a>
-            <a th:href="@{/admin/camera/{id}/update(id=${camera.id})}">수정</a>
-            <a th:href="@{/admin/zone/{cameraId}(cameraId=${camera.id})}">위험구역</a>
-
-            <form th:action="@{/admin/camera/{id}/delete(id=${camera.id})}" method="post" >
-                <button type="submit" onclick="return confirm('비활성화하시겠습니까?');">삭제</button>
-            </form>
-        </td>
-
-
-    </tr>
-    </tbody>
-</table>
-
-</body>
+                            <form th:action="@{/admin/camera/{id}/delete(id=${camera.id})}" method="post">
+                                <button class="btn btn-danger" type="submit" onclick="return confirm('비활성화하시겠습니까?');">삭제</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
 
 <script>
     async function toggleCameraStatus(id) {
@@ -87,4 +89,6 @@
         }
     }
 </script>
+
+</body>
 </html>
