@@ -31,9 +31,12 @@ public class StatisticsController {
         return statisticsService.save(crowdStat);
     }
 
+    // 수정: cameraId가 있으면 카메라별, 없으면 전체
     @GetMapping("/crowd")
-    public List<CrowdStat> findAll() {
-        return statisticsService.findAll();
+    public List<CrowdStat> findCrowdStats(
+            @RequestParam(required = false) Long cameraId
+    ) {
+        return statisticsService.findCrowdStats(cameraId, null, null);
     }
 
     @GetMapping("/crowd/period")
@@ -61,6 +64,8 @@ public class StatisticsController {
 
     @GetMapping("/crowd/hourly")
     public List<HourlyStatDto> getHourlyStatistics(
+            @RequestParam(required = false) Long cameraId,
+
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime start,
@@ -69,11 +74,13 @@ public class StatisticsController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime end
     ) {
-        return statisticsService.getHourlyStatistics(start, end);
+        return statisticsService.getHourlyStatistics(cameraId, start, end);
     }
 
     @GetMapping("/crowd/chart")
     public List<ChartDataDto> getChartData(
+            @RequestParam(required = false) Long cameraId,
+
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime start,
@@ -82,11 +89,13 @@ public class StatisticsController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime end
     ) {
-        return statisticsService.getChartData(start, end);
+        return statisticsService.getChartData(cameraId, start, end);
     }
 
     @GetMapping("/crowd/summary")
     public SummaryStatDto getSummaryStatistics(
+            @RequestParam(required = false) Long cameraId,
+
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime start,
@@ -95,7 +104,6 @@ public class StatisticsController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime end
     ) {
-        return statisticsService.getSummaryStatistics(start, end);
+        return statisticsService.getSummaryStatistics(cameraId, start, end);
     }
-
 }

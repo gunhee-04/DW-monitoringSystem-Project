@@ -45,11 +45,29 @@ public class StatisticsService {
         return crowdStatRepository.findByDangerZoneId(dangerZoneId);
     }
 
-    public List<HourlyStatDto> getHourlyStatistics(LocalDateTime start, LocalDateTime end) {
-        List<CrowdStat> stats = crowdStatRepository.findByMeasuredAtBetween(start, end);
+    // 추가: cameraId 있으면 카메라 기준, 없으면 전체
+    public List<CrowdStat> findCrowdStats(Long cameraId, LocalDateTime start, LocalDateTime end) {
+        if (cameraId != null && start != null && end != null) {
+            return crowdStatRepository.findByCameraIdAndMeasuredAtBetween(cameraId, start, end);
+        }
+        if (cameraId != null) {
+            return crowdStatRepository.findByCameraId(cameraId);
+        }
+        if (start != null && end != null) {
+            return crowdStatRepository.findByMeasuredAtBetween(start, end);
+        }
+        return crowdStatRepository.findAll();
+    }
+
+    public List<HourlyStatDto> getHourlyStatistics(Long cameraId, LocalDateTime start, LocalDateTime end) {
+        List<CrowdStat> stats = findCrowdStats(cameraId, start, end);
 
         Map<Integer, List<CrowdStat>> groupedByHour = stats.stream()
-                .collect(Collectors.groupingBy(stat -> stat.getMeasuredAt().getHour(), TreeMap::new, Collectors.toList()));
+                .collect(Collectors.groupingBy(
+                        stat -> stat.getMeasuredAt().getHour(),
+                        TreeMap::new,
+                        Collectors.toList()
+                ));
 
         List<HourlyStatDto> result = new ArrayList<>();
 
@@ -76,8 +94,8 @@ public class StatisticsService {
         return result;
     }
 
-    public List<ChartDataDto> getChartData(LocalDateTime start, LocalDateTime end) {
-        List<CrowdStat> stats = crowdStatRepository.findByMeasuredAtBetween(start, end);
+    public List<ChartDataDto> getChartData(Long cameraId, LocalDateTime start, LocalDateTime end) {
+        List<CrowdStat> stats = findCrowdStats(cameraId, start, end);
 
         Map<Integer, Integer> groupedByHour = stats.stream()
                 .collect(Collectors.groupingBy(
@@ -98,8 +116,8 @@ public class StatisticsService {
         return result;
     }
 
-    public SummaryStatDto getSummaryStatistics(LocalDateTime start, LocalDateTime end) {
-        List<CrowdStat> stats = crowdStatRepository.findByMeasuredAtBetween(start, end);
+    public SummaryStatDto getSummaryStatistics(Long cameraId, LocalDateTime start, LocalDateTime end) {
+        List<CrowdStat> stats = findCrowdStats(cameraId, start, end);
 
         int totalPeopleCount = stats.stream()
                 .mapToInt(CrowdStat::getPeopleCount)
@@ -128,5 +146,4 @@ public class StatisticsService {
                 averageIncreaseRate
         );
     }
-
 }
