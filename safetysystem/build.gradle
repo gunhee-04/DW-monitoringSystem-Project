@@ -58,6 +58,9 @@ dependencies {
 
     // jakarta.validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // sec 사용하려면 추가해야됨
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 }
 
 tasks.named('test') {

@@ -1,4 +1,4 @@
-package com.dwacademy.safetysystem.member;
+package com.dwacademy.safetysystem.member.dto;
 
 import com.dwacademy.safetysystem.config.RoleType;
 import lombok.*;

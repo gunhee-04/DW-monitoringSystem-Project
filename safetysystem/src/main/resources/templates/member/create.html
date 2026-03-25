@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원 등록</title>
+
+    <div th:replace="fragments/header :: header('회원 등록')"></div>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+
+    <script th:src="@{/js/theme.js}"></script>
+
+</head>
+<body>
+
+    <div class="signup-page">
+        <div class="signup-wrap">
+
+            <div class="signup-title">회원 등록</div>
+
+            <div th:if="${errorMsg}" class="signup-error" th:text="${errorMsg}"></div>
+
+            <div class="signup-panel">
+                <form th:action="@{/member/create}" method="post" class="signup-form">
+
+                    <div class="signup-field">
+                        <label class="signup-label">이름</label>
+                        <input type="text" name="name" class="signup-input" required>
+                    </div>
+
+                    <div class="signup-field">
+                        <label class="signup-label">이메일</label>
+                        <input type="email" name="email" class="signup-input" required>
+                    </div>
+
+                    <div class="signup-field">
+                        <label class="signup-label">비밀번호</label>
+                        <input type="password" name="password" class="signup-input" required>
+                    </div>
+
+                    <div class="signup-field">
+                        <label class="signup-label">연락처</label>
+                        <input type="text" name="phone" class="signup-input" required>
+                    </div>
+
+                    <div class="signup-field">
+                        <label class="signup-label">주소</label>
+                        <input type="text" name="address" class="signup-input" required>
+                    </div>
+
+                    <div class="signup-btn-area">
+                        <button type="submit" class="signup-submit-btn">등록</button>
+                        <button type="button" class="signup-list-btn"
+                                onclick="location.href='/member/list'">
+                            목록
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
