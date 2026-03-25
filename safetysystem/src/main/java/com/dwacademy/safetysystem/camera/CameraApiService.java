@@ -21,7 +21,7 @@ public class CameraApiService {
                 .orElseThrow(() -> new IllegalArgumentException("카메라를 찾을 수 없습니다."));
 
         // 2. 해당 카메라의 활성 danger zone 1개 조회
-        DangerZone zone = dangerZoneRepository.findFirstByCameraIdAndIsActiveTrue(camera.getId())
+        DangerZone zone = dangerZoneRepository.findFirstByCameraIdAndIsActiveTrueOrderByUpdatedAtDesc(camera.getId())
                 .orElseThrow(() -> new IllegalArgumentException("활성 위험구역을 찾을 수 없습니다."));
 
         // 3. JSON 응답 DTO 생성
