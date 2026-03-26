@@ -7,6 +7,7 @@ import com.dwacademy.safetysystem.detection_event.dto.DetectionRequestDto;
 import com.dwacademy.safetysystem.detection_event.dto.EventResponseDto;
 import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
 import com.dwacademy.safetysystem.detection_event.repository.DetectionEventRepository;
+import com.dwacademy.safetysystem.statistics.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class DetectionService {
 
     private final DetectionEventRepository repository;
     private final AlertService alertService;
+    private final StatisticsService statisticsService;
 
     private static final int CROWD_WARNING_THRESHOLD = 5;
     private static final int CROWD_CRITICAL_THRESHOLD = 20;
@@ -39,7 +41,10 @@ public class DetectionService {
         DetectionEntity entity = dto.toEntity(message, level);
         DetectionEntity saved = repository.save(entity);
 
-        // 3. 팀원 알림 로그 연동
+        // 3. 통계 저장
+        statisticsService.saveFromDetection(saved);
+
+        // 4. 팀원 알림 로그 연동
         alertService.createAlert(
                 saved.getId().longValue(),
                 saved.getEventType().name(),
@@ -47,7 +52,7 @@ public class DetectionService {
                 saved.getMessage()
         );
 
-        // 4. SSE 실시간 브로드캐스트
+        // 5. SSE 실시간 브로드캐스트
         broadcast(saved);
     }
 
