@@ -7,6 +7,7 @@ import com.dwacademy.safetysystem.detection_event.dto.DetectionRequestDto;
 import com.dwacademy.safetysystem.detection_event.dto.EventResponseDto;
 import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
 import com.dwacademy.safetysystem.detection_event.repository.DetectionEventRepository;
+import com.dwacademy.safetysystem.statistics.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class DetectionService {
 
     private final DetectionEventRepository repository;
     private final AlertService alertService;
+    private final StatisticsService statisticsService;
 
     private static final int CROWD_WARNING_THRESHOLD = 5;
     private static final int CROWD_CRITICAL_THRESHOLD = 20;
@@ -39,7 +41,10 @@ public class DetectionService {
         DetectionEntity entity = dto.toEntity(message, level);
         DetectionEntity saved = repository.save(entity);
 
-        // 3. 팀원 알림 로그 연동
+        // 3. 통계 저장
+        statisticsService.saveFromDetection(saved);
+
+        // 4. 팀원 알림 로그 연동
         alertService.createAlert(
                 saved.getId().longValue(),
                 saved.getEventType().name(),
@@ -47,28 +52,34 @@ public class DetectionService {
                 saved.getMessage()
         );
 
-        // 4. SSE 실시간 브로드캐스트
+        // 5. SSE 실시간 브로드캐스트
         broadcast(saved);
     }
 
     private Object[] analyzeEvent(DetectionRequestDto dto) {
         int count = (dto.getDetectedCount() != null) ? dto.getDetectedCount() : 0;
         int hour = LocalTime.now().getHour();
-        boolean isNight = (hour >= 22 || hour <= 5);
+        boolean isNight = (hour >= 22 || hour <= 5); // 기존 야간 로직 유지
 
         EventLevel level = EventLevel.NORMAL;
         String message = "실시간 정상 모니터링 중입니다.";
 
+        // 1. 침입인 경우 (가장 높은 우선순위)
         if ("INTRUSION".equals(dto.getEventType())) {
-            level = EventLevel.ALERT;
+            level = EventLevel.HIGH;
             message = "🚨 [긴급] 구역 내 침입자 감지!";
-        } else if (count >= CROWD_CRITICAL_THRESHOLD || (isNight && count > 0)) {
-            level = EventLevel.ALERT;
+        }
+        // 2. 야간에 사람이 있거나, 인원수가 임계치(20명)를 넘은 경우 -> HIGH
+        else if (count >= CROWD_CRITICAL_THRESHOLD || (isNight && count > 0)) {
+            level = EventLevel.HIGH;
             message = isNight ? "🌙 [야간경계] 미확인 인원 감지!" : String.format("🚨 [위험] %d명 감지!", count);
-        } else if (count >= CROWD_WARNING_THRESHOLD) {
-            level = EventLevel.WARNING;
+        }
+        // 3. 인원수가 주의 수준(5명)을 넘은 경우 -> MEDIUM
+        else if (count >= CROWD_WARNING_THRESHOLD) {
+            level = EventLevel.MEDIUM;
             message = String.format("⚠️ [주의] 인원 %d명 감지!", count);
         }
+        // 그 외에는 처음 설정한 NORMAL과 "정상" 메시지가 나갑니다.
 
         return new Object[]{level, message};
     }

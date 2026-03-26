@@ -9,7 +9,7 @@ import java.util.List;
 
 @Service
 public class AlertService {
-
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AlertService.class);
     private final AlertLogRepository alertRepository;
 
     public AlertService(AlertLogRepository alertRepository) {
@@ -38,7 +38,7 @@ public class AlertService {
     //최근 경고 로그 관련 필터도 아직 안됨
     public List<AlertLog> getRecentWarnings(){
         return alertRepository.findTop10BySeverityInOrderByCreatedAtDesc(
-                List.of(EventLevel.WARNING, EventLevel.ALERT)
+                List.of(EventLevel.MEDIUM, EventLevel.HIGH)
         );
     }
 
@@ -53,26 +53,27 @@ public class AlertService {
     @Transactional
     public void createAlert(Long detectionEventId, String alertType, String severityStr, String message) {
 
-        // 1. 문자열 -> Enum 변환
         if (severityStr == null || severityStr.isBlank()) {
-            throw new IllegalArgumentException("severity 값은 필수입니다.");
+            severityStr = "NORMAL"; // 기본값 설정
         }
 
         EventLevel severity;
         try {
             severity = EventLevel.valueOf(severityStr.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("잘못된 severity 값: " + severityStr);
+            // 🚩 핵심: 코드에 없는 ALERT 같은 값이 들어와도 HIGH나 NORMAL로 치환해서 서버가 안 죽게 방어
+            log.error("잘못된 severity 값 들어옴: {}. HIGH로 대체합니다.", severityStr);
+            severity = EventLevel.HIGH;
         }
 
-        // 2. 메시지 기본 생성 (전달받은 메시지가 null 또는 빈 문자열이면)
         if (message == null || message.isBlank()) {
             message = switch (severity) {
-                case NORMAL -> "실시간 정상 모니터링 중입니다.";
-                case WARNING -> "⚠️ 주의: 위험 상태가 감지되었습니다.";
-                case ALERT -> "🚨 긴급: 위험 상태가 감지되었습니다!";
+                case HIGH -> "🚨 [위험] 긴급 상황 발생!";
+                case MEDIUM -> "⚠️ [주의] 이상 징후 감지";
+                case NORMAL -> "✅ 정상 상태";
             };
         }
+        // ... 이하 저장 로직 동일 ...
 
         // 3. 알림 객체 생성 후 저장
         AlertLog alert = new AlertLog();

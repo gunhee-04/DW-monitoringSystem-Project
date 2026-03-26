@@ -6,6 +6,8 @@ import com.dwacademy.safetysystem.statistics.dto.SummaryStatDto;
 import com.dwacademy.safetysystem.statistics.entity.CrowdStat;
 import com.dwacademy.safetysystem.statistics.repository.CrowdStatRepository;
 import org.springframework.stereotype.Service;
+import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
+import com.dwacademy.safetysystem.detection_event.domain.EventType;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -146,4 +148,33 @@ public class StatisticsService {
                 averageIncreaseRate
         );
     }
+
+    public void saveFromDetection(DetectionEntity event) {
+        if (event == null) {
+            return;
+        }
+
+        // CROWD 이벤트만 crowd_stat에 저장
+        if (event.getEventType() == null || event.getEventType() != EventType.CROWD) {
+            return;
+        }
+
+        CrowdStat stat = new CrowdStat();
+
+        stat.setCameraId(event.getCameraId() != null ? event.getCameraId().longValue() : 0L);
+        stat.setDangerZoneId(event.getDangerZoneId() != null ? event.getDangerZoneId().longValue() : null);
+        stat.setMeasuredAt(event.getCreatedAt() != null ? event.getCreatedAt() : LocalDateTime.now());
+        stat.setPeopleCount(event.getDetectedCount() != null ? event.getDetectedCount() : 0);
+
+        // 일단 발표/연동용 기본값
+        stat.setDensityValue(event.getDetectedCount() != null ? event.getDetectedCount().doubleValue() : 0.0);
+
+        // 증가율은 이전 데이터 비교 로직 전까지 0.0으로 저장
+        stat.setIncreaseRate(0.0);
+
+        stat.setCreatedAt(LocalDateTime.now());
+
+        crowdStatRepository.save(stat);
+    }
+
 }
