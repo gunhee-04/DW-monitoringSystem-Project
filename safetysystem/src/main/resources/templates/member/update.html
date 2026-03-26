@@ -26,21 +26,21 @@
                     <tr>
                         <th>이름</th>
                         <td>
-                            <input type="text" name="name" th:value="${member.name}" class="member-edit-input" required>
+                            <input type="text" name="name" th:value="${member.name}" class="member-edit-input" readonly>
                         </td>
                     </tr>
 
                     <tr>
                         <th>이메일</th>
                         <td>
-                            <input type="email" name="email" th:value="${member.email}" class="member-edit-input" required>
+                            <input type="email" name="email" th:value="${member.email}" class="member-edit-input" readonly>
                         </td>
                     </tr>
 
                     <tr>
                         <th>비밀번호</th>
                         <td>
-                            <input type="password" name="password" placeholder="변경할 경우만 입력" class="member-edit-input">
+                            <input type="password" name="password" class="member-edit-input" readonly>
                         </td>
                     </tr>
 

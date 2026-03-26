@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -48,14 +49,15 @@ public class MemberController {
             MemberDto memberDto
     ) {
         log.info("--- [MemberController] createMember() ---");
-        int result = memberService.createMember(memberDto);
 
-        if (result > 0) {
-            model.addAttribute("errorMsg", "회원 등록 중 오류가 발생했습니다.");
+        try {
+            memberService.createMember(memberDto);
+            return "redirect:/member/list";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMsg", e.getMessage());
+            model.addAttribute("memberDto", memberDto);
             return "member/create";
         }
-
-        return "redirect:/member/list";
     }
 
     // 수정 페이지
@@ -81,17 +83,14 @@ public class MemberController {
     ) {
         log.info("--- [MemberController] updateMember() ---");
 
-        memberDto.setId(id);
-
-        int result = memberService.updateMember(memberDto);
-
-        if (result > 0) {
-            model.addAttribute("errorMsg", "회원 수정 중 오류가 발생했습니다.");
+        try {
+            memberService.updateMember(memberDto);
+            return "redirect:/member/list";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMsg", e.getMessage());
             model.addAttribute("member", memberService.getMemberById(id));
-            return "member/updateMember";
+            return "member/update";
         }
-
-        return "redirect:/member/list";
     }
 
     // 로그인 페이지

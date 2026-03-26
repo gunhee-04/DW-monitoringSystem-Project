@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Integer> {
@@ -20,4 +21,5 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
 
     boolean existsByEmail(String email); // 중복체크를 위해 이메일이 있냐/없냐 만 보는 용도(훨씬 가벼움)
 
+    boolean existsByEmailAndStatusIn(String email, List<String> statuses); // 이메일 중복 체크(상태에 따라 중복인지 아닌지 나뉨)
 }

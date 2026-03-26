@@ -46,8 +46,6 @@ public class Member {
     @Column(name = "detail_address")
     private String detailAddress;  // 상세 주소
 
-
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoleType role; // USER, ADMIN
