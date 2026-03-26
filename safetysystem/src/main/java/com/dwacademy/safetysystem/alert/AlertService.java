@@ -1,8 +1,11 @@
 package com.dwacademy.safetysystem.alert;
 
+import com.dwacademy.safetysystem.detection_event.controller.SseController;
 import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
+import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -83,6 +86,25 @@ public class AlertService {
         alert.setAlertMessage(message);
         alert.setIsRead(false);
 
-        alertRepository.save(alert);
+        AlertLog saved = alertRepository.save(alert);
+
+        // 🔥 2. 저장 직후 SSE 전송
+        sendAlertSse(saved);
     }
+
+    // 🔥 Alert 전용 SSE (핵심)
+    public void sendAlertSse(AlertLog alert) {
+        SseController.emitters.forEach(emitter -> {
+            try {
+                emitter.send(
+                        SseEmitter.event()
+                                .name("alert")   // 이벤트 이름 명확히
+                                .data(new AlertResponseDto(alert))     // 🔥 전체 객체 전송
+                );
+            } catch (Exception e) {
+                SseController.emitters.remove(emitter);
+            }
+        });
+    }
+
 }
