@@ -5,6 +5,7 @@ import com.dwacademy.safetysystem.member.dto.RejectRequestDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,18 +16,19 @@ public class MemberRestController {
 
     private final MemberService memberService;
 
+
     // 승인 처리
     @PatchMapping("/{id}/approve")
     public ResponseEntity<String> approveMember(@PathVariable int id) {
         log.info("--- [MemberRestController] approveMember() ---");
 
-        int result = memberService.approveMember(id);
-
-        if (result > 0) {
-            return ResponseEntity.badRequest().body("회원 승인 중 오류가 발생했습니다.");
+        try {
+            memberService.approveMember(id);
+            return ResponseEntity.ok("회원 승인 완료");
+        } catch (IllegalArgumentException e) {
+            return  ResponseEntity.badRequest().body(e.getMessage());
         }
 
-        return ResponseEntity.ok("회원 승인 완료");
     }
 
     // 반려 처리
@@ -37,27 +39,28 @@ public class MemberRestController {
     ) {
         log.info("--- [MemberRestController] rejectMember() ---");
 
-        int result = memberService.rejectMember(id, rejectRequestDto.getRejectReason());
-
-        if (result > 0) {
-            return ResponseEntity.badRequest().body("회원 반려 처리 중 오류가 발생했습니다.");
+        try {
+            memberService.rejectMember(id, rejectRequestDto.getRejectReason());
+            return ResponseEntity.ok("회원 반려 완료");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
 
-        return ResponseEntity.ok("회원 반려 완료");
-    }
 
+    }
 
     // 탈퇴 처리 (실제 삭제 X)
     @DeleteMapping("/{id}")
     public ResponseEntity<String> withdrawMember(@PathVariable int id) {
         log.info("--- [MemberRestController] withdrawMember() ---");
 
-        int result = memberService.withdrawMember(id);
-
-        if (result > 0) {
-            return ResponseEntity.badRequest().body("회원 탈퇴 처리 중 오류가 발생했습니다.");
+        try {
+            memberService.withdrawMember(id);
+            return ResponseEntity.ok("회원 탈퇴 처리 완료");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
 
-        return ResponseEntity.ok("회원 탈퇴 처리 완료");
+
     }
 }
