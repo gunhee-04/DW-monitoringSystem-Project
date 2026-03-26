@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>에러 발생</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+
+    <script th:src="@{/js/theme.js}"></script>
+    <style>
+        .error-wrap {
+            max-width: 500px;
+            margin: 120px auto;
+            padding: 40px;
+            text-align: center;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .error-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ff4d4f;
+        }
+
+        .error-message {
+            margin-bottom: 25px;
+            color: #555;
+        }
+
+        .btn-home {
+            padding: 10px 20px;
+            border-radius: 10px;
+            background: #2f63ff;
+            color: #fff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="error-wrap">
+    <div class="error-title">⚠️ 오류 발생</div>
+
+    <div class="error-message" th:text="${errorMessage}">
+        에러 메시지
+    </div>
+
+    <a href="/admin/camera/list" class="btn-home">홈으로 이동</a>
+</div>
+
+</body>
+</html>
