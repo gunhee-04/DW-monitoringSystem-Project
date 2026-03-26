@@ -61,6 +61,12 @@ dependencies {
 
     // sec 사용하려면 추가해야됨
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+
+    // PDF 의존성 추가
+    implementation 'com.itextpdf:itextpdf:5.5.13.3'
+
+    //Excel 의존성 추가
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
 }
 
 tasks.named('test') {

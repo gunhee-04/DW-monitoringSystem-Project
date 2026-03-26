@@ -7,7 +7,14 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "crowd_stat")
+@Table(
+        name = "crowd_stat",
+        indexes = {
+                @Index(name = "idx_crowd_stat_camera_id", columnList = "camera_id"),
+                @Index(name = "idx_crowd_stat_danger_zone_id", columnList = "danger_zone_id"),
+                @Index(name = "idx_crowd_stat_measured_at", columnList = "measured_at")
+        }
+)
 @Getter
 @Setter
 public class CrowdStat {
