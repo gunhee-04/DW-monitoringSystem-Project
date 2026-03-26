@@ -29,77 +29,80 @@ public class AdminController {
 
     @GetMapping("/camera/list")
     public String cameraList(Model model) {
-        log.info("--- [AdminController] cameraList() ---");
         model.addAttribute("list", cameraService.findAll());
         return "camera/list";
     }
 
     @GetMapping("/camera/detail/{id}")
     public String cameraDetail(@PathVariable Long id, Model model) {
-        log.info("--- [AdminController] cameraDetail() ---");
-        Camera camera = cameraService.findById(id);
-
-        model.addAttribute("dto", cameraService.toDto(camera));
-
-
-        return "camera/detail";
+        try {
+            Camera camera = cameraService.findById(id);
+            model.addAttribute("dto", cameraService.toDto(camera));
+            return "camera/detail";
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @GetMapping("/camera/create")
     public String cameraCreate(Model model) {
-        log.info("--- [AdminController] cameraCreate() ---");
         model.addAttribute("dto", new CameraDto());
         return "camera/create";
     }
 
     @PostMapping("/camera/createProc")
     public String cameraCreateProc(@Valid @ModelAttribute("dto") CameraDto dto,
-                                   BindingResult result) {
-        log.info("--- [AdminController] cameraCreateProc() ---");
-
-        System.out.println("===== 카메라 등록 요청 들어옴 =====");
-        System.out.println("dto = " + dto);
-
+                                   BindingResult result,
+                                   Model model) {
         if (result.hasErrors()) {
-            System.out.println("===== 검증 오류 발생 =====");
-            System.out.println(result.getAllErrors());
             return "camera/create";
         }
 
-        System.out.println("===== 저장 시작 =====");
-        cameraService.save(dto);
-        System.out.println("===== 저장 완료 =====");
-
-        return "redirect:/admin/camera/list";
+        try {
+            cameraService.save(dto);
+            return "redirect:/admin/camera/list";
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @GetMapping("/camera/{id}/update")
     public String cameraUpdate(@PathVariable Long id, Model model) {
-        log.info("--- [AdminController] cameraUpdate() ---");
-        Camera camera = cameraService.findById(id);
-        model.addAttribute("dto", cameraService.toDto(camera));
-        return "camera/update";
+        try {
+            Camera camera = cameraService.findById(id);
+            model.addAttribute("dto", cameraService.toDto(camera));
+            return "camera/update";
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @PostMapping("/camera/{id}/updateProc")
     public String cameraUpdateProc(@PathVariable Long id,
                                    @Valid @ModelAttribute("dto") CameraDto dto,
-                                   BindingResult result) {
-        log.info("--- [AdminController] cameraUpdateProc() ---");
+                                   BindingResult result,
+                                   Model model) {
 
         if (result.hasErrors()) {
             return "camera/update";
         }
 
-        cameraService.update(id, dto);
-        return "redirect:/admin/camera/detail/" + id;
+        try {
+            cameraService.update(id, dto);
+            return "redirect:/admin/camera/detail/" + id;
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @PostMapping("/camera/{id}/delete")
-    public String cameraDeleteProc(@PathVariable Long id) {
-        log.info("--- [AdminController] cameraDeleteProc() ---");
-        cameraService.softDelete(id);
-        return "redirect:/admin/camera/list";
+    public String cameraDeleteProc(@PathVariable Long id, Model model) {
+        try {
+            cameraService.softDelete(id);
+            return "redirect:/admin/camera/list";
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     // =========================
@@ -108,61 +111,79 @@ public class AdminController {
 
     @GetMapping("/zone/{cameraId}")
     public String zoneList(@PathVariable Long cameraId, Model model) {
-        log.info("--- [AdminController] zoneList() ---");
-        model.addAttribute("list", zoneService.findByCamera(cameraId));
-        model.addAttribute("cameraId", cameraId);
-        return "zone/list";
+        try {
+            model.addAttribute("list", zoneService.findByCamera(cameraId));
+            model.addAttribute("cameraId", cameraId);
+            return "zone/list";
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @GetMapping("/zone/detail/{id}")
     public String zoneDetail(@PathVariable Long id, Model model) {
-        log.info("--- [AdminController] zoneDetail() ---");
-        DangerZone zone = zoneService.findById(id);
-        model.addAttribute("dto", zoneService.toDto(zone));
-        return "zone/detail";
+        try {
+            DangerZone zone = zoneService.findById(id);
+            model.addAttribute("dto", zoneService.toDto(zone));
+            return "zone/detail";
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @GetMapping("/zone/{cameraId}/create")
     public String zoneCreate(@PathVariable Long cameraId, Model model) {
-        log.info("--- [AdminController] zoneCreate() ---");
+        try {
+            DangerZoneDto dto = new DangerZoneDto();
+            dto.setCameraId(cameraId);
 
-        DangerZoneDto dto = new DangerZoneDto();
-        dto.setCameraId(cameraId);
+            Camera camera = cameraService.findById(cameraId);
 
-        Camera camera = cameraService.findById(cameraId);
+            model.addAttribute("dto", dto);
+            model.addAttribute("streamUrl", camera.getStreamUrl());
 
-        model.addAttribute("dto", dto);
-        model.addAttribute("streamUrl", camera.getStreamUrl());
-
-        return "zone/create";
+            return "zone/create";
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @PostMapping("/zone/createProc")
     public String zoneCreateProc(@Valid @ModelAttribute("dto") DangerZoneDto dto,
                                  BindingResult result,
                                  Model model) {
-        log.info("--- [AdminController] zoneCreateProc() ---");
+
         if (result.hasErrors()) {
-            Camera camera = cameraService.findById(dto.getCameraId());
-            model.addAttribute("streamUrl", camera.getStreamUrl());
+            try {
+                Camera camera = cameraService.findById(dto.getCameraId());
+                model.addAttribute("streamUrl", camera.getStreamUrl());
+            } catch (Exception e) {
+                return error(model, e);
+            }
             return "zone/create";
         }
 
-        zoneService.save(dto);
-        return "redirect:/admin/zone/" + dto.getCameraId();
+        try {
+            zoneService.save(dto);
+            return "redirect:/admin/zone/" + dto.getCameraId();
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @GetMapping("/zone/{id}/update")
     public String zoneUpdate(@PathVariable Long id, Model model) {
-        log.info("--- [AdminController] zoneUpdate() ---");
+        try {
+            DangerZone zone = zoneService.findById(id);
+            Camera camera = cameraService.findById(zone.getCameraId());
 
-        DangerZone zone = zoneService.findById(id);
-        Camera camera = cameraService.findById(zone.getCameraId());
+            model.addAttribute("dto", zoneService.toDto(zone));
+            model.addAttribute("streamUrl", camera.getStreamUrl());
 
-        model.addAttribute("dto", zoneService.toDto(zone));
-        model.addAttribute("streamUrl", camera.getStreamUrl());
-
-        return "zone/update";
+            return "zone/update";
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @PostMapping("/zone/{id}/updateProc")
@@ -170,23 +191,43 @@ public class AdminController {
                                  @Valid @ModelAttribute("dto") DangerZoneDto dto,
                                  BindingResult result,
                                  Model model) {
-        log.info("--- [AdminController] zoneUpdateProc() ---");
 
         if (result.hasErrors()) {
-            Camera camera = cameraService.findById(dto.getCameraId());
-            model.addAttribute("streamUrl", camera.getStreamUrl());
+            try {
+                Camera camera = cameraService.findById(dto.getCameraId());
+                model.addAttribute("streamUrl", camera.getStreamUrl());
+            } catch (Exception e) {
+                return error(model, e);
+            }
             return "zone/update";
         }
 
-        zoneService.update(id, dto);
-        return "redirect:/admin/zone/" + dto.getCameraId();
+        try {
+            zoneService.update(id, dto);
+            return "redirect:/admin/zone/" + dto.getCameraId();
+        } catch (Exception e) {
+            return error(model, e);
+        }
     }
 
     @PostMapping("/zone/{id}/delete")
     public String zoneDeleteProc(@PathVariable Long id,
-                                 @RequestParam Long cameraId) {
-        log.info("--- [AdminController] zoneDeleteProc() ---");
-        zoneService.softDelete(id);
-        return "redirect:/admin/zone/" + cameraId;
+                                 @RequestParam Long cameraId,
+                                 Model model) {
+        try {
+            zoneService.softDelete(id);
+            return "redirect:/admin/zone/" + cameraId;
+        } catch (Exception e) {
+            return error(model, e);
+        }
+    }
+
+    // =========================
+    // 공통 에러 처리
+    // =========================
+
+    private String error(Model model, Exception e) {
+        model.addAttribute("errorMessage", e.getMessage());
+        return "error/error-page";
     }
 }

@@ -11,6 +11,5 @@ public interface DangerZoneRepository extends JpaRepository<DangerZone,Long> {
 
     List<DangerZone> findByCameraIdAndIsActiveTrue(Long cameraId);
 
-    // 기존 findFirstByCameraIdAndIsActiveTrue 삭제
     Optional<DangerZone> findFirstByCameraIdAndIsActiveTrueOrderByUpdatedAtDesc(Long cameraId);
 }
