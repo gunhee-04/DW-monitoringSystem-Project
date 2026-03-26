@@ -9,7 +9,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -47,7 +48,7 @@ public class DetectionRequestDto {
         }
 
         // 3. 침입 여부 판단 로직
-        int intrusionVal = (EventType.INTRUSION.equals(type) || EventLevel.ALERT.equals(calculatedLevel)) ? 1 : 0;
+        int intrusionVal = (EventType.INTRUSION.equals(type) || EventLevel.MEDIUM.equals(calculatedLevel)) ? 1 : 0;
 
         return DetectionEntity.builder()
                 .cameraId(this.cameraId != null ? this.cameraId : 1)

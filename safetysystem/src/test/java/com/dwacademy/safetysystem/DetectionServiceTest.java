@@ -42,7 +42,7 @@ public class DetectionServiceTest {
         DetectionEntity lastEvent = repository.findAllByOrderByIdDesc().get(0);
 
         // 검증: 침입(INTRUSION) 타입이므로 ALERT 등급이어야 함
-        assertEquals(EventLevel.ALERT, lastEvent.getEventLevel());
+        assertEquals(EventLevel.HIGH, lastEvent.getEventLevel());
 
         // 검증: 메시지에 '침입자' 또는 '감지' 관련 문구가 포함되어 있는지 확인
         assertTrue(lastEvent.getMessage().contains("침입자"));

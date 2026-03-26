@@ -22,9 +22,9 @@ public class EventResponseDto {
         this.people_count = entity.getDetectedCount();
 
         // 1. 위험도별 색상 설정 (프론트 log.level_color 대응)
-        if (entity.getEventLevel() == EventLevel.ALERT) {
+        if (entity.getEventLevel() == EventLevel.HIGH) {
             this.level_color = "#ff4d4f"; // 빨강
-        } else if (entity.getEventLevel() == EventLevel.WARNING) {
+        } else if (entity.getEventLevel() == EventLevel.MEDIUM) {
             this.level_color = "#faad14"; // 주황
         } else {
             this.level_color = "#52c41a"; // 초록

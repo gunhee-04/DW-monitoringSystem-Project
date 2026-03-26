@@ -54,21 +54,27 @@ public class DetectionService {
     private Object[] analyzeEvent(DetectionRequestDto dto) {
         int count = (dto.getDetectedCount() != null) ? dto.getDetectedCount() : 0;
         int hour = LocalTime.now().getHour();
-        boolean isNight = (hour >= 22 || hour <= 5);
+        boolean isNight = (hour >= 22 || hour <= 5); // 기존 야간 로직 유지
 
         EventLevel level = EventLevel.NORMAL;
         String message = "실시간 정상 모니터링 중입니다.";
 
+        // 1. 침입인 경우 (가장 높은 우선순위)
         if ("INTRUSION".equals(dto.getEventType())) {
-            level = EventLevel.ALERT;
+            level = EventLevel.HIGH;
             message = "🚨 [긴급] 구역 내 침입자 감지!";
-        } else if (count >= CROWD_CRITICAL_THRESHOLD || (isNight && count > 0)) {
-            level = EventLevel.ALERT;
+        }
+        // 2. 야간에 사람이 있거나, 인원수가 임계치(20명)를 넘은 경우 -> HIGH
+        else if (count >= CROWD_CRITICAL_THRESHOLD || (isNight && count > 0)) {
+            level = EventLevel.HIGH;
             message = isNight ? "🌙 [야간경계] 미확인 인원 감지!" : String.format("🚨 [위험] %d명 감지!", count);
-        } else if (count >= CROWD_WARNING_THRESHOLD) {
-            level = EventLevel.WARNING;
+        }
+        // 3. 인원수가 주의 수준(5명)을 넘은 경우 -> MEDIUM
+        else if (count >= CROWD_WARNING_THRESHOLD) {
+            level = EventLevel.MEDIUM;
             message = String.format("⚠️ [주의] 인원 %d명 감지!", count);
         }
+        // 그 외에는 처음 설정한 NORMAL과 "정상" 메시지가 나갑니다.
 
         return new Object[]{level, message};
     }
