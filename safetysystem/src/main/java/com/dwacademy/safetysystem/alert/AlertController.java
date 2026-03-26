@@ -16,8 +16,11 @@ public class AlertController {
 
     // 최근 알림
     @GetMapping("/recent")
-    public List<AlertLog> getRecentAlerts() {
-        return alertService.getRecentAlerts();
+    public List<AlertResponseDto> getRecentAlerts() {
+        return alertService.getRecentAlerts()
+                .stream()
+                .map(AlertResponseDto::new)
+                .toList();
     }
 
     // 읽음 처리
