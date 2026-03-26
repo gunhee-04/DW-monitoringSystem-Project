@@ -53,7 +53,8 @@ public class DetectionEntity {
     @Column(length = 500)
     private String message;
 
-    @Column(name = "image_path")
+    @Lob
+    @Column(name = "image_path", columnDefinition = "LONGTEXT")
     private String imagePath;
 
     @Column(name = "event_time", nullable = false)
