@@ -26,4 +26,7 @@ public interface DetectionEventRepository extends JpaRepository<DetectionEntity,
             Integer cameraId, EventType eventType, Long start, Long end);
 
     boolean existsByEventLevelAndIsReadAndCreatedAtAfter(EventLevel level, Integer isRead, LocalDateTime time);
+
+    List<DetectionEntity> findByIsRead(Integer isRead);
+
 }

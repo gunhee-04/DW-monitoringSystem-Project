@@ -5,6 +5,7 @@ import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
@@ -13,42 +14,40 @@ public class EventResponseDto {
     private Long id;
     private String status_text;
     private String level_color;
-    private Integer people_count; // 🚩 프론트의 log.people_count와 매칭
-    private String created_at;    // 🚩 프론트의 log.created_at과 매칭
-    private boolean isAlert;      // 🚩 프론트의 log.isAlert와 매칭
+    private Integer people_count;
+    private String created_at;
+    private boolean isAlert;
 
     public EventResponseDto(DetectionEntity entity) {
         this.id = entity.getId().longValue();
         this.status_text = entity.getMessage();
-
-        // 1. 인원수 데이터 담기 (null 체크 포함)
         this.people_count = (entity.getDetectedCount() != null) ? entity.getDetectedCount() : 0;
 
-        // 2. 위험도별 색상 및 알림 여부(isAlert) 결정
-        // 여기서 entity.getEventLevel()이 HIGH인지가 가장 중요합니다!
-        if (entity.getEventLevel() == EventLevel.HIGH) {
-            this.level_color = "#ff4d4f"; // 빨강
-            this.isAlert = true;          // 🔥 종 모양 숫자를 올리는 핵심 스위치
+        // 1. 알림 여부 결정 로직 (HIGH 등급 + 미확인(0) 상태)
+        if (entity.getEventLevel() == EventLevel.HIGH && entity.getIsRead() == 0) {
+            this.level_color = "#ff4d4f";
+            this.isAlert = true;
         } else if (entity.getEventLevel() == EventLevel.MEDIUM) {
-            this.level_color = "#faad14"; // 주황
+            this.level_color = "#faad14";
             this.isAlert = false;
         } else {
-            this.level_color = "#52c41a"; // 초록
+            // HIGH여도 읽은 상태면 색상은 빨강 유지, isAlert만 false
+            this.level_color = (entity.getEventLevel() == EventLevel.HIGH) ? "#ff4d4f" : "#52c41a";
             this.isAlert = false;
         }
 
-        // 3. 시간 변환 로직
+        // 2. 시간 포맷팅 (빨간 줄 해결 지점)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
         if (entity.getEventTime() != null && entity.getEventTime() > 0) {
             long timeVal = entity.getEventTime();
             Instant instant = (timeVal > 1_000_000_000_000L)
                     ? Instant.ofEpochMilli(timeVal)
                     : Instant.ofEpochSecond(timeVal);
 
-            this.created_at = instant.atZone(ZoneId.of("Asia/Seoul"))
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            this.created_at = instant.atZone(ZoneId.of("Asia/Seoul")).format(formatter);
         } else {
-            this.created_at = java.time.LocalDateTime.now()
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            this.created_at = LocalDateTime.now().format(formatter);
         }
     }
 }

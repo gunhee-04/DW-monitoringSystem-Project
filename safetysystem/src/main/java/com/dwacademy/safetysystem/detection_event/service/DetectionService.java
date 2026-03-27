@@ -138,4 +138,15 @@ public class DetectionService {
                 .map(EventResponseDto::new)
                 .toList();
     }
+
+    @Transactional
+    public void markAllAlertsAsRead() {
+        // 🚩 아직 안 읽은(isRead=0) 데이터들만 가져와서 1로 바꿉니다.
+        List<DetectionEntity> unreadEvents = repository.findByIsRead(0);
+
+        for (DetectionEntity entity : unreadEvents) {
+            entity.setIsRead(1); // 🚩 이제 빨간 줄 안 뜹니다!
+        }
+        log.info(">>> ✅ {}건의 알림을 읽음 처리했습니다. 이제 숫자가 0이 됩니다.", unreadEvents.size());
+    }
 }

@@ -39,4 +39,11 @@ public class DetectionController {
                 .toList();
         return ResponseEntity.ok(dtoList);
     }
+
+    @PostMapping("/api/events/mark-as-read")
+    public ResponseEntity<String> markAsRead() {
+        detectionService.markAllAlertsAsRead();
+        return ResponseEntity.ok("모든 알림 읽음 처리 완료");
+    }
+
 }
