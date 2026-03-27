@@ -729,3 +729,25 @@
         width: 100%;
     }
 }
+
+/* =========================
+   이메일 중복확인 버튼
+========================= */
+
+.signup-check-btn {
+    min-width: 100px;
+    height: 46px;
+    border-radius: 12px;
+    border: 1px solid var(--primary);
+    background: var(--bg-panel);
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.signup-check-btn:hover {
+    background: var(--primary);
+    color: #fff;
+}

@@ -15,7 +15,25 @@ import org.springframework.web.bind.annotation.*;
 public class MemberRestController {
 
     private final MemberService memberService;
+    
+    
+    // 회원가입 때 이메일 중복 확인
+    @GetMapping("/check-email")
+    public ResponseEntity<String> checkEmail(@RequestParam String email) {
 
+        try {
+            boolean available = memberService.checkEmailAvailable(email);
+
+            if (available) {
+                return ResponseEntity.ok("사용 가능한 이메일입니다.");
+            } else {
+                return ResponseEntity.badRequest().body("이미 사용 중인 이메일입니다.");
+            }
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     // 승인 처리
     @PatchMapping("/{id}/approve")

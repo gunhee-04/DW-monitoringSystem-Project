@@ -20,31 +20,50 @@
         <div class="signup-title">회원 등록</div>
 
         <div class="signup-panel">
-            <form th:action="@{/member/create}" method="post" class="signup-form">
+            <form th:action="@{/member/create}" method="post"
+                  class="signup-form"
+                  onsubmit="return validateForm()">
 
+                <!-- 이름 -->
                 <div class="signup-field">
                     <label class="signup-label">이름</label>
                     <input type="text" name="name" class="signup-input"
                            th:value="${memberDto != null ? memberDto.name : ''}" required>
                 </div>
 
+                <!-- 이메일 + 중복확인 -->
                 <div class="signup-field">
                     <label class="signup-label">이메일</label>
-                    <input type="email" name="email" class="signup-input"
-                           th:value="${memberDto != null ? memberDto.email : ''}" placeholder="이메일은 ID로 사용됩니다." required>
+
+                    <div style="display:flex; gap:10px;">
+                        <input type="email" id="email" name="email" class="signup-input"
+                               th:value="${memberDto != null ? memberDto.email : ''}"
+                               placeholder="이메일은 ID로 사용됩니다."
+                               oninput="resetEmailCheck()" required>
+
+                        <button type="button" class="signup-check-btn" onclick="checkEmail()">
+                            중복확인
+                        </button>
+                    </div>
+
+                    <div id="emailCheckMsg" style="font-size:13px; margin-top:5px;"></div>
                 </div>
 
+                <!-- 비밀번호 -->
                 <div class="signup-field">
                     <label class="signup-label">비밀번호</label>
                     <input type="password" name="password" class="signup-input" required>
                 </div>
 
+                <!-- 연락처 -->
                 <div class="signup-field">
                     <label class="signup-label">연락처</label>
                     <input type="text" name="phone" class="signup-input"
-                           th:value="${memberDto != null ? memberDto.phone : ''}" placeholder="010-0000-0000 형식으로 입력해주십시오." required>
+                           th:value="${memberDto != null ? memberDto.phone : ''}"
+                           placeholder="010-0000-0000 형식으로 입력해주십시오." required>
                 </div>
 
+                <!-- 우편번호 -->
                 <div class="signup-field">
                     <label class="signup-label">우편번호</label>
                     <div style="display:flex; gap:10px;">
@@ -56,12 +75,14 @@
                     </div>
                 </div>
 
+                <!-- 기본주소 -->
                 <div class="signup-field">
                     <label class="signup-label">기본주소</label>
                     <input type="text" id="address" name="address" class="signup-input" readonly
                            th:value="${memberDto != null ? memberDto.address : ''}" required>
                 </div>
 
+                <!-- 상세주소 -->
                 <div class="signup-field">
                     <label class="signup-label">상세주소</label>
                     <input type="text" id="detailAddress" name="detailAddress" class="signup-input"
@@ -69,6 +90,7 @@
                            placeholder="상세주소를 입력하세요">
                 </div>
 
+                <!-- 버튼 -->
                 <div class="signup-btn-area">
                     <button type="submit" class="signup-submit-btn">등록</button>
                     <button type="button" class="signup-list-btn"
@@ -83,6 +105,7 @@
     </div>
 </div>
 
+<!-- 🔥 에러 alert -->
 <script th:inline="javascript">
     const errorMsg = /*[[${errorMsg}]]*/ null;
 
@@ -91,6 +114,57 @@
     }
 </script>
 
+<!-- 🔥 이메일 중복 체크 -->
+<script>
+    let isEmailChecked = false;
+
+    function checkEmail() {
+
+        const email = document.getElementById("email").value;
+
+        if (!email) {
+            alert("이메일을 입력해주세요.");
+            return;
+        }
+
+        fetch(`/api/members/check-email?email=${email}`)
+            .then(res => res.text().then(text => ({
+                ok: res.ok,
+                text: text
+            })))
+            .then(data => {
+
+                const msg = document.getElementById("emailCheckMsg");
+
+                if (data.ok) {
+                    msg.innerText = data.text;
+                    msg.style.color = "green";
+                    isEmailChecked = true;
+                } else {
+                    msg.innerText = data.text;
+                    msg.style.color = "red";
+                    isEmailChecked = false;
+                }
+            });
+    }
+
+    function resetEmailCheck() {
+        isEmailChecked = false;
+        document.getElementById("emailCheckMsg").innerText = "";
+    }
+
+    function validateForm() {
+
+        if (!isEmailChecked) {
+            alert("이메일 중복 확인은 필수입니다.");
+            return false;
+        }
+
+        return true;
+    }
+</script>
+
+<!-- 주소 API -->
 <script>
     function execDaumPostcode() {
         new daum.Postcode({

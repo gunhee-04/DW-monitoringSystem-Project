@@ -139,7 +139,24 @@ public class MemberService {
 
     }
 
+    @Transactional(readOnly = true)
+    public boolean checkEmailAvailable(String email) {
 
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("이메일을 입력해주세요.");
+        }
+
+        String trimmed = email.trim();
+
+        // 중복으로 막을 상태들
+        boolean exists = memberRepository.existsByEmailAndStatusIn(
+                trimmed,
+                List.of("PENDING", "ACTIVE", "WITHDRAWN")
+        );
+
+        // true = 사용 가능
+        return !exists;
+    }
 
     // 회원 수정
     public void updateMember(MemberDto memberDto) {
