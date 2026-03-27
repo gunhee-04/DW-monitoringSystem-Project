@@ -46,7 +46,7 @@ public class SecurityConfig {
                             .loginProcessingUrl("/member/loginProc")        // form action이랑 맞춤
                             .usernameParameter("email")                 // input name="email"
                             .passwordParameter("password")              // input name="password"
-                            .defaultSuccessUrl("/member/list", true)    // 로그인 성공 후 이동
+                            .defaultSuccessUrl("/", true)    // 로그인 성공 후 이동
                             .failureUrl("/member/login?error")          // 로그인 실패
                             .permitAll()
                     )
