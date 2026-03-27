@@ -24,6 +24,7 @@ public class AdminController {
     private final CameraService cameraService;
     private final DangerZoneService zoneService;
 
+
     // =========================
     // Camera
     // =========================
@@ -33,6 +34,7 @@ public class AdminController {
         model.addAttribute("list", cameraService.findAll());
         return "camera/list";
     }
+
 
     @GetMapping("/camera/detail/{id}")
     public String cameraDetail(@PathVariable Long id, Model model) {
