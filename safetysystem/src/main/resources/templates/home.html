@@ -1216,23 +1216,20 @@
             const list = document.getElementById("alert-list");
             if (!badge || !list) return;
 
-            // 1. HIGH 등급인 것만 필터링
-            const highAlerts = data.filter(log => log.alert === true);
-
-            // 2. 종 모양 배지 숫자 업데이트
-            badge.innerText = highAlerts.length;
-
-            // 3. 알림 리스트 업데이트
-            list.innerHTML = highAlerts.slice().map(log => `
-                <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px; padding: 10px; background: #fff1f0;">
+            badge.innerText = data.length;
+            list.innerHTML = data.slice().map(log => `
+                <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px;">
                     <strong style="color: ${log.level_color};">${log.status_text}</strong><br>
                     인원: ${log.people_count}명<br>
-                    <small style="color: #888;">${log.created_at}</small>
+                    시간: ${log.created_at}
                 </div>
             `).join("");
 
-            // 🚩 4번 로직(showDangerPopup 호출 부분)을 완전히 삭제했습니다.
-            // 리스트에 데이터가 있다고 해서 2초마다 팝업을 띄우지 않기 위해서입니다.
+            const latestLog = data[0];
+
+            if (latestLog && latestLog.showAlertText === true && latestLog.created_at !== lastDismissedTime) {
+                showDangerPopup(latestLog);
+            }
         }
 
         function showDangerPopup(log) {
