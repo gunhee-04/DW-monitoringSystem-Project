@@ -1088,34 +1088,34 @@
     }
 
     function closeReportModal() {
-        document.getElementById("report-modal-backdrop").style.display = "none";
-        if (state.reportChart) {
-            state.reportChart.destroy();
-            state.reportChart = null;
+            document.getElementById("report-modal-backdrop").style.display = "none";
+            if (state.reportChart) {
+                state.reportChart.destroy();
+                state.reportChart = null;
+            }
         }
-    }
 
-    function setReportTab(button, tab) {
-        state.selectedReportTab = tab;
-        document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
-        button.classList.add("active");
-        renderReportModal();
-    }
+        function setReportTab(button, tab) {
+            state.selectedReportTab = tab;
+            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+            button.classList.add("active");
+            renderReportModal();
+        }
 
-    function downloadPdf() {
-        alert("PDF 다운로드 기능 연결 예정");
-    }
+        function downloadPdf() {
+            alert("PDF 다운로드 기능 연결 예정");
+        }
 
-    function downloadExcel() {
-        alert("EXCEL 다운로드 기능 연결 예정");
-    }
+        function downloadExcel() {
+            alert("EXCEL 다운로드 기능 연결 예정");
+        }
 
-    function toggleAlertPanel() {
-        const panel = document.getElementById("alert-panel");
-        if (panel) panel.classList.toggle("show");
-    }
+        function toggleAlertPanel() {
+            const panel = document.getElementById("alert-panel");
+            if (panel) panel.classList.toggle("show");
+        }
 
-    function updateAlertPanel(data) {
+        function updateAlertPanel(data) {
         const badge = document.getElementById("alert-badge");
         const list = document.getElementById("alert-list");
         if (!badge || !list) return;
@@ -1134,6 +1134,7 @@
             `).join("")
             : `<div class="alert-empty">현재 알림 없음</div>`;
 
+        // 🔥 popup 유지 (이게 핵심)
         const latestLog = highAlerts[0];
         if (latestLog && latestLog.created_at !== state.lastDismissedTime) {
             showDangerPopup(latestLog);

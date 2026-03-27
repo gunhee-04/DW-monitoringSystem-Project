@@ -39,12 +39,10 @@ public class DetectionEntity {
     @Column(name = "object_type")
     private String objectType;
 
-    // 🚩 DB 컬럼명 people_count에 맞춤
-    @Column(name = "people_count")
+    @Column(name = "detected_count") // 🚩 DB 컬럼명 확인 (detected_count)
     private Integer detectedCount;
 
-    // 🚩 DB 컬럼명 stay_duration에 맞춤
-    @Column(name = "stay_duration")
+    @Column(name = "stay_duration_sec") // 🚩 DB 컬럼명 확인 (stay_duration_sec)
     private Integer stayDurationSec;
 
     @Column(name = "intrusion_now")
@@ -59,6 +57,16 @@ public class DetectionEntity {
 
     @Column(name = "event_time", nullable = false)
     private Long eventTime;
+
+    // 🚩 추가된 필드: 알림 확인용 (0: 안읽음/팝업대상, 1: 읽음/팝업완료)
+    @Column(name = "is_read")
+    @Builder.Default
+    private Integer isRead = 0;
+
+    // 🚩 추가된 필드: 알림 삭제 여부
+    @Column(name = "is_deleted")
+    @Builder.Default
+    private Integer isDeleted = 0;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
