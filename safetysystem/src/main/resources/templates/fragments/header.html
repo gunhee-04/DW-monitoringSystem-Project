@@ -55,6 +55,13 @@
                 </button>
 
                 <div id="user-menu" class="user-menu">
+                    <!-- 관리자만 보이기 -->
+                    <a th:href="@{/admin/home}"
+                       class="user-menu-item"
+                       sec:authorize="hasRole('ADMIN')">
+                        관리자 페이지
+                    </a>
+                    <!-- ----------- -->
                     <a th:href="@{/member/list}"
                        class="user-menu-item"
                        sec:authorize="hasRole('ADMIN')">
