@@ -427,12 +427,11 @@
         selectedReportTab: "day",
         selectedCardKey: "card1",
         timer: null,
-        logsTimer: null,
         pollingMs: 5000,
-        logPollingMs: 3000,
         isLoading: false,
         abortController: null,
         realtimeData: null,
+        realtimeLogs: [],
         lastDismissedTime: "",
         mainChart: null,
         reportChart: null,
@@ -477,8 +476,20 @@
         crowdHourly: (cameraId, start, end) =>
             `/api/statistics/crowd/hourly?cameraId=${cameraId}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
 
-        logs: () => `http://127.0.0.1:8081/get_logs`
+        dangerSummary: (cameraId, start, end) =>
+            `/api/statistics/danger/summary?cameraId=${cameraId}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+
+        dangerHourly: (cameraId, start, end) =>
+            `/api/statistics/danger/hourly?cameraId=${cameraId}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+
+        logs: () => `/get_logs`,
+        sse: () => `/api/sse/connect`
     };
+
+    function safeNumber(value, fallback = 0) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
+    }
 
     function getSelectedDrone() {
         return droneData.find(d => d.id === state.selectedDroneId) || droneData[0];
@@ -504,7 +515,7 @@
     }
 
     function formatDateTimeParam(value) {
-        return value.replace("T", " ") + ":00";
+        return value + ":00";
     }
 
     function setTodayRange() {
@@ -535,6 +546,62 @@
         };
     }
 
+    function updateCardTitles() {
+        if (state.mode === "crowd") {
+            document.getElementById("card1-label").innerText = "평균 밀집";
+            document.getElementById("card2-label").innerText = "최대 밀집(시간별)";
+            document.getElementById("card3-label").innerText = "밀집도 증가율";
+            document.getElementById("card1-sub").innerText = "현재 선택된 드론 기준";
+            document.getElementById("card2-sub").innerText = "시간대별 최대값";
+            document.getElementById("card3-sub").innerText = "이전 구간 대비";
+        } else {
+            document.getElementById("card1-label").innerText = "총 침입 수";
+            document.getElementById("card2-label").innerText = "시간당 침입 횟수";
+            document.getElementById("card3-label").innerText = "평균 체류 시간";
+            document.getElementById("card1-sub").innerText = "위험 이벤트 기준";
+            document.getElementById("card2-sub").innerText = "시간 단위 집계";
+            document.getElementById("card3-sub").innerText = "평균 체류 시간 기준";
+        }
+    }
+
+    function updateTableHeaders() {
+        if (state.mode === "crowd") {
+            document.getElementById("table-col-1").innerText = "총 인원 수";
+            document.getElementById("table-col-2").innerText = "평균 밀집도";
+        } else {
+            document.getElementById("table-col-1").innerText = "침입 횟수";
+            document.getElementById("table-col-2").innerText = "평균 체류 시간";
+        }
+    }
+
+    function updateVideoByMode() {
+        const matchedDrone =
+            droneData.find(drone => drone.id === state.selectedDroneId) ||
+            droneData.find(drone => drone.mode === state.mode) ||
+            droneData[0];
+
+        state.selectedDroneId = matchedDrone.id;
+        document.getElementById("selected-drone-text").innerText = matchedDrone.id;
+
+        const stream = document.getElementById("stream-video");
+        const video = document.getElementById("file-video");
+
+        if ((matchedDrone.videoUrl || "").endsWith(".mp4")) {
+            stream.style.display = "none";
+            video.style.display = "block";
+            video.src = matchedDrone.videoUrl;
+            video.load();
+            video.play().catch(() => {});
+        } else {
+            if (video) {
+                video.pause();
+                video.style.display = "none";
+            }
+            stream.style.display = "block";
+            stream.src = matchedDrone.videoUrl + "?t=" + Date.now();
+        }
+    }
+
     function switchMode(mode) {
         state.mode = mode;
 
@@ -562,148 +629,6 @@
         refreshRealtime();
     }
 
-    function updateVideoByMode() {
-        const matchedDrone =
-            droneData.find(drone => drone.id === state.selectedDroneId) ||
-            droneData.find(drone => drone.mode === state.mode) ||
-            droneData[0];
-
-        state.selectedDroneId = matchedDrone.id;
-        document.getElementById("selected-drone-text").innerText = matchedDrone.id;
-
-        const stream = document.getElementById("stream-video");
-        const video = document.getElementById("file-video");
-
-        if ((matchedDrone.videoUrl || "").endsWith(".mp4")) {
-            stream.style.display = "none";
-            video.style.display = "block";
-            video.src = matchedDrone.videoUrl;
-            video.load();
-            video.play().catch(() => {});
-        } else {
-            video.pause();
-            video.style.display = "none";
-            stream.style.display = "block";
-            stream.src = matchedDrone.videoUrl + "?t=" + Date.now();
-        }
-    }
-
-    function updateCardTitles() {
-        if (state.mode === "crowd") {
-            document.getElementById("card1-label").innerText = "평균 밀집";
-            document.getElementById("card2-label").innerText = "최대 밀집(시간별)";
-            document.getElementById("card3-label").innerText = "밀집도 증가율";
-            document.getElementById("card1-sub").innerText = "현재 선택된 드론 기준";
-            document.getElementById("card2-sub").innerText = "시간대별 최대값";
-            document.getElementById("card3-sub").innerText = "이전 구간 대비";
-        } else {
-            document.getElementById("card1-label").innerText = "총 침입 수";
-            document.getElementById("card2-label").innerText = "시간당 침입 횟수";
-            document.getElementById("card3-label").innerText = "평균 체류 시간";
-            document.getElementById("card1-sub").innerText = "위험 이벤트 기준";
-            document.getElementById("card2-sub").innerText = "시간 단위 집계";
-            document.getElementById("card3-sub").innerText = "실시간 로그 기준";
-        }
-    }
-
-    function updateTableHeaders() {
-        if (state.mode === "crowd") {
-            document.getElementById("table-col-1").innerText = "총 인원 수";
-            document.getElementById("table-col-2").innerText = "평균 밀집도";
-        } else {
-            document.getElementById("table-col-1").innerText = "침입 횟수";
-            document.getElementById("table-col-2").innerText = "평균 체류 시간";
-        }
-    }
-
-    function getDensityStatus(value) {
-        if (value >= 0.8) return { text: "위험", rowClass: "danger-row" };
-        if (value >= 0.5) return { text: "주의", rowClass: "warning-row" };
-        return { text: "정상", rowClass: "safe-row" };
-    }
-
-    function safeNumber(value, fallback = 0) {
-        const n = Number(value);
-        return Number.isFinite(n) ? n : fallback;
-    }
-
-    function normalizeCrowdSummary(data) {
-        return {
-            card1: safeNumber(data?.averageDensityValue ?? data?.averageDensity ?? 0),
-            card2: safeNumber(data?.maxPeopleCount ?? data?.peopleMax ?? 0),
-            card3: safeNumber(data?.averageIncreaseRate ?? data?.increaseRate ?? 0)
-        };
-    }
-
-    function normalizeCrowdHourly(data) {
-        return (data || []).map(item => {
-            const density = safeNumber(
-                item.averageDensityValue ?? item.densityValue ?? item.averageDensity ?? item.density ?? 0
-            );
-
-            return {
-                label: item.hour ?? item.time ?? item.label ?? item.measuredAt ?? "-",
-                value1: safeNumber(item.totalPeopleCount ?? item.peopleCount ?? item.detectedCount ?? 0),
-                value2: density,
-                status: getDensityStatus(density).text,
-                rowClass: getDensityStatus(density).rowClass
-            };
-        });
-    }
-
-    function normalizeDangerFromLogs(logs) {
-        const dangerLogs = (logs || []).filter(log =>
-            (log.status_text || "").includes("침입") ||
-            log.level_color === "#ff4d4f" ||
-            log.alert === true
-        );
-
-        const grouped = {};
-        dangerLogs.forEach(log => {
-            const timeText = log.created_at || "";
-            const hour = timeText.length >= 13 ? timeText.substring(11, 13) + ":00" : "00:00";
-
-            if (!grouped[hour]) {
-                grouped[hour] = {
-                    count: 0,
-                    staySum: 0
-                };
-            }
-
-            grouped[hour].count += 1;
-            grouped[hour].staySum += safeNumber(log.stay_duration_sec ?? 0);
-        });
-
-        const hourly = Object.keys(grouped).sort().map(hour => {
-            const count = grouped[hour].count;
-            const avgStay = count > 0 ? grouped[hour].staySum / count : 0;
-
-            return {
-                label: hour,
-                value1: count,
-                value2: avgStay,
-                status: count >= 3 ? "위험" : "주의",
-                rowClass: count >= 3 ? "danger-row" : "warning-row"
-            };
-        });
-
-        const totalIntrusion = dangerLogs.length;
-        const maxHourly = hourly.length ? Math.max(...hourly.map(x => x.value1)) : 0;
-        const avgStay = dangerLogs.length
-            ? dangerLogs.reduce((sum, log) => sum + safeNumber(log.stay_duration_sec ?? 0), 0) / dangerLogs.length
-            : 0;
-
-        return {
-            summary: {
-                card1: totalIntrusion,
-                card2: maxHourly,
-                card3: avgStay
-            },
-            hourly,
-            logs: logs || []
-        };
-    }
-
     async function fetchCrowdRealtime(signal) {
         const range = getRangeParams();
         if (!range) return null;
@@ -723,24 +648,54 @@
 
         return {
             mode: "crowd",
-            summary: normalizeCrowdSummary(summaryJson),
-            hourly: normalizeCrowdHourly(hourlyJson),
+            summary: {
+                card1: safeNumber(summaryJson.averageDensityValue),
+                card2: safeNumber(summaryJson.maxPeopleCount),
+                card3: safeNumber(summaryJson.averageIncreaseRate)
+            },
+            hourly: (hourlyJson || []).map(x => ({
+                label: x.hour ?? "-",
+                value1: safeNumber(x.totalPeopleCount),
+                value2: safeNumber(x.averageDensityValue),
+                status: "-",
+                rowClass: ""
+            })),
             logs: null
         };
     }
 
     async function fetchDangerRealtime(signal) {
-        const res = await fetch(API.logs(), { signal });
-        if (!res.ok) throw new Error("danger logs 조회 실패");
+        const range = getRangeParams();
+        if (!range) return null;
 
-        const logs = await res.json();
-        const normalized = normalizeDangerFromLogs(logs);
+        const drone = getSelectedDrone();
+
+        const [summaryRes, hourlyRes] = await Promise.all([
+            fetch(API.dangerSummary(drone.cameraId, range.start, range.end), { signal }),
+            fetch(API.dangerHourly(drone.cameraId, range.start, range.end), { signal })
+        ]);
+
+        if (!summaryRes.ok) throw new Error("danger summary 조회 실패");
+        if (!hourlyRes.ok) throw new Error("danger hourly 조회 실패");
+
+        const summaryJson = await summaryRes.json();
+        const hourlyJson = await hourlyRes.json();
 
         return {
             mode: "danger",
-            summary: normalized.summary,
-            hourly: normalized.hourly,
-            logs: normalized.logs
+            summary: {
+                card1: safeNumber(summaryJson.totalIntrusion),
+                card2: safeNumber(summaryJson.maxHourlyIntrusion),
+                card3: safeNumber(summaryJson.averageStayDuration)
+            },
+            hourly: (hourlyJson || []).map(x => ({
+                label: x.hour ?? "-",
+                value1: safeNumber(x.intrusionCount),
+                value2: safeNumber(x.averageStayDuration),
+                status: safeNumber(x.intrusionCount) >= 3 ? "위험" : "주의",
+                rowClass: safeNumber(x.intrusionCount) >= 3 ? "danger-row" : "warning-row"
+            })),
+            logs: state.realtimeLogs || []
         };
     }
 
@@ -748,10 +703,7 @@
         if (state.isLoading) return;
         state.isLoading = true;
 
-        if (state.abortController) {
-            state.abortController.abort();
-        }
-
+        if (state.abortController) state.abortController.abort();
         state.abortController = new AbortController();
 
         try {
@@ -761,10 +713,9 @@
 
             state.realtimeData = data;
             renderDashboard();
-        } catch (error) {
-            if (error.name !== "AbortError") {
-                console.error("실시간 데이터 조회 실패:", error);
-                renderErrorState(error.message || "실시간 데이터 조회 실패");
+        } catch (e) {
+            if (e.name !== "AbortError") {
+                console.error("실시간 데이터 조회 실패:", e);
             }
         } finally {
             state.isLoading = false;
@@ -772,15 +723,24 @@
     }
 
     function renderDashboard() {
-        const data = state.realtimeData;
-        if (!data) return;
+        const d = state.realtimeData;
+        if (!d) return;
 
-        renderSummary(data.summary);
-        renderHourlyTable(data.hourly);
-        renderMainChart(data.hourly);
+        if (state.mode === "crowd") {
+            document.getElementById("card1-value").innerText = d.summary.card1.toFixed(2);
+            document.getElementById("card2-value").innerText = d.summary.card2;
+            document.getElementById("card3-value").innerText = d.summary.card3.toFixed(1) + "%";
+        } else {
+            document.getElementById("card1-value").innerText = d.summary.card1;
+            document.getElementById("card2-value").innerText = d.summary.card2;
+            document.getElementById("card3-value").innerText = d.summary.card3.toFixed(1) + "초";
+        }
 
-        if (data.logs) {
-            renderLogs(data.logs);
+        renderTable(d.hourly);
+        renderChart(d.hourly);
+
+        if (d.logs) {
+            renderLogs(d.logs);
         } else {
             document.getElementById("log-box").innerHTML =
                 `<div class="log-item">현재 모드에서는 로그 연동이 없습니다.</div>`;
@@ -791,63 +751,42 @@
         }
     }
 
-    function renderSummary(summary) {
-        if (state.mode === "crowd") {
-            document.getElementById("card1-value").innerText = safeNumber(summary.card1).toFixed(2);
-            document.getElementById("card2-value").innerText = safeNumber(summary.card2);
-            document.getElementById("card3-value").innerText = safeNumber(summary.card3).toFixed(1) + "%";
-        } else {
-            document.getElementById("card1-value").innerText = safeNumber(summary.card1);
-            document.getElementById("card2-value").innerText = safeNumber(summary.card2);
-            document.getElementById("card3-value").innerText = safeNumber(summary.card3).toFixed(1) + "초";
-        }
-    }
+    function renderTable(list) {
+        const body = document.getElementById("hourly-body");
+        body.innerHTML = "";
 
-    function renderHourlyTable(hourly) {
-        const tbody = document.getElementById("hourly-body");
-        tbody.innerHTML = "";
-
-        if (!hourly || !hourly.length) {
-            tbody.innerHTML = `<tr><td colspan="4">데이터 없음</td></tr>`;
+        if (!list || !list.length) {
+            body.innerHTML = `<tr><td colspan="4">데이터 없음</td></tr>`;
             return;
         }
 
-        hourly.forEach(item => {
-            tbody.innerHTML += `
-                <tr class="${item.rowClass || ''}">
-                    <td>${item.label}</td>
-                    <td>${item.value1}</td>
-                    <td>${state.mode === "crowd" ? item.value2.toFixed(2) : item.value2 ? item.value2.toFixed(1) + "초" : "-"}</td>
-                    <td>${item.status}</td>
+        list.forEach(x => {
+            body.innerHTML += `
+                <tr class="${x.rowClass || ""}">
+                    <td>${x.label}</td>
+                    <td>${x.value1}</td>
+                    <td>${state.mode === "crowd" ? x.value2.toFixed(2) : x.value2.toFixed(1) + "초"}</td>
+                    <td>${x.status}</td>
                 </tr>
             `;
         });
     }
 
-    function renderMainChart(hourly) {
-        const canvas = document.getElementById("mainChart");
-        if (!canvas) return;
-
-        const ctx = canvas.getContext("2d");
+    function renderChart(list) {
+        const ctx = document.getElementById("mainChart").getContext("2d");
         const colors = getChartColors();
-
-        const labels = (hourly || []).map(item => item.label);
-        const values = (hourly || []).map(item => state.mode === "crowd" ? item.value2 : item.value1);
 
         if (state.mainChart) {
             state.mainChart.destroy();
-            state.mainChart = null;
         }
-
-        if (!labels.length) return;
 
         state.mainChart = new Chart(ctx, {
             type: state.mode === "crowd" ? "line" : "bar",
             data: {
-                labels,
+                labels: list.map(x => x.label),
                 datasets: [{
                     label: state.mode === "crowd" ? "평균 밀집도" : "시간당 침입 횟수",
-                    data: values,
+                    data: list.map(x => state.mode === "crowd" ? x.value2 : x.value1),
                     borderColor: colors.line,
                     backgroundColor: colors.fill,
                     borderWidth: 2,
@@ -859,24 +798,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: { color: colors.tick }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: colors.tick },
-                        grid: { color: colors.grid }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: colors.tick },
-                        grid: { color: colors.grid }
-                    }
-                }
+                maintainAspectRatio: false
             }
         });
     }
@@ -886,57 +808,63 @@
 
         if (!logs || !logs.length) {
             box.innerHTML = `<div class="log-item">로그 데이터 없음</div>`;
-            updateAlertPanel([]);
             return;
         }
 
         box.innerHTML = logs.map(log => `
-            <div class="log-item" style="border-left: 4px solid ${log.level_color || '#64748b'}; margin-bottom: 5px; padding-left: 8px;">
-                <span style="color: ${log.level_color || '#64748b'}; font-weight: bold;">
-                    ${log.status_text || '-'}
+            <div class="log-item" style="border-left: 4px solid ${log.level_color || "#64748b"}; margin-bottom: 5px; padding-left: 8px;">
+                <span style="color: ${log.level_color || "#64748b"}; font-weight: bold;">
+                    ${log.status_text || "-"}
                 </span>
                 인원: ${safeNumber(log.people_count)}명 |
-                시간: ${log.created_at || '-'}
+                시간: ${log.created_at || "-"}
             </div>
         `).join("");
 
         updateAlertPanel(logs);
     }
 
-    function renderErrorState(message) {
-        document.getElementById("card1-value").innerText = "-";
-        document.getElementById("card2-value").innerText = "-";
-        document.getElementById("card3-value").innerText = "-";
-        document.getElementById("hourly-body").innerHTML =
-            `<tr><td colspan="4">${message}</td></tr>`;
-        document.getElementById("log-box").innerHTML =
-            `<div class="log-item log-danger">${message}</div>`;
+    function updateAlertPanel(data) {
+        const high = (data || []).filter(x => x.alert === true);
+        const latest = high[0];
 
-        if (state.mainChart) {
-            state.mainChart.destroy();
-            state.mainChart = null;
+        if (latest && latest.created_at !== state.lastDismissedTime) {
+            showDangerPopup(latest);
         }
     }
 
-    function refreshRealtime() {
-        fetchRealtimeData();
-    }
+    function showDangerPopup(log) {
+        const oldPopup = document.getElementById("dynamic-danger-alert");
+        if (oldPopup) return;
 
-    function startPolling() {
-        stopPolling();
-        refreshRealtime();
-        state.timer = setInterval(refreshRealtime, state.pollingMs);
-    }
+        const popup = document.createElement("div");
+        popup.id = "dynamic-danger-alert";
+        popup.innerHTML = `
+            <div style="font-size:24px; margin-bottom:10px;">🚨 ${log.status_text || "위험 감지"} 🚨</div>
+            <div style="font-size:18px;">인원: ${safeNumber(log.people_count)}명</div>
+            <div style="font-size:14px; margin-top:10px;">${log.created_at || "-"}</div>
+            <button onclick="state.lastDismissedTime='${log.created_at}'; this.parentElement.remove();"
+                    style="margin-top:15px; padding:8px 20px; border:none; cursor:pointer;">
+                닫기
+            </button>
+        `;
+        popup.style.position = "fixed";
+        popup.style.top = "50%";
+        popup.style.left = "50%";
+        popup.style.transform = "translate(-50%, -50%)";
+        popup.style.background = "#ef4444";
+        popup.style.color = "white";
+        popup.style.padding = "25px";
+        popup.style.borderRadius = "15px";
+        popup.style.zIndex = "10000";
+        popup.style.textAlign = "center";
+        popup.style.boxShadow = "0 10px 40px rgba(0,0,0,0.4)";
+        document.body.appendChild(popup);
 
-    function stopPolling() {
-        if (state.timer) {
-            clearInterval(state.timer);
-            state.timer = null;
-        }
-    }
-
-    function loadDashboardData() {
-        refreshRealtime();
+        setTimeout(() => {
+            const nowPopup = document.getElementById("dynamic-danger-alert");
+            if (nowPopup) nowPopup.remove();
+        }, 5000);
     }
 
     function getCurrentReportData() {
@@ -1065,122 +993,95 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: { color: colors.tick }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: colors.tick },
-                        grid: { color: colors.grid }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: colors.tick },
-                        grid: { color: colors.grid }
-                    }
-                }
+                maintainAspectRatio: false
             }
         });
     }
 
     function closeReportModal() {
-            document.getElementById("report-modal-backdrop").style.display = "none";
-            if (state.reportChart) {
-                state.reportChart.destroy();
-                state.reportChart = null;
-            }
-        }
-
-        function setReportTab(button, tab) {
-            state.selectedReportTab = tab;
-            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
-            button.classList.add("active");
-            renderReportModal();
-        }
-
-        function downloadPdf() {
-            alert("PDF 다운로드 기능 연결 예정");
-        }
-
-        function downloadExcel() {
-            alert("EXCEL 다운로드 기능 연결 예정");
-        }
-
-        function toggleAlertPanel() {
-            const panel = document.getElementById("alert-panel");
-            if (panel) panel.classList.toggle("show");
-        }
-
-        function updateAlertPanel(data) {
-        const badge = document.getElementById("alert-badge");
-        const list = document.getElementById("alert-list");
-        if (!badge || !list) return;
-
-        const highAlerts = (data || []).filter(log => log.alert === true);
-
-        badge.innerText = highAlerts.length;
-
-        list.innerHTML = highAlerts.length
-            ? highAlerts.map(log => `
-                <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px; padding: 10px; background: #fff1f0;">
-                    <strong style="color: ${log.level_color};">${log.status_text}</strong><br>
-                    인원: ${safeNumber(log.people_count)}명<br>
-                    <small style="color: #888;">${log.created_at}</small>
-                </div>
-            `).join("")
-            : `<div class="alert-empty">현재 알림 없음</div>`;
-
-        // 🔥 popup 유지 (이게 핵심)
-        const latestLog = highAlerts[0];
-        if (latestLog && latestLog.created_at !== state.lastDismissedTime) {
-            showDangerPopup(latestLog);
+        document.getElementById("report-modal-backdrop").style.display = "none";
+        if (state.reportChart) {
+            state.reportChart.destroy();
+            state.reportChart = null;
         }
     }
 
-    function showDangerPopup(log) {
-        const oldPopup = document.getElementById("dynamic-danger-alert");
-        if (oldPopup) return;
+    function setReportTab(button, tab) {
+        state.selectedReportTab = tab;
+        document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+        button.classList.add("active");
+        renderReportModal();
+    }
 
-        const popup = document.createElement("div");
-        popup.id = "dynamic-danger-alert";
+    function downloadPdf() {
+        const range = getRangeParams();
+        if (!range) return;
 
-        Object.assign(popup.style, {
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: "10000",
-            width: "350px",
-            padding: "25px",
-            backgroundColor: log.level_color || "#ef4444",
-            color: "white",
-            borderRadius: "15px",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
-            textAlign: "center",
-            fontWeight: "bold",
-            border: "2px solid white"
+        const drone = getSelectedDrone();
+        const reportType = state.mode === "crowd" ? "CROWD" : "DANGER";
+        const category = state.selectedReportTab.toUpperCase();
+
+        const url =
+            `/api/reports/pdf?cameraId=${drone.cameraId}` +
+            `&start=${encodeURIComponent(range.start)}` +
+            `&end=${encodeURIComponent(range.end)}` +
+            `&reportType=${reportType}` +
+            `&category=${category}`;
+
+        window.open(url, "_blank");
+    }
+
+    function downloadExcel() {
+        const range = getRangeParams();
+        if (!range) return;
+
+        const drone = getSelectedDrone();
+        const reportType = state.mode === "crowd" ? "CROWD" : "DANGER";
+        const category = state.selectedReportTab.toUpperCase();
+
+        const url =
+            `/api/reports/excel?cameraId=${drone.cameraId}` +
+            `&start=${encodeURIComponent(range.start)}` +
+            `&end=${encodeURIComponent(range.end)}` +
+            `&reportType=${reportType}` +
+            `&category=${category}`;
+
+        window.open(url, "_blank");
+    }
+
+    function connectSse() {
+        const es = new EventSource(API.sse());
+
+        es.addEventListener("newDetection", e => {
+            const log = JSON.parse(e.data);
+            state.realtimeLogs.unshift(log);
+            state.realtimeLogs = state.realtimeLogs.slice(0, 50);
+            renderLogs(state.realtimeLogs);
         });
 
-        popup.innerHTML = `
-            <div style="font-size: 24px; margin-bottom: 10px;">🚨 ${log.status_text || '위험 감지'} 🚨</div>
-            <div style="font-size: 18px;">현재 인원: ${safeNumber(log.people_count)}명</div>
-            <div style="font-size: 14px; margin-top: 15px; opacity: 0.9;">${log.created_at || '-'}</div>
-            <button onclick="state.lastDismissedTime='${log.created_at}'; this.parentElement.remove();"
-                    style="margin-top: 20px; padding: 8px 20px; border: none; cursor: pointer; background: white; color: ${log.level_color || '#ef4444'}; font-weight: bold;">
-                닫기
-            </button>
-        `;
+        es.onerror = () => {
+            es.close();
+            setTimeout(connectSse, 3000);
+        };
+    }
 
-        document.body.appendChild(popup);
+    async function loadInitialLogs() {
+        try {
+            const res = await fetch(API.logs());
+            state.realtimeLogs = await res.json();
+            renderLogs(state.realtimeLogs);
+        } catch (e) {
+            state.realtimeLogs = [];
+        }
+    }
 
-        setTimeout(() => {
-            const nowPopup = document.getElementById("dynamic-danger-alert");
-            if (nowPopup) nowPopup.remove();
-        }, 5000);
+    function startPolling() {
+        fetchRealtimeData();
+        state.timer = setInterval(fetchRealtimeData, state.pollingMs);
+    }
+
+    function loadDashboardData() {
+        fetchRealtimeData();
     }
 
     function initKakaoMap() {
@@ -1238,24 +1139,9 @@
         });
     }
 
-    function refreshChartTheme() {
-        renderDashboard();
-    }
-
-    document.addEventListener("click", function (event) {
-        const wrapper = document.querySelector(".alert-wrapper");
-        const panel = document.getElementById("alert-panel");
-
-        if (!wrapper || !panel) return;
-        if (!wrapper.contains(event.target)) {
-            panel.classList.remove("show");
-        }
-    });
-
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
             closeReportModal();
-
             const popup = document.getElementById("dynamic-danger-alert");
             if (popup) popup.remove();
         }
@@ -1268,12 +1154,13 @@
     });
 
     kakao.maps.load(function () {
-        applySavedTheme();
         setTodayRange();
         initKakaoMap();
         updateVideoByMode();
         updateCardTitles();
         updateTableHeaders();
+        loadInitialLogs();
+        connectSse();
         startPolling();
     });
 </script>

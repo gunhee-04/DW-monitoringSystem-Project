@@ -21,8 +21,10 @@ public class StatisticsService {
     private final CrowdStatRepository crowdStatRepository;
     private final DetectionEventRepository detectionEventRepository;
 
-    public StatisticsService(CrowdStatRepository crowdStatRepository) {
+    public StatisticsService(CrowdStatRepository crowdStatRepository,
+                             DetectionEventRepository detectionEventRepository) {
         this.crowdStatRepository = crowdStatRepository;
+        this.detectionEventRepository = detectionEventRepository;
     }
 
     // =========================
@@ -39,6 +41,10 @@ public class StatisticsService {
         }
 
         return crowdStatRepository.findByMeasuredAtBetween(start, end);
+    }
+
+    public List<CrowdStat> findCrowdStats(Long cameraId, LocalDateTime start, LocalDateTime end) {
+        return getStats(cameraId, start, end);
     }
 
     // =========================
