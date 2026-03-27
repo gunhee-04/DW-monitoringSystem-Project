@@ -1,67 +1,81 @@
 package com.dwacademy.safetysystem.security;
 
+import com.dwacademy.safetysystem.member.repository.MemberRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // @PreAuthorize 활성화
+@RequiredArgsConstructor // 생성자 자동 주입
 public class SecurityConfig {
 
-        @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    private final MemberRepository memberRepository;
 
-            http
-                    .csrf(AbstractHttpConfigurer::disable)
+    // 필터를 Bean으로 등록 (이게 핵심)
+    @Bean
+    public MemberRefreshFilter memberRefreshFilter() {
+        return new MemberRefreshFilter(memberRepository);
+    }
 
-                    .authorizeHttpRequests(auth -> auth
-                            // 누구나 접근 가능
-                            .requestMatchers(
-                                    "/**",
-                                    "/",
-                                    "/member/login",
-                                    "/member/loginProc",
-                                    "/member/create",
-                                    "/css/**",
-                                    "/js/**",
-                                    "/images/**",
-                                    "/member/list"
-                            ).permitAll()
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-                            // 관리자만 접근
-                            //.requestMatchers("/member/list").hasRole("ADMIN")
-                            //.requestMatchers("/api/members/**").hasRole("ADMIN")
+        http
+                .csrf(AbstractHttpConfigurer::disable)
 
-                            // 나머지는 로그인 필요
-                            //.anyRequest().authenticated()
-                    )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/",
+                                "/member/login",
+                                "/member/loginProc",
+                                "/member/create",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**"
+                        ).permitAll()
 
-                    .formLogin(form -> form
-                            .loginPage("/member/login")                 // 네가 만든 로그인 페이지
-                            .loginProcessingUrl("/member/loginProc")        // form action이랑 맞춤
-                            .usernameParameter("email")                 // input name="email"
-                            .passwordParameter("password")              // input name="password"
-                            .defaultSuccessUrl("/", true)    // 로그인 성공 후 이동
-                            .failureUrl("/member/login?error")          // 로그인 실패
-                            .permitAll()
-                    )
+                        .requestMatchers("/member/list").hasRole("ADMIN")
+                        .requestMatchers("/api/members/**").hasRole("ADMIN")
 
-                    .logout(logout -> logout
-                            .logoutUrl("/member/logout")
-                            .logoutSuccessUrl("/member/login?logout")
-                            .invalidateHttpSession(true)
-                            .deleteCookies("JSESSIONID")
-                            .permitAll()
-                    );
+                        .anyRequest().authenticated()
+                )
 
-            return http.build();
-        }
+                .formLogin(form -> form
+                        .loginPage("/member/login")
+                        .loginProcessingUrl("/member/loginProc")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/member/login?error")
+                        .permitAll()
+                )
 
+                .logout(logout -> logout
+                        .logoutUrl("/member/logout")
+                        .logoutSuccessUrl("/member/login?logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
+                )
+
+                //  Bean으로 등록된 필터 사용 (이게 진짜 중요)
+                .addFilterAfter(
+                        memberRefreshFilter(),
+                        UsernamePasswordAuthenticationFilter.class
+                );
+
+        return http.build();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
