@@ -421,15 +421,24 @@
 </div>
 
 <script>
-    let currentMode = "crowd";
-    let selectedDroneId = "DRONE-01";
-    let selectedReportTab = "day";
-    let selectedCardKey = "card1";
-    let map;
-    let markers = [];
-    let mainChart = null;
-    let reportChart = null;
-    let lastDismissedTime = "";
+    const state = {
+        mode: "crowd",
+        selectedDroneId: "DRONE-01",
+        selectedReportTab: "day",
+        selectedCardKey: "card1",
+        timer: null,
+        logsTimer: null,
+        pollingMs: 5000,
+        logPollingMs: 3000,
+        isLoading: false,
+        abortController: null,
+        realtimeData: null,
+        lastDismissedTime: "",
+        mainChart: null,
+        reportChart: null,
+        map: null,
+        markers: []
+    };
 
     const droneData = [
         {
@@ -461,6 +470,20 @@
         }
     ];
 
+    const API = {
+        crowdSummary: (cameraId, start, end) =>
+            `/api/statistics/crowd/summary?cameraId=${cameraId}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+
+        crowdHourly: (cameraId, start, end) =>
+            `/api/statistics/crowd/hourly?cameraId=${cameraId}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+
+        logs: () => `http://127.0.0.1:8081/get_logs`
+    };
+
+    function getSelectedDrone() {
+        return droneData.find(d => d.id === state.selectedDroneId) || droneData[0];
+    }
+
     function getChartColors() {
         const style = getComputedStyle(document.body);
         return {
@@ -469,10 +492,6 @@
             line: style.getPropertyValue("--chart-line").trim() || "#2563eb",
             fill: style.getPropertyValue("--chart-fill").trim() || "rgba(37, 99, 235, 0.15)"
         };
-    }
-
-    function refreshChartTheme() {
-        loadDashboardData();
     }
 
     function formatDateTimeLocal(date) {
@@ -485,7 +504,7 @@
     }
 
     function formatDateTimeParam(value) {
-        return value + ":00";
+        return value.replace("T", " ") + ":00";
     }
 
     function setTodayRange() {
@@ -502,7 +521,6 @@
         const endValue = document.getElementById("end").value;
 
         if (!startValue || !endValue) {
-            alert("시작 시간과 종료 시간을 입력해주세요.");
             return null;
         }
 
@@ -518,47 +536,43 @@
     }
 
     function switchMode(mode) {
-        currentMode = mode;
+        state.mode = mode;
 
-        document.getElementById("crowd-btn").classList.remove("active");
-        document.getElementById("danger-btn").classList.remove("active");
+        document.getElementById("crowd-btn").classList.toggle("active", mode === "crowd");
+        document.getElementById("danger-btn").classList.toggle("active", mode === "danger");
 
         const sideInfo = document.querySelector(".side-info");
         sideInfo.classList.remove("active-crowd", "active-danger");
 
         if (mode === "crowd") {
-            document.getElementById("crowd-btn").classList.add("active");
             document.getElementById("selected-mode-text").innerText = "밀집 관제";
             document.getElementById("selected-status-badge").innerText = "밀집";
             document.getElementById("selected-status-badge").className = "status-badge badge-crowd";
             sideInfo.classList.add("active-crowd");
         } else {
-            document.getElementById("danger-btn").classList.add("active");
             document.getElementById("selected-mode-text").innerText = "위험 관제";
             document.getElementById("selected-status-badge").innerText = "위험";
             document.getElementById("selected-status-badge").className = "status-badge badge-danger";
             sideInfo.classList.add("active-danger");
         }
 
-        updateVideoByMode();
         updateCardTitles();
         updateTableHeaders();
-        loadDashboardData();
+        updateVideoByMode();
+        refreshRealtime();
     }
 
     function updateVideoByMode() {
         const matchedDrone =
-            droneData.find(drone => drone.id === selectedDroneId) ||
-            droneData.find(drone => drone.mode === currentMode) ||
+            droneData.find(drone => drone.id === state.selectedDroneId) ||
+            droneData.find(drone => drone.mode === state.mode) ||
             droneData[0];
 
-        selectedDroneId = matchedDrone.id;
+        state.selectedDroneId = matchedDrone.id;
         document.getElementById("selected-drone-text").innerText = matchedDrone.id;
 
         const stream = document.getElementById("stream-video");
         const video = document.getElementById("file-video");
-
-        if (!stream || !video) return;
 
         if ((matchedDrone.videoUrl || "").endsWith(".mp4")) {
             stream.style.display = "none";
@@ -570,12 +584,12 @@
             video.pause();
             video.style.display = "none";
             stream.style.display = "block";
-            stream.src = matchedDrone.videoUrl + "?t=" + new Date().getTime();
+            stream.src = matchedDrone.videoUrl + "?t=" + Date.now();
         }
     }
 
     function updateCardTitles() {
-        if (currentMode === "crowd") {
+        if (state.mode === "crowd") {
             document.getElementById("card1-label").innerText = "평균 밀집";
             document.getElementById("card2-label").innerText = "최대 밀집(시간별)";
             document.getElementById("card3-label").innerText = "밀집도 증가율";
@@ -588,12 +602,12 @@
             document.getElementById("card3-label").innerText = "평균 체류 시간";
             document.getElementById("card1-sub").innerText = "위험 이벤트 기준";
             document.getElementById("card2-sub").innerText = "시간 단위 집계";
-            document.getElementById("card3-sub").innerText = "체류 시간 데이터 미연동";
+            document.getElementById("card3-sub").innerText = "실시간 로그 기준";
         }
     }
 
     function updateTableHeaders() {
-        if (currentMode === "crowd") {
+        if (state.mode === "crowd") {
             document.getElementById("table-col-1").innerText = "총 인원 수";
             document.getElementById("table-col-2").innerText = "평균 밀집도";
         } else {
@@ -608,68 +622,239 @@
         return { text: "정상", rowClass: "safe-row" };
     }
 
-    function getSelectedDrone() {
-        return droneData.find(drone => drone.id === selectedDroneId) || droneData[0];
+    function safeNumber(value, fallback = 0) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
     }
 
-    function getCrowdDensityValue(item) {
-        return Number(
-            item.averageDensityValue ??
-            item.densityValue ??
-            item.averageDensity ??
-            item.density ??
-            0
-        );
+    function normalizeCrowdSummary(data) {
+        return {
+            card1: safeNumber(data?.averageDensityValue ?? data?.averageDensity ?? 0),
+            card2: safeNumber(data?.maxPeopleCount ?? data?.peopleMax ?? 0),
+            card3: safeNumber(data?.averageIncreaseRate ?? data?.increaseRate ?? 0)
+        };
     }
 
-    function getCrowdPeopleCount(item) {
-        return Number(
-            item.totalPeopleCount ??
-            item.peopleCount ??
-            item.detectedCount ??
-            0
-        );
+    function normalizeCrowdHourly(data) {
+        return (data || []).map(item => {
+            const density = safeNumber(
+                item.averageDensityValue ?? item.densityValue ?? item.averageDensity ?? item.density ?? 0
+            );
+
+            return {
+                label: item.hour ?? item.time ?? item.label ?? item.measuredAt ?? "-",
+                value1: safeNumber(item.totalPeopleCount ?? item.peopleCount ?? item.detectedCount ?? 0),
+                value2: density,
+                status: getDensityStatus(density).text,
+                rowClass: getDensityStatus(density).rowClass
+            };
+        });
     }
 
-    function getCrowdLabel(item) {
-        return item.hour ?? item.time ?? item.label ?? item.measuredAt ?? "-";
-    }
-
-    function getDangerLogsOnly(data) {
-        return (data || []).filter(log =>
+    function normalizeDangerFromLogs(logs) {
+        const dangerLogs = (logs || []).filter(log =>
             (log.status_text || "").includes("침입") ||
             log.level_color === "#ff4d4f" ||
-            log.isAlert === true
+            log.alert === true
         );
+
+        const grouped = {};
+        dangerLogs.forEach(log => {
+            const timeText = log.created_at || "";
+            const hour = timeText.length >= 13 ? timeText.substring(11, 13) + ":00" : "00:00";
+
+            if (!grouped[hour]) {
+                grouped[hour] = {
+                    count: 0,
+                    staySum: 0
+                };
+            }
+
+            grouped[hour].count += 1;
+            grouped[hour].staySum += safeNumber(log.stay_duration_sec ?? 0);
+        });
+
+        const hourly = Object.keys(grouped).sort().map(hour => {
+            const count = grouped[hour].count;
+            const avgStay = count > 0 ? grouped[hour].staySum / count : 0;
+
+            return {
+                label: hour,
+                value1: count,
+                value2: avgStay,
+                status: count >= 3 ? "위험" : "주의",
+                rowClass: count >= 3 ? "danger-row" : "warning-row"
+            };
+        });
+
+        const totalIntrusion = dangerLogs.length;
+        const maxHourly = hourly.length ? Math.max(...hourly.map(x => x.value1)) : 0;
+        const avgStay = dangerLogs.length
+            ? dangerLogs.reduce((sum, log) => sum + safeNumber(log.stay_duration_sec ?? 0), 0) / dangerLogs.length
+            : 0;
+
+        return {
+            summary: {
+                card1: totalIntrusion,
+                card2: maxHourly,
+                card3: avgStay
+            },
+            hourly,
+            logs: logs || []
+        };
     }
 
-    function drawCrowdChart(data) {
+    async function fetchCrowdRealtime(signal) {
+        const range = getRangeParams();
+        if (!range) return null;
+
+        const drone = getSelectedDrone();
+
+        const [summaryRes, hourlyRes] = await Promise.all([
+            fetch(API.crowdSummary(drone.cameraId, range.start, range.end), { signal }),
+            fetch(API.crowdHourly(drone.cameraId, range.start, range.end), { signal })
+        ]);
+
+        if (!summaryRes.ok) throw new Error("crowd summary 조회 실패");
+        if (!hourlyRes.ok) throw new Error("crowd hourly 조회 실패");
+
+        const summaryJson = await summaryRes.json();
+        const hourlyJson = await hourlyRes.json();
+
+        return {
+            mode: "crowd",
+            summary: normalizeCrowdSummary(summaryJson),
+            hourly: normalizeCrowdHourly(hourlyJson),
+            logs: null
+        };
+    }
+
+    async function fetchDangerRealtime(signal) {
+        const res = await fetch(API.logs(), { signal });
+        if (!res.ok) throw new Error("danger logs 조회 실패");
+
+        const logs = await res.json();
+        const normalized = normalizeDangerFromLogs(logs);
+
+        return {
+            mode: "danger",
+            summary: normalized.summary,
+            hourly: normalized.hourly,
+            logs: normalized.logs
+        };
+    }
+
+    async function fetchRealtimeData() {
+        if (state.isLoading) return;
+        state.isLoading = true;
+
+        if (state.abortController) {
+            state.abortController.abort();
+        }
+
+        state.abortController = new AbortController();
+
+        try {
+            const data = state.mode === "crowd"
+                ? await fetchCrowdRealtime(state.abortController.signal)
+                : await fetchDangerRealtime(state.abortController.signal);
+
+            state.realtimeData = data;
+            renderDashboard();
+        } catch (error) {
+            if (error.name !== "AbortError") {
+                console.error("실시간 데이터 조회 실패:", error);
+                renderErrorState(error.message || "실시간 데이터 조회 실패");
+            }
+        } finally {
+            state.isLoading = false;
+        }
+    }
+
+    function renderDashboard() {
+        const data = state.realtimeData;
+        if (!data) return;
+
+        renderSummary(data.summary);
+        renderHourlyTable(data.hourly);
+        renderMainChart(data.hourly);
+
+        if (data.logs) {
+            renderLogs(data.logs);
+        } else {
+            document.getElementById("log-box").innerHTML =
+                `<div class="log-item">현재 모드에서는 로그 연동이 없습니다.</div>`;
+        }
+
+        if (document.getElementById("report-modal-backdrop").style.display === "flex") {
+            renderReportModal();
+        }
+    }
+
+    function renderSummary(summary) {
+        if (state.mode === "crowd") {
+            document.getElementById("card1-value").innerText = safeNumber(summary.card1).toFixed(2);
+            document.getElementById("card2-value").innerText = safeNumber(summary.card2);
+            document.getElementById("card3-value").innerText = safeNumber(summary.card3).toFixed(1) + "%";
+        } else {
+            document.getElementById("card1-value").innerText = safeNumber(summary.card1);
+            document.getElementById("card2-value").innerText = safeNumber(summary.card2);
+            document.getElementById("card3-value").innerText = safeNumber(summary.card3).toFixed(1) + "초";
+        }
+    }
+
+    function renderHourlyTable(hourly) {
+        const tbody = document.getElementById("hourly-body");
+        tbody.innerHTML = "";
+
+        if (!hourly || !hourly.length) {
+            tbody.innerHTML = `<tr><td colspan="4">데이터 없음</td></tr>`;
+            return;
+        }
+
+        hourly.forEach(item => {
+            tbody.innerHTML += `
+                <tr class="${item.rowClass || ''}">
+                    <td>${item.label}</td>
+                    <td>${item.value1}</td>
+                    <td>${state.mode === "crowd" ? item.value2.toFixed(2) : item.value2 ? item.value2.toFixed(1) + "초" : "-"}</td>
+                    <td>${item.status}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function renderMainChart(hourly) {
         const canvas = document.getElementById("mainChart");
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
-        const labels = data.map(item => getCrowdLabel(item));
-        const densityValues = data.map(item => getCrowdDensityValue(item));
         const colors = getChartColors();
 
-        if (mainChart) {
-            mainChart.destroy();
+        const labels = (hourly || []).map(item => item.label);
+        const values = (hourly || []).map(item => state.mode === "crowd" ? item.value2 : item.value1);
+
+        if (state.mainChart) {
+            state.mainChart.destroy();
+            state.mainChart = null;
         }
 
-        mainChart = new Chart(ctx, {
-            type: "line",
+        if (!labels.length) return;
+
+        state.mainChart = new Chart(ctx, {
+            type: state.mode === "crowd" ? "line" : "bar",
             data: {
-                labels: labels,
+                labels,
                 datasets: [{
-                    label: "평균 밀집도",
-                    data: densityValues,
+                    label: state.mode === "crowd" ? "평균 밀집도" : "시간당 침입 횟수",
+                    data: values,
                     borderColor: colors.line,
                     backgroundColor: colors.fill,
                     borderWidth: 2,
-                    fill: true,
+                    fill: state.mode === "crowd",
                     tension: 0.3,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointRadius: state.mode === "crowd" ? 4 : 0,
+                    pointHoverRadius: state.mode === "crowd" ? 6 : 0
                 }]
             },
             options: {
@@ -678,362 +863,102 @@
                 plugins: {
                     legend: {
                         display: true,
-                        labels: {
-                            color: colors.tick
-                        }
+                        labels: { color: colors.tick }
                     }
                 },
                 scales: {
                     x: {
-                        ticks: {
-                            color: colors.tick
-                        },
-                        grid: {
-                            color: colors.grid
-                        }
+                        ticks: { color: colors.tick },
+                        grid: { color: colors.grid }
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            color: colors.tick
-                        },
-                        grid: {
-                            color: colors.grid
-                        }
+                        ticks: { color: colors.tick },
+                        grid: { color: colors.grid }
                     }
                 }
             }
         });
     }
 
-    function drawDangerChart(data) {
-        const canvas = document.getElementById("mainChart");
-        if (!canvas) return;
+    function renderLogs(logs) {
+        const box = document.getElementById("log-box");
 
-        const ctx = canvas.getContext("2d");
-        const colors = getChartColors();
-        const labels = (data || []).map(item => item.hour);
-        const values = (data || []).map(item => item.intrusionCount);
-
-        if (mainChart) {
-            mainChart.destroy();
+        if (!logs || !logs.length) {
+            box.innerHTML = `<div class="log-item">로그 데이터 없음</div>`;
+            updateAlertPanel([]);
+            return;
         }
 
-        mainChart = new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "시간당 침입 횟수",
-                    data: values,
-                    backgroundColor: colors.fill,
-                    borderColor: colors.line,
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            color: colors.tick
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: colors.tick
-                        },
-                        grid: {
-                            color: colors.grid
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: colors.tick
-                        },
-                        grid: {
-                            color: colors.grid
-                        }
-                    }
-                }
-            }
-        });
+        box.innerHTML = logs.map(log => `
+            <div class="log-item" style="border-left: 4px solid ${log.level_color || '#64748b'}; margin-bottom: 5px; padding-left: 8px;">
+                <span style="color: ${log.level_color || '#64748b'}; font-weight: bold;">
+                    ${log.status_text || '-'}
+                </span>
+                인원: ${safeNumber(log.people_count)}명 |
+                시간: ${log.created_at || '-'}
+            </div>
+        `).join("");
+
+        updateAlertPanel(logs);
     }
 
-    function loadCrowdHourly() {
-        const range = getRangeParams();
-        if (!range) return;
+    function renderErrorState(message) {
+        document.getElementById("card1-value").innerText = "-";
+        document.getElementById("card2-value").innerText = "-";
+        document.getElementById("card3-value").innerText = "-";
+        document.getElementById("hourly-body").innerHTML =
+            `<tr><td colspan="4">${message}</td></tr>`;
+        document.getElementById("log-box").innerHTML =
+            `<div class="log-item log-danger">${message}</div>`;
 
-        const selectedDrone = getSelectedDrone();
-        let url = `/api/statistics/crowd/hourly?start=${range.start}&end=${range.end}`;
-
-        if (selectedDrone.cameraId) {
-            url += `&cameraId=${selectedDrone.cameraId}`;
+        if (state.mainChart) {
+            state.mainChart.destroy();
+            state.mainChart = null;
         }
-
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.getElementById("hourly-body");
-                tbody.innerHTML = "";
-
-                if (!data || !data.length) {
-                    tbody.innerHTML = `<tr><td colspan="4">선택한 날짜 범위에 밀집 데이터가 없습니다.</td></tr>`;
-                    if (mainChart) {
-                        mainChart.destroy();
-                        mainChart = null;
-                    }
-                    return;
-                }
-
-                data.forEach(item => {
-                    const density = getCrowdDensityValue(item);
-                    const peopleCount = getCrowdPeopleCount(item);
-                    const hourText = getCrowdLabel(item);
-                    const status = getDensityStatus(density);
-
-                    tbody.innerHTML += `
-                        <tr class="${status.rowClass}">
-                            <td>${hourText}</td>
-                            <td>${peopleCount}</td>
-                            <td>${density.toFixed(2)}</td>
-                            <td>${status.text}</td>
-                        </tr>
-                    `;
-                });
-
-                drawCrowdChart(data);
-            })
-            .catch(error => {
-                console.error("밀집 시간별 통계 조회 실패:", error);
-                document.getElementById("hourly-body").innerHTML =
-                    `<tr><td colspan="4">시간별 통계 조회 실패</td></tr>`;
-            });
     }
 
-    function loadCrowdSummary() {
-        const range = getRangeParams();
-        if (!range) return;
+    function refreshRealtime() {
+        fetchRealtimeData();
+    }
 
-        const selectedDrone = getSelectedDrone();
-        let url = `/api/statistics/crowd/summary?start=${range.start}&end=${range.end}`;
+    function startPolling() {
+        stopPolling();
+        refreshRealtime();
+        state.timer = setInterval(refreshRealtime, state.pollingMs);
+    }
 
-        if (selectedDrone.cameraId) {
-            url += `&cameraId=${selectedDrone.cameraId}`;
+    function stopPolling() {
+        if (state.timer) {
+            clearInterval(state.timer);
+            state.timer = null;
         }
-
-        fetch(url)
-            .then(res => {
-                if (!res.ok) throw new Error("summary api error");
-                return res.json();
-            })
-            .then(data => {
-                document.getElementById("card1-value").innerText =
-                    Number(data.averageDensityValue ?? 0).toFixed(2);
-
-                document.getElementById("card2-value").innerText =
-                    Number(data.maxPeopleCount ?? 0);
-
-                document.getElementById("card3-value").innerText =
-                    Number(data.averageIncreaseRate ?? 0).toFixed(1) + "%";
-            })
-            .catch(error => {
-                console.error("밀집 요약 통계 조회 실패:", error);
-                document.getElementById("card1-value").innerText = "-";
-                document.getElementById("card2-value").innerText = "-";
-                document.getElementById("card3-value").innerText = "-";
-            });
-    }
-
-    function loadDangerSummary() {
-        fetch("http://127.0.0.1:8081/get_logs")
-            .then(res => {
-                if (!res.ok) throw new Error("danger summary api error");
-                return res.json();
-            })
-            .then(data => {
-                const dangerLogs = getDangerLogsOnly(data);
-                const totalIntrusion = dangerLogs.length;
-
-                const hourMap = {};
-                dangerLogs.forEach(log => {
-                    const timeText = log.created_at || "";
-                    const hour = timeText.length >= 13 ? timeText.substring(11, 13) : "00";
-                    hourMap[hour] = (hourMap[hour] || 0) + 1;
-                });
-
-                const maxHourlyIntrusion = Object.values(hourMap).length
-                    ? Math.max(...Object.values(hourMap))
-                    : 0;
-
-                document.getElementById("card1-value").innerText = totalIntrusion;
-                document.getElementById("card2-value").innerText = maxHourlyIntrusion;
-                document.getElementById("card3-value").innerText = "-";
-            })
-            .catch(error => {
-                console.error("위험 요약 통계 조회 실패:", error);
-                document.getElementById("card1-value").innerText = "-";
-                document.getElementById("card2-value").innerText = "-";
-                document.getElementById("card3-value").innerText = "-";
-            });
-    }
-
-    function loadDangerHourly() {
-        fetch("http://127.0.0.1:8081/get_logs")
-            .then(res => {
-                if (!res.ok) throw new Error("danger hourly api error");
-                return res.json();
-            })
-            .then(data => {
-                const tbody = document.getElementById("hourly-body");
-                tbody.innerHTML = "";
-
-                const dangerLogs = getDangerLogsOnly(data);
-
-                if (!dangerLogs.length) {
-                    tbody.innerHTML = `<tr><td colspan="4">위험 탐지 데이터가 없습니다.</td></tr>`;
-                    if (mainChart) {
-                        mainChart.destroy();
-                        mainChart = null;
-                    }
-                    return;
-                }
-
-                const grouped = {};
-
-                dangerLogs.forEach(log => {
-                    const timeText = log.created_at || "";
-                    const hour = timeText.length >= 13 ? timeText.substring(11, 13) + ":00" : "00:00";
-
-                    if (!grouped[hour]) {
-                        grouped[hour] = { count: 0 };
-                    }
-                    grouped[hour].count += 1;
-                });
-
-                const chartData = Object.keys(grouped)
-                    .sort()
-                    .map(hour => ({
-                        hour: hour,
-                        intrusionCount: grouped[hour].count
-                    }));
-
-                chartData.forEach(item => {
-                    const status = item.intrusionCount >= 3 ? "위험" : "주의";
-                    const rowClass = item.intrusionCount >= 3 ? "danger-row" : "warning-row";
-
-                    tbody.innerHTML += `
-                        <tr class="${rowClass}">
-                            <td>${item.hour}</td>
-                            <td>${item.intrusionCount}</td>
-                            <td>-</td>
-                            <td>${status}</td>
-                        </tr>
-                    `;
-                });
-
-                drawDangerChart(chartData);
-            })
-            .catch(error => {
-                console.error("위험 시간별 통계 조회 실패:", error);
-                document.getElementById("hourly-body").innerHTML =
-                    `<tr><td colspan="4">위험 시간별 통계 조회 실패</td></tr>`;
-            });
-    }
-
-    function loadLogs() {
-        fetch("http://127.0.0.1:8081/get_logs")
-            .then(response => {
-                if (!response.ok) throw new Error();
-                return response.json();
-            })
-            .then(data => {
-                const box = document.getElementById("log-box");
-
-                if (data.error) {
-                    box.innerHTML = `<div class="log-item log-danger">에러: ${data.error}</div>`;
-                    return;
-                }
-
-                updateAlertPanel(data);
-                box.innerHTML = "";
-
-                data.forEach(log => {
-                    box.innerHTML += `
-                        <div class="log-item" style="border-left: 4px solid ${log.level_color}; margin-bottom: 5px; padding-left: 8px;">
-                            <span style="color: ${log.level_color}; font-weight: bold;">
-                                ${log.status_text}
-                            </span>
-                            인원: ${log.people_count}명 |
-                            시간: ${log.created_at}
-                        </div>
-                    `;
-                });
-            })
-            .catch(() => {
-                document.getElementById("log-box").innerHTML =
-                    `<div class="log-item log-danger">Flask 로그 서버 연결 실패</div>`;
-
-                const badge = document.getElementById("alert-badge");
-                const list = document.getElementById("alert-list");
-
-                if (badge) badge.innerText = "!";
-                if (list) {
-                    list.innerHTML = `<div class="alert-empty">로그 서버 연결 실패</div>`;
-                }
-            });
     }
 
     function loadDashboardData() {
-        if (currentMode === "crowd") {
-            loadCrowdSummary();
-            loadCrowdHourly();
-        } else {
-            loadDangerSummary();
-            loadDangerHourly();
-        }
+        refreshRealtime();
     }
 
     function getCurrentReportData() {
-        const rows = Array.from(document.querySelectorAll("#hourly-body tr"));
-        const labels = [];
-        const values = [];
+        const hourly = state.realtimeData?.hourly || [];
+        const labels = hourly.map(item => item.label);
 
-        rows.forEach(row => {
-            const cells = row.querySelectorAll("td");
-            if (currentMode === "crowd" && cells.length >= 3) {
-                labels.push(cells[0].innerText.trim());
-                values.push(Number(cells[2].innerText.trim()) || 0);
-            } else if (currentMode === "danger" && cells.length >= 2) {
-                labels.push(cells[0].innerText.trim());
-                values.push(Number(cells[1].innerText.trim()) || 0);
-            }
-        });
-
-        if (currentMode === "crowd") {
-            if (selectedCardKey === "card1") {
+        if (state.mode === "crowd") {
+            if (state.selectedCardKey === "card1") {
                 return {
                     title: "평균 밀집 상세 통계",
                     datasetLabel: "평균 밀집도",
                     labels,
-                    values,
+                    values: hourly.map(item => item.value2),
                     unit: ""
                 };
             }
-            if (selectedCardKey === "card2") {
+            if (state.selectedCardKey === "card2") {
                 return {
                     title: "최대 밀집 상세 통계",
                     datasetLabel: "총 인원 수",
                     labels,
-                    values: Array.from(document.querySelectorAll("#hourly-body tr")).map(row => {
-                        const cells = row.querySelectorAll("td");
-                        return cells.length >= 2 ? Number(cells[1].innerText.trim()) || 0 : 0;
-                    }),
+                    values: hourly.map(item => item.value1),
                     unit: "명"
                 };
             }
@@ -1041,26 +966,42 @@
                 title: "밀집도 증가율 상세 통계",
                 datasetLabel: "평균 밀집도",
                 labels,
-                values,
+                values: hourly.map(item => item.value2),
                 unit: ""
             };
         }
 
+        if (state.selectedCardKey === "card1") {
+            return {
+                title: "총 침입 수 상세 통계",
+                datasetLabel: "침입 횟수",
+                labels,
+                values: hourly.map(item => item.value1),
+                unit: "건"
+            };
+        }
+
+        if (state.selectedCardKey === "card2") {
+            return {
+                title: "시간당 침입 횟수 상세 통계",
+                datasetLabel: "시간당 침입 횟수",
+                labels,
+                values: hourly.map(item => item.value1),
+                unit: "건"
+            };
+        }
+
         return {
-            title: selectedCardKey === "card1"
-                ? "총 침입 수 상세 통계"
-                : selectedCardKey === "card2"
-                    ? "시간당 침입 횟수 상세 통계"
-                    : "평균 체류 시간 상세 통계",
-            datasetLabel: selectedCardKey === "card3" ? "평균 체류 시간" : "시간당 침입 횟수",
+            title: "평균 체류 시간 상세 통계",
+            datasetLabel: "평균 체류 시간",
             labels,
-            values,
-            unit: selectedCardKey === "card3" ? "분" : "건"
+            values: hourly.map(item => item.value2),
+            unit: "초"
         };
     }
 
     function openReportModal(cardKey) {
-        selectedCardKey = cardKey;
+        state.selectedCardKey = cardKey;
         document.getElementById("report-modal-backdrop").style.display = "flex";
         renderReportModal();
     }
@@ -1072,45 +1013,42 @@
         document.getElementById("modal-title").innerText = report.title;
 
         const summary = document.getElementById("report-summary");
-        if (summary) {
-            summary.innerHTML = `
-                현재 선택 모드: <strong>${currentMode === "crowd" ? "밀집" : "위험"}</strong><br>
-                선택 드론: <strong>${selectedDroneId}</strong><br>
-                선택 항목: <strong>${report.datasetLabel}</strong><br>
-                선택 기간: <strong>${selectedReportTab}</strong>
-            `;
-        }
+        summary.innerHTML = `
+            현재 선택 모드: <strong>${state.mode === "crowd" ? "밀집" : "위험"}</strong><br>
+            선택 드론: <strong>${state.selectedDroneId}</strong><br>
+            선택 항목: <strong>${report.datasetLabel}</strong><br>
+            선택 기간: <strong>${state.selectedReportTab}</strong>
+        `;
 
         const tbody = document.getElementById("report-table-body");
-        if (tbody) {
-            tbody.innerHTML = "";
+        tbody.innerHTML = "";
 
-            if (!report.labels.length) {
-                tbody.innerHTML = `<tr><td colspan="3">데이터 없음</td></tr>`;
-            } else {
-                report.labels.forEach((label, index) => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${label}</td>
-                            <td>${report.values[index]}${report.unit}</td>
-                            <td>${report.datasetLabel}</td>
-                        </tr>
-                    `;
-                });
-            }
+        if (!report.labels.length) {
+            tbody.innerHTML = `<tr><td colspan="3">데이터 없음</td></tr>`;
+        } else {
+            report.labels.forEach((label, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${label}</td>
+                        <td>${report.values[index]}${report.unit}</td>
+                        <td>${report.datasetLabel}</td>
+                    </tr>
+                `;
+            });
         }
 
         const canvas = document.getElementById("reportChart");
-        if (!canvas) return;
-
         const ctx = canvas.getContext("2d");
 
-        if (reportChart) {
-            reportChart.destroy();
+        if (state.reportChart) {
+            state.reportChart.destroy();
+            state.reportChart = null;
         }
 
-        reportChart = new Chart(ctx, {
-            type: currentMode === "crowd" ? "line" : "bar",
+        if (!report.labels.length) return;
+
+        state.reportChart = new Chart(ctx, {
+            type: state.mode === "crowd" ? "line" : "bar",
             data: {
                 labels: report.labels,
                 datasets: [{
@@ -1119,10 +1057,10 @@
                     borderColor: colors.line,
                     backgroundColor: colors.fill,
                     borderWidth: 2,
-                    fill: currentMode === "crowd",
+                    fill: state.mode === "crowd",
                     tension: 0.3,
-                    pointRadius: currentMode === "crowd" ? 4 : 0,
-                    pointHoverRadius: currentMode === "crowd" ? 6 : 0
+                    pointRadius: state.mode === "crowd" ? 4 : 0,
+                    pointHoverRadius: state.mode === "crowd" ? 6 : 0
                 }]
             },
             options: {
@@ -1131,28 +1069,18 @@
                 plugins: {
                     legend: {
                         display: true,
-                        labels: {
-                            color: colors.tick
-                        }
+                        labels: { color: colors.tick }
                     }
                 },
                 scales: {
                     x: {
-                        ticks: {
-                            color: colors.tick
-                        },
-                        grid: {
-                            color: colors.grid
-                        }
+                        ticks: { color: colors.tick },
+                        grid: { color: colors.grid }
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            color: colors.tick
-                        },
-                        grid: {
-                            color: colors.grid
-                        }
+                        ticks: { color: colors.tick },
+                        grid: { color: colors.grid }
                     }
                 }
             }
@@ -1161,14 +1089,14 @@
 
     function closeReportModal() {
         document.getElementById("report-modal-backdrop").style.display = "none";
-        if (reportChart) {
-            reportChart.destroy();
-            reportChart = null;
+        if (state.reportChart) {
+            state.reportChart.destroy();
+            state.reportChart = null;
         }
     }
 
     function setReportTab(button, tab) {
-        selectedReportTab = tab;
+        state.selectedReportTab = tab;
         document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
         button.classList.add("active");
         renderReportModal();
@@ -1184,9 +1112,7 @@
 
     function toggleAlertPanel() {
         const panel = document.getElementById("alert-panel");
-        if (panel) {
-            panel.classList.toggle("show");
-        }
+        if (panel) panel.classList.toggle("show");
     }
 
     function updateAlertPanel(data) {
@@ -1194,24 +1120,22 @@
         const list = document.getElementById("alert-list");
         if (!badge || !list) return;
 
-    // 1. 🚩 백엔드에서 보낸 isAlert가 true인 것만 정확히 필터링
-        const highAlerts = data.filter(log => log.alert === true);
+        const highAlerts = (data || []).filter(log => log.alert === true);
 
-    // 2. 🚩 필터링된 개수만큼 종 모양 숫자 업데이트
         badge.innerText = highAlerts.length;
 
-    // 3. 🚩 종 모양 클릭 시 나오는 리스트도 HIGH 상황만 출력
-        list.innerHTML = highAlerts.slice().map(log => `
-            <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px; padding: 10px; background: #fff1f0;">
-                <strong style="color: ${log.level_color};">${log.status_text}</strong><br>
-                인원: ${log.people_count}명<br>
-                <small style="color: #888;">${log.created_at}</small>
-            </div>
-        `).join("");
+        list.innerHTML = highAlerts.length
+            ? highAlerts.map(log => `
+                <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px; padding: 10px; background: #fff1f0;">
+                    <strong style="color: ${log.level_color};">${log.status_text}</strong><br>
+                    인원: ${safeNumber(log.people_count)}명<br>
+                    <small style="color: #888;">${log.created_at}</small>
+                </div>
+            `).join("")
+            : `<div class="alert-empty">현재 알림 없음</div>`;
 
-    // 4. 🚩 실시간 빨간색 팝업 알림 (가장 최근 데이터가 HIGH일 때만)
         const latestLog = highAlerts[0];
-        if (latestLog && latestLog.alert === true && latestLog.created_at !== lastDismissedTime) {
+        if (latestLog && latestLog.created_at !== state.lastDismissedTime) {
             showDangerPopup(latestLog);
         }
     }
@@ -1231,7 +1155,7 @@
             zIndex: "10000",
             width: "350px",
             padding: "25px",
-            backgroundColor: log.level_color,
+            backgroundColor: log.level_color || "#ef4444",
             color: "white",
             borderRadius: "15px",
             boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
@@ -1241,11 +1165,11 @@
         });
 
         popup.innerHTML = `
-            <div style="font-size: 24px; margin-bottom: 10px;">🚨 ${log.status_text} 🚨</div>
-            <div style="font-size: 18px;">현재 인원: ${log.people_count}명</div>
-            <div style="font-size: 14px; margin-top: 15px; opacity: 0.9;">${log.created_at}</div>
-            <button onclick="lastDismissedTime='${log.created_at}'; this.parentElement.remove();"
-                    style="margin-top: 20px; padding: 8px 20px; border: none; cursor: pointer; background: white; color: ${log.level_color}; font-weight: bold;">
+            <div style="font-size: 24px; margin-bottom: 10px;">🚨 ${log.status_text || '위험 감지'} 🚨</div>
+            <div style="font-size: 18px;">현재 인원: ${safeNumber(log.people_count)}명</div>
+            <div style="font-size: 14px; margin-top: 15px; opacity: 0.9;">${log.created_at || '-'}</div>
+            <button onclick="state.lastDismissedTime='${log.created_at}'; this.parentElement.remove();"
+                    style="margin-top: 20px; padding: 8px 20px; border: none; cursor: pointer; background: white; color: ${log.level_color || '#ef4444'}; font-weight: bold;">
                 닫기
             </button>
         `;
@@ -1253,22 +1177,20 @@
         document.body.appendChild(popup);
 
         setTimeout(() => {
-            if (document.getElementById("dynamic-danger-alert")) {
-                popup.remove();
-            }
+            const nowPopup = document.getElementById("dynamic-danger-alert");
+            if (nowPopup) nowPopup.remove();
         }, 5000);
     }
 
     function initKakaoMap() {
         const mapContainer = document.getElementById("map");
-
         const mapOption = {
             center: new kakao.maps.LatLng(37.5665, 126.9780),
             level: 5
         };
 
-        map = new kakao.maps.Map(mapContainer, mapOption);
-        markers = [];
+        state.map = new kakao.maps.Map(mapContainer, mapOption);
+        state.markers = [];
 
         droneData.forEach(drone => {
             const position = new kakao.maps.LatLng(drone.lat, drone.lng);
@@ -1283,26 +1205,25 @@
             );
 
             const marker = new kakao.maps.Marker({
-                position: position,
+                position,
                 title: drone.id,
                 image: markerImage
             });
 
-            marker.setMap(map);
-            markers.push(marker);
+            marker.setMap(state.map);
+            state.markers.push(marker);
 
             kakao.maps.event.addListener(marker, "click", function () {
                 const applyDroneSelection = () => {
-                    selectedDroneId = drone.id;
-                    currentMode = drone.mode;
+                    state.selectedDroneId = drone.id;
+                    state.mode = drone.mode;
 
-                    markers.forEach(m => m.setZIndex(1));
+                    state.markers.forEach(m => m.setZIndex(1));
                     marker.setZIndex(999);
-                    map.panTo(position);
+                    state.map.panTo(position);
 
                     document.getElementById("selected-drone-text").innerText = drone.id;
                     switchMode(drone.mode);
-                    updateVideoByMode();
                 };
 
                 if (drone.switchUrl) {
@@ -1316,12 +1237,15 @@
         });
     }
 
+    function refreshChartTheme() {
+        renderDashboard();
+    }
+
     document.addEventListener("click", function (event) {
         const wrapper = document.querySelector(".alert-wrapper");
         const panel = document.getElementById("alert-panel");
 
         if (!wrapper || !panel) return;
-
         if (!wrapper.contains(event.target)) {
             panel.classList.remove("show");
         }
@@ -1330,6 +1254,9 @@
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
             closeReportModal();
+
+            const popup = document.getElementById("dynamic-danger-alert");
+            if (popup) popup.remove();
         }
     });
 
@@ -1346,12 +1273,9 @@
         updateVideoByMode();
         updateCardTitles();
         updateTableHeaders();
-        loadDashboardData();
-        loadLogs();
-
-        setInterval(loadLogs, 2000);
-        setInterval(loadDashboardData, 5000);
+        startPolling();
     });
 </script>
+
 </body>
 </html>
