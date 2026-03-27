@@ -13,40 +13,40 @@ public class EventResponseDto {
     private Long id;
     private String status_text;
     private String level_color;
-    private Integer people_count;
-    private String created_at; // 🚩 프론트의 log.created_at과 매칭
+    private Integer people_count; // 🚩 프론트의 log.people_count와 매칭
+    private String created_at;    // 🚩 프론트의 log.created_at과 매칭
+    private boolean isAlert;      // 🚩 프론트의 log.isAlert와 매칭
 
     public EventResponseDto(DetectionEntity entity) {
         this.id = entity.getId().longValue();
-        this.status_text = entity.getMessage(); // "실시간 정상..." 또는 "🚨 [위험]..."
-        this.people_count = entity.getDetectedCount();
+        this.status_text = entity.getMessage();
 
-        // 1. 위험도별 색상 설정 (프론트 log.level_color 대응)
+        // 1. 인원수 데이터 담기 (null 체크 포함)
+        this.people_count = (entity.getDetectedCount() != null) ? entity.getDetectedCount() : 0;
+
+        // 2. 위험도별 색상 및 알림 여부(isAlert) 결정
+        // 여기서 entity.getEventLevel()이 HIGH인지가 가장 중요합니다!
         if (entity.getEventLevel() == EventLevel.HIGH) {
             this.level_color = "#ff4d4f"; // 빨강
+            this.isAlert = true;          // 🔥 종 모양 숫자를 올리는 핵심 스위치
         } else if (entity.getEventLevel() == EventLevel.MEDIUM) {
             this.level_color = "#faad14"; // 주황
+            this.isAlert = false;
         } else {
             this.level_color = "#52c41a"; // 초록
+            this.isAlert = false;
         }
 
-        // 2. [핵심] 시간 단위 자동 감별 및 한국 시간 변환
+        // 3. 시간 변환 로직
         if (entity.getEventTime() != null && entity.getEventTime() > 0) {
             long timeVal = entity.getEventTime();
-            Instant instant;
+            Instant instant = (timeVal > 1_000_000_000_000L)
+                    ? Instant.ofEpochMilli(timeVal)
+                    : Instant.ofEpochSecond(timeVal);
 
-            // 값이 10^12보다 크면 밀리초(13자리), 작으면 초(10자리)로 판단
-            if (timeVal > 1_000_000_000_000L) {
-                instant = Instant.ofEpochMilli(timeVal);
-            } else {
-                instant = Instant.ofEpochSecond(timeVal);
-            }
-
-            // 한국 시간(Asia/Seoul)으로 포맷팅
             this.created_at = instant.atZone(ZoneId.of("Asia/Seoul"))
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         } else {
-            // 시간 데이터가 없으면 현재 시간 출력
             this.created_at = java.time.LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         }
