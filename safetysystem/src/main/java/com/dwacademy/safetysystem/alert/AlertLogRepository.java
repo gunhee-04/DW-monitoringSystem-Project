@@ -12,5 +12,5 @@ public interface AlertLogRepository extends JpaRepository<AlertLog, Long> {
 
     List<AlertLog> findTop10BySeverityInOrderByCreatedAtDesc(List<EventLevel> severities);
 
-
+    List<AlertLog> findAllByIsReadFalse();
 }

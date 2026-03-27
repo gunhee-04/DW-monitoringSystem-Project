@@ -1,9 +1,9 @@
 package com.dwacademy.safetysystem.statistics.controller;
 
-import com.dwacademy.safetysystem.statistics.dto.ChartDataDto;
+import com.dwacademy.safetysystem.detection_event.dto.DangerHourlyResponseDto;
+import com.dwacademy.safetysystem.detection_event.dto.DangerSummaryResponseDto;
 import com.dwacademy.safetysystem.statistics.dto.HourlyStatDto;
 import com.dwacademy.safetysystem.statistics.dto.SummaryStatDto;
-import com.dwacademy.safetysystem.statistics.entity.CrowdStat;
 import com.dwacademy.safetysystem.statistics.service.StatisticsService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -21,89 +21,39 @@ public class StatisticsController {
         this.statisticsService = statisticsService;
     }
 
-    @GetMapping("/test")
-    public String test() {
-        return statisticsService.test();
-    }
-
-    @PostMapping("/crowd")
-    public CrowdStat save(@RequestBody CrowdStat crowdStat) {
-        return statisticsService.save(crowdStat);
-    }
-
-    // 수정: cameraId가 있으면 카메라별, 없으면 전체
-    @GetMapping("/crowd")
-    public List<CrowdStat> findCrowdStats(
-            @RequestParam(required = false) Long cameraId
+    @GetMapping("/crowd/summary")
+    public SummaryStatDto getSummaryStatistics(
+            @RequestParam(required = false) Long cameraId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end
     ) {
-        return statisticsService.findCrowdStats(cameraId, null, null);
-    }
-
-    @GetMapping("/crowd/period")
-    public List<CrowdStat> findByPeriod(
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime start,
-
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime end
-    ) {
-        return statisticsService.findByPeriod(start, end);
-    }
-
-    @GetMapping("/crowd/camera")
-    public List<CrowdStat> findByCameraId(@RequestParam Long cameraId) {
-        return statisticsService.findByCameraId(cameraId);
-    }
-
-    @GetMapping("/crowd/zone")
-    public List<CrowdStat> findByZone(@RequestParam Long dangerZoneId) {
-        return statisticsService.findByDangerZoneId(dangerZoneId);
+        return statisticsService.getSummaryStatistics(cameraId, start, end);
     }
 
     @GetMapping("/crowd/hourly")
     public List<HourlyStatDto> getHourlyStatistics(
             @RequestParam(required = false) Long cameraId,
-
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime start,
-
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime end
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end
     ) {
         return statisticsService.getHourlyStatistics(cameraId, start, end);
     }
 
-    @GetMapping("/crowd/chart")
-    public List<ChartDataDto> getChartData(
+    @GetMapping("/danger/summary")
+    public DangerSummaryResponseDto getDangerSummary(
             @RequestParam(required = false) Long cameraId,
-
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime start,
-
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime end
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end
     ) {
-        return statisticsService.getChartData(cameraId, start, end);
+        return statisticsService.getDangerSummary(cameraId, start, end);
     }
 
-    @GetMapping("/crowd/summary")
-    public SummaryStatDto getSummaryStatistics(
+    @GetMapping("/danger/hourly")
+    public List<DangerHourlyResponseDto> getDangerHourly(
             @RequestParam(required = false) Long cameraId,
-
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime start,
-
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime end
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end
     ) {
-        return statisticsService.getSummaryStatistics(cameraId, start, end);
+        return statisticsService.getDangerHourly(cameraId, start, end);
     }
 }
