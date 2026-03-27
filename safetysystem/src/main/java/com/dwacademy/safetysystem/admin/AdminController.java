@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Controller
@@ -165,6 +166,7 @@ public class AdminController {
 
         try {
             zoneService.save(dto);
+            flaskReload();
             return "redirect:/admin/zone/" + dto.getCameraId();
         } catch (Exception e) {
             return error(model, e);
@@ -204,6 +206,7 @@ public class AdminController {
 
         try {
             zoneService.update(id, dto);
+            flaskReload();
             return "redirect:/admin/zone/" + dto.getCameraId();
         } catch (Exception e) {
             return error(model, e);
@@ -216,9 +219,20 @@ public class AdminController {
                                  Model model) {
         try {
             zoneService.softDelete(id);
+            flaskReload();
             return "redirect:/admin/zone/" + cameraId;
         } catch (Exception e) {
             return error(model, e);
+        }
+    }
+
+    private void flaskReload() {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getForObject("http://localhost:5001/reload-config", String.class);
+            System.out.println("[Flask ROI reload 요청 완료]");
+        } catch (Exception e) {
+            System.out.println("[Flask reload 실패] " + e.getMessage());
         }
     }
 

@@ -50,6 +50,7 @@ public class DangerZoneService {
                 .intrusionTimeSec(dto.getIntrusionTimeSec())
                 .isActive(true)
                 .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())   // ★ 추가
                 .build();
 
         zoneRepository.save(zone);
