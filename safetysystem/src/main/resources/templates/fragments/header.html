@@ -18,8 +18,13 @@
             </a>
         </div>
 
+
         <!-- 오른쪽 -->
         <div class="topbar-right">
+            <!-- 🔥 디버깅용 (권한 확인) -->
+            <div sec:authorize="isAuthenticated()">
+                <span sec:authentication="principal.authorities"></span>
+            </div>
 
             <!-- 다크모드 -->
             <button id="theme-toggle-btn"

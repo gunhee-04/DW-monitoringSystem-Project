@@ -258,4 +258,13 @@ public class MemberService {
 
         memberRepository.save(member);
     }
+
+    // 권한 변경(Postman 테스트 하려고..)
+    public void changeRole(int id, String role) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 없습니다."));
+
+        member.setRole(RoleType.valueOf(role));
+        memberRepository.save(member);
+    }
 }
