@@ -1,1117 +1,1094 @@
-    <!DOCTYPE html>
-    <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>스마트 안전 관제 대시보드</title>
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 안전 관제 대시보드</title>
 
-        <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=3a617da73b0f244b54d8271ca81260fd&autoload=false"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:src="@{/js/theme.js}"></script>
 
+    <style>
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1.8fr 0.75fr;
+            gap: 16px;
+        }
 
-        <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=3a617da73b0f244b54d8271ca81260fd&autoload=false"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        .video-panel {
+            padding: 16px;
+        }
 
-        <!-- 공통 다크모드 스크립트 연결
-         - applySavedTheme()
-         - toggleTheme()
-         - updateThemeButtonText()
-         를 불러오는 파일 -->
-        <script th:src="@{/js/theme.js}"></script>
+        .video-frame {
+            width: 100%;
+            height: 400px;
+            min-height: auto;
+            background: var(--video-bg);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        <style>
-            /* =========================
-               [home 전용] 메인 상단 레이아웃
-               - 왼쪽 영상 / 오른쪽 지도, 모드 패널
-               - 로그인/관리자 페이지에서는 안 씀
-            ========================= */
+        .video-frame video,
+        .video-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .side-info div {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+        }
+
+        .side-info div:last-child {
+            justify-content: flex-start;
+        }
+
+        .side-info strong {
+            min-width: 30px;
+        }
+
+        .side-panel {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            height: 44px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-soft);
+            color: var(--text-main);
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        #map {
+            width: 100%;
+            height: 280px;
+            border-radius: 14px;
+            background: #1e293b;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            border: 1px solid var(--border-color);
+        }
+
+        .side-info {
+            background: var(--bg-soft);
+            border: 1px solid var(--border-soft);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            line-height: 1.8;
+            transition: all 0.25s ease;
+        }
+
+        .side-info.active-crowd {
+            border: 2px solid #3b82f6;
+            background: var(--bg-soft-2);
+        }
+
+        .side-info.active-danger {
+            border: 2px solid #ef4444;
+            background: var(--bg-danger-soft);
+        }
+
+        .stats-grid {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .stat-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px 18px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.25s ease, border-color 0.25s ease;
+            min-height: 132px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 15px;
+            color: var(--text-sub);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-top: 6px;
+        }
+
+        .stat-sub {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .chart-panel {
+            margin-top: 16px;
+            padding: 16px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 260px;
+        }
+
+        .bottom-grid {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 16px;
+        }
+
+        .table-panel,
+        .log-panel {
+            padding: 16px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .toolbar label {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .toolbar input {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-main);
+        }
+
+        .toolbar input::-webkit-calendar-picker-indicator {
+            filter: invert(0);
+        }
+
+        body.dark-mode .toolbar input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        .log-box {
+            height: 320px;
+            overflow-y: auto;
+            background: var(--log-bg);
+            border-radius: 12px;
+            padding: 14px;
+            color: white;
+            border: 1px solid var(--border-color);
+        }
+
+        .log-item {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 14px;
+        }
+
+        .log-danger {
+            color: #ff6b6b;
+            font-weight: 700;
+        }
+
+        .log-normal {
+            color: #4ade80;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1200px) {
             .main-grid {
-                display: grid;
-                grid-template-columns: 1.8fr 0.75fr;
-                gap: 16px;
+                grid-template-columns: 1fr;
             }
 
-            /* =========================
-               [home 전용] 영상 패널 내부 여백
-            ========================= */
-            .video-panel {
-                padding: 16px;
-            }
-
-            /* =========================
-               [home 전용] 영상 프레임
-               - 실시간 영상 영역
-            ========================= */
-            .video-frame {
-                width: 100%;
-                height: 400px;
-                min-height: auto;
-                background: var(--video-bg);
-                border-radius: 14px;
-                overflow: hidden;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .video-frame video,
-            .video-frame img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            }
-
-            .side-info div {
-                display: flex;
-                align-items: center;
-                justify-content: flex-start;
-                gap: 10px;
-            }
-
-            .side-info div:last-child {
-                justify-content: flex-start;
-            }
-
-            .side-info strong {
-                min-width: 30px;
-            }
-
-            /* =========================
-               [home 전용] 오른쪽 패널
-               - 모드 버튼, 지도, 상태 정보 영역
-            ========================= */
-            .side-panel {
-                padding: 16px;
-                display: flex;
-                flex-direction: column;
-                gap: 14px;
-            }
-
-            /* =========================
-               [home 전용] 밀집/위험 버튼 그룹
-            ========================= */
-            .mode-buttons {
-                display: flex;
-                gap: 10px;
-            }
-
-            .mode-btn {
-                flex: 1;
-                height: 44px;
-                border: 1px solid var(--border-color);
-                background: var(--bg-soft);
-                color: var(--text-main);
-                border-radius: 10px;
-                font-size: 15px;
-                font-weight: 700;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-
-            .mode-btn.active {
-                background: var(--primary);
-                color: white;
-                border-color: var(--primary);
-            }
-
-            /* =========================
-               [home 전용] 카카오맵 영역
-            ========================= */
-            #map {
-                width: 100%;
-                height: 280px;
-                border-radius: 14px;
-                background: #1e293b;
-                overflow: hidden;
-                position: relative;
-                z-index: 1;
-                border: 1px solid var(--border-color);
-            }
-
-            /* =========================
-               [home 전용] 오른쪽 상태 정보 박스
-            ========================= */
-            .side-info {
-                background: var(--bg-soft);
-                border: 1px solid var(--border-soft);
-                border-radius: 12px;
-                padding: 12px 14px;
-                font-size: 14px;
-                line-height: 1.8;
-                transition: all 0.25s ease;
-            }
-
-            .side-info.active-crowd {
-                border: 2px solid #3b82f6;
-                background: var(--bg-soft-2);
-            }
-
-            .side-info.active-danger {
-                border: 2px solid #ef4444;
-                background: var(--bg-danger-soft);
-            }
-
-            /* =========================
-               [home 전용] 상단 카드 3개 영역
-            ========================= */
             .stats-grid {
-                margin-top: 16px;
-                display: grid;
                 grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 16px;
-                align-items: stretch;
             }
 
-            .stat-card {
-                background: var(--bg-panel);
-                border: 1px solid var(--border-color);
-                border-radius: 16px;
-                padding: 16px 18px;
-                box-shadow: var(--shadow);
-                cursor: pointer;
-                transition: transform 0.15s ease, background 0.25s ease, border-color 0.25s ease;
-                min-height: 132px;
-            }
-
-            .stat-card:hover {
-                transform: translateY(-2px);
-            }
-
-            .stat-label {
-                font-size: 15px;
-                color: var(--text-sub);
-                margin-bottom: 10px;
-                font-weight: 700;
-            }
-
-            .stat-value {
-                font-size: 26px;
-                font-weight: 800;
-                color: var(--text-main);
-                margin-top: 6px;
-            }
-
-            .stat-sub {
-                margin-top: 10px;
-                font-size: 13px;
-                color: var(--text-muted);
-            }
-
-            /* =========================
-               [home 전용] 메인 차트 패널
-            ========================= */
-            .chart-panel {
-                margin-top: 16px;
-                padding: 16px;
-            }
-
-            .chart-wrap {
-                position: relative;
-                width: 100%;
-                height: 260px;
-            }
-
-            /* =========================
-               [home 전용] 하단 통계표 + 로그 영역
-            ========================= */
             .bottom-grid {
-                margin-top: 16px;
-                display: grid;
-                grid-template-columns: 1.3fr 1fr;
-                gap: 16px;
+                grid-template-columns: 1fr;
             }
 
-            .table-panel,
-            .log-panel {
-                padding: 16px;
+            .video-frame {
+                height: 360px;
             }
+        }
 
-            /* =========================
-               [home 전용] 날짜 조회 툴바
-            ========================= */
-            .toolbar {
-                display: flex;
-                gap: 10px;
-                align-items: center;
-                flex-wrap: wrap;
-                margin-bottom: 14px;
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
+        }
+    </style>
+</head>
 
-            .toolbar label {
-                font-size: 14px;
-                font-weight: 700;
-            }
+<body>
+<div th:replace="fragments/header :: header('스마트 안전 관제 시스템')"></div>
 
-            .toolbar input {
-                padding: 8px 10px;
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                background: var(--input-bg);
-                color: var(--text-main);
-            }
+<div class="container">
+    <div class="main-grid">
+        <div class="panel video-panel">
+            <div class="panel-title">🎥 실시간 드론 영상</div>
+            <div class="video-frame">
+                <img id="stream-video"
+                     src="http://127.0.0.1:5001/video"
+                     alt="드론 영상"
+                     onerror="this.src='https://dummyimage.com/1200x700/0f172a/ffffff&text=Drone+Offline'">
 
-            .toolbar input::-webkit-calendar-picker-indicator {
-                filter: invert(0);
-            }
-
-            body.dark-mode .toolbar input::-webkit-calendar-picker-indicator {
-                filter: invert(1);
-            }
-
-            /* =========================
-               [home 전용] 실시간 로그 박스
-            ========================= */
-            .log-box {
-                height: 320px;
-                overflow-y: auto;
-                background: var(--log-bg);
-                border-radius: 12px;
-                padding: 14px;
-                color: white;
-                border: 1px solid var(--border-color);
-            }
-
-            .log-item {
-                padding: 10px 0;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-                font-size: 14px;
-            }
-
-            .log-danger {
-                color: #ff6b6b;
-                font-weight: 700;
-            }
-
-            .log-normal {
-                color: #4ade80;
-                font-weight: 700;
-            }
-
-            /* =========================
-               [home 전용] 반응형
-               - home 대시보드 구조만 조정
-            ========================= */
-            @media (max-width: 1200px) {
-                .main-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .stats-grid {
-                    grid-template-columns: repeat(3, minmax(0, 1fr));
-                }
-
-                .bottom-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .video-frame {
-                    height: 360px;
-                }
-            }
-
-            @media (max-width: 900px) {
-                .stats-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-        </style>
-
-
-    </head>
-
-
-    <body>
-
-    <div th:replace="fragments/header :: header('스마트 안전 관제 시스템')"></div>
-
-    <div class="container">
-        <div class="main-grid">
-            <div class="panel video-panel">
-                <div class="panel-title">🎥 실시간 드론 영상</div>
-                <div class="video-frame">
-                    <!-- 스트림용 -->
-                    <img id="stream-video"
-                         src="http://127.0.0.1:5000/video"
-                         alt="드론 영상"
-                         onerror="this.src='https://dummyimage.com/1200x700/0f172a/ffffff&text=Drone+Offline'">
-
-                    <!-- 테스트 mp4용 -->
-                    <video id="file-video" autoplay muted loop controls style="display:none;">
-                        <source src="/videos/test1.mp4" type="video/mp4">
-                    </video>
-                </div>
-            </div>
-
-            <div class="panel side-panel">
-                <div>
-                    <div class="panel-title">📡 관제 모드</div>
-                    <div class="mode-buttons">
-                        <button id="crowd-btn" class="mode-btn active" onclick="switchMode('crowd')">밀집</button>
-                        <button id="danger-btn" class="mode-btn" onclick="switchMode('danger')">위험</button>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="panel-title">🗺 드론 위치 지도</div>
-                    <div id="map"></div>
-                </div>
-
-                <div class="side-info">
-                    <div><strong>선택 모드:</strong> <span id="selected-mode-text">밀집 관제</span></div>
-                    <div><strong>선택 드론:</strong> <span id="selected-drone-text">DRONE-01</span></div>
-                    <div><strong>현재 상태:</strong> <span id="selected-status-badge" class="status-badge badge-crowd">밀집</span></div>
-                </div>
+                <video id="file-video" autoplay muted loop controls style="display:none;">
+                    <source src="/videos/test1.mp4" type="video/mp4">
+                </video>
             </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card" onclick="openReportModal('card1')">
-                <div class="stat-label" id="card1-label">평균 밀집</div>
-                <div class="stat-value" id="card1-value">0</div>
-                <div class="stat-sub" id="card1-sub">현재 선택된 드론 기준</div>
-            </div>
-
-            <div class="stat-card" onclick="openReportModal('card2')">
-                <div class="stat-label" id="card2-label">최대 밀집(시간별)</div>
-                <div class="stat-value" id="card2-value">0</div>
-                <div class="stat-sub" id="card2-sub">시간대별 최대값</div>
-            </div>
-
-            <div class="stat-card" onclick="openReportModal('card3')">
-                <div class="stat-label" id="card3-label">밀집도 증가율</div>
-                <div class="stat-value" id="card3-value">0%</div>
-                <div class="stat-sub" id="card3-sub">이전 구간 대비</div>
-            </div>
-        </div>
-
-        <div class="panel chart-panel">
-            <div class="panel-title">📊 실시간 통계 그래프</div>
-            <div class="chart-wrap">
-                <canvas id="mainChart"></canvas>
-            </div>
-        </div>
-
-        <div class="bottom-grid">
-            <div class="panel table-panel">
-                <div class="panel-title">📈 시간대별 통계</div>
-
-                <div class="toolbar">
-                    <label for="start">시작</label>
-                    <input type="datetime-local" id="start">
-
-                    <label for="end">종료</label>
-                    <input type="datetime-local" id="end">
-
-                    <button class="btn" onclick="loadDashboardData()">조회</button>
-                    <button class="btn gray" onclick="setTodayRange()">오늘 기준</button>
+        <div class="panel side-panel">
+            <div>
+                <div class="panel-title">📡 관제 모드</div>
+                <div class="mode-buttons">
+                    <button id="crowd-btn" class="mode-btn active" onclick="switchMode('crowd')">밀집</button>
+                    <button id="danger-btn" class="mode-btn" onclick="switchMode('danger')">위험</button>
                 </div>
+            </div>
 
+            <div>
+                <div class="panel-title">🗺 드론 위치 지도</div>
+                <div id="map"></div>
+            </div>
+
+            <div class="side-info">
+                <div><strong>선택 모드:</strong> <span id="selected-mode-text">밀집 관제</span></div>
+                <div><strong>선택 드론:</strong> <span id="selected-drone-text">DRONE-01</span></div>
+                <div><strong>현재 상태:</strong> <span id="selected-status-badge" class="status-badge badge-crowd">밀집</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card" onclick="openReportModal('card1')">
+            <div class="stat-label" id="card1-label">평균 밀집</div>
+            <div class="stat-value" id="card1-value">0</div>
+            <div class="stat-sub" id="card1-sub">현재 선택된 드론 기준</div>
+        </div>
+
+        <div class="stat-card" onclick="openReportModal('card2')">
+            <div class="stat-label" id="card2-label">최대 밀집(시간별)</div>
+            <div class="stat-value" id="card2-value">0</div>
+            <div class="stat-sub" id="card2-sub">시간대별 최대값</div>
+        </div>
+
+        <div class="stat-card" onclick="openReportModal('card3')">
+            <div class="stat-label" id="card3-label">밀집도 증가율</div>
+            <div class="stat-value" id="card3-value">0%</div>
+            <div class="stat-sub" id="card3-sub">이전 구간 대비</div>
+        </div>
+    </div>
+
+    <div class="panel chart-panel">
+        <div class="panel-title">📊 실시간 통계 그래프</div>
+        <div class="chart-wrap">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+
+    <div class="bottom-grid">
+        <div class="panel table-panel">
+            <div class="panel-title">📈 시간대별 통계</div>
+
+            <div class="toolbar">
+                <label for="start">시작</label>
+                <input type="datetime-local" id="start">
+
+                <label for="end">종료</label>
+                <input type="datetime-local" id="end">
+
+                <button class="btn" onclick="loadDashboardData()">조회</button>
+                <button class="btn gray" onclick="setTodayRange()">오늘 기준</button>
+            </div>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>시간</th>
+                    <th id="table-col-1">총 인원 수</th>
+                    <th id="table-col-2">평균 밀집도</th>
+                    <th>상태</th>
+                </tr>
+                </thead>
+                <tbody id="hourly-body">
+                <tr>
+                    <td colspan="4">데이터 없음</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel log-panel">
+            <div class="panel-title">🚨 실시간 탐지 로그</div>
+            <div id="log-box" class="log-box">
+                <div class="log-item">데이터를 불러오는 중입니다...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="report-modal-backdrop" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-title">상세 통계</div>
+            <button class="close-btn" onclick="closeReportModal()">&times;</button>
+        </div>
+
+        <div class="report-tabs">
+            <button class="tab-btn active" onclick="setReportTab(this, 'day')">일</button>
+            <button class="tab-btn" onclick="setReportTab(this, 'week')">주</button>
+            <button class="tab-btn" onclick="setReportTab(this, 'month')">월</button>
+            <button class="tab-btn" onclick="setReportTab(this, 'year')">년</button>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn" onclick="downloadPdf()">PDF 다운로드</button>
+            <button class="btn gray" onclick="downloadExcel()">EXCEL 다운로드</button>
+        </div>
+
+        <div id="report-content">
+            <div id="report-summary" class="report-placeholder"></div>
+
+            <div class="chart-wrap" style="margin-top:16px; height:260px;">
+                <canvas id="reportChart"></canvas>
+            </div>
+
+            <div style="margin-top:16px;">
                 <table>
                     <thead>
                     <tr>
-                        <th>시간</th>
-                        <th id="table-col-1">총 인원 수</th>
-                        <th id="table-col-2">평균 밀집도</th>
-                        <th>상태</th>
+                        <th>구간</th>
+                        <th>값</th>
+                        <th>비고</th>
                     </tr>
                     </thead>
-                    <tbody id="hourly-body">
+                    <tbody id="report-table-body">
                     <tr>
-                        <td colspan="4">데이터 없음</td>
+                        <td colspan="3">데이터 없음</td>
                     </tr>
                     </tbody>
                 </table>
             </div>
-
-            <div class="panel log-panel">
-                <div class="panel-title">🚨 실시간 탐지 로그</div>
-                <div id="log-box" class="log-box">
-                    <div class="log-item">데이터를 불러오는 중입니다...</div>
-                </div>
-            </div>
         </div>
     </div>
+</div>
 
-    <div id="report-modal-backdrop" class="modal-backdrop">
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-title" id="modal-title">상세 통계</div>
-                <button class="close-btn" onclick="closeReportModal()">&times;</button>
-            </div>
+<script>
+    let currentMode = "crowd";
+    let selectedDroneId = "DRONE-01";
+    let selectedReportTab = "day";
+    let selectedCardKey = "card1";
+    let map;
+    let markers = [];
+    let mainChart = null;
+    let reportChart = null;
+    let lastDismissedTime = "";
 
-            <div class="report-tabs">
-                <button class="tab-btn active" onclick="setReportTab(this, 'day')">일</button>
-                <button class="tab-btn" onclick="setReportTab(this, 'week')">주</button>
-                <button class="tab-btn" onclick="setReportTab(this, 'month')">월</button>
-                <button class="tab-btn" onclick="setReportTab(this, 'year')">년</button>
-            </div>
+    const droneData = [
+        {
+            id: "DRONE-01",
+            lat: 37.5665,
+            lng: 126.9780,
+            switchUrl: "http://127.0.0.1:5001/switch/webcam",
+            videoUrl: "http://127.0.0.1:5001/video",
+            mode: "crowd",
+            cameraId: 1
+        },
+        {
+            id: "DRONE-02",
+            lat: 37.5651,
+            lng: 126.9895,
+            switchUrl: "http://127.0.0.1:5001/switch/drone1",
+            videoUrl: "http://127.0.0.1:5001/video",
+            mode: "crowd",
+            cameraId: 2
+        },
+        {
+            id: "DRONE-03",
+            lat: 37.5700,
+            lng: 126.9820,
+            switchUrl: "http://127.0.0.1:5001/switch/drone2",
+            videoUrl: "http://127.0.0.1:5001/video",
+            mode: "danger",
+            cameraId: 3
+        }
+    ];
 
-            <div class="modal-actions">
-                <button class="btn" onclick="downloadPdf()">PDF 다운로드</button>
-                <button class="btn gray" onclick="downloadExcel()">EXCEL 다운로드</button>
-            </div>
+    function getChartColors() {
+        const style = getComputedStyle(document.body);
+        return {
+            grid: style.getPropertyValue("--chart-grid").trim() || "rgba(148, 163, 184, 0.25)",
+            tick: style.getPropertyValue("--chart-tick").trim() || "#475569",
+            line: style.getPropertyValue("--chart-line").trim() || "#2563eb",
+            fill: style.getPropertyValue("--chart-fill").trim() || "rgba(37, 99, 235, 0.15)"
+        };
+    }
 
-            <div id="report-content">
-                <div id="report-summary" class="report-placeholder"></div>
+    function refreshChartTheme() {
+        loadDashboardData();
+    }
 
-                <div class="chart-wrap" style="margin-top:16px; height:260px;">
-                    <canvas id="reportChart"></canvas>
-                </div>
+    function formatDateTimeLocal(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        const hh = String(date.getHours()).padStart(2, "0");
+        const mm = String(date.getMinutes()).padStart(2, "0");
+        return `${y}-${m}-${d}T${hh}:${mm}`;
+    }
 
-                <div style="margin-top:16px;">
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>구간</th>
-                            <th>값</th>
-                            <th>비고</th>
-                        </tr>
-                        </thead>
-                        <tbody id="report-table-body">
-                        <tr>
-                            <td colspan="3">데이터 없음</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+    function formatDateTimeParam(value) {
+        return value + ":00";
+    }
 
-    <script>
-        let currentMode = "crowd";
-        let selectedDroneId = "DRONE-01";
-        let selectedReportTab = "day";
-        let selectedCardKey = "card1";
-        let map;
-        let markers = [];
-        let mainChart = null;
-        let reportChart = null;
-        let lastDismissedTime = "";
+    function setTodayRange() {
+        const now = new Date();
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
 
-        const droneData = [
-            {
-                id: "DRONE-01",
-                lat: 37.5665,
-                lng: 126.9780,
-                switchUrl: "http://127.0.0.1:5001/switch/webcam",
-                videoUrl: "http://127.0.0.1:5001/video",
-                mode: "crowd",
-                cameraId: 1
+        document.getElementById("start").value = formatDateTimeLocal(start);
+        document.getElementById("end").value = formatDateTimeLocal(now);
+    }
+
+    function getRangeParams() {
+        const startValue = document.getElementById("start").value;
+        const endValue = document.getElementById("end").value;
+
+        if (!startValue || !endValue) {
+            alert("시작 시간과 종료 시간을 입력해주세요.");
+            return null;
+        }
+
+        if (startValue > endValue) {
+            alert("시작 시간이 종료 시간보다 늦을 수 없습니다.");
+            return null;
+        }
+
+        return {
+            start: formatDateTimeParam(startValue),
+            end: formatDateTimeParam(endValue)
+        };
+    }
+
+    function switchMode(mode) {
+        currentMode = mode;
+
+        document.getElementById("crowd-btn").classList.remove("active");
+        document.getElementById("danger-btn").classList.remove("active");
+
+        const sideInfo = document.querySelector(".side-info");
+        sideInfo.classList.remove("active-crowd", "active-danger");
+
+        if (mode === "crowd") {
+            document.getElementById("crowd-btn").classList.add("active");
+            document.getElementById("selected-mode-text").innerText = "밀집 관제";
+            document.getElementById("selected-status-badge").innerText = "밀집";
+            document.getElementById("selected-status-badge").className = "status-badge badge-crowd";
+            sideInfo.classList.add("active-crowd");
+        } else {
+            document.getElementById("danger-btn").classList.add("active");
+            document.getElementById("selected-mode-text").innerText = "위험 관제";
+            document.getElementById("selected-status-badge").innerText = "위험";
+            document.getElementById("selected-status-badge").className = "status-badge badge-danger";
+            sideInfo.classList.add("active-danger");
+        }
+
+        updateVideoByMode();
+        updateCardTitles();
+        updateTableHeaders();
+        loadDashboardData();
+    }
+
+    function updateVideoByMode() {
+        const matchedDrone =
+            droneData.find(drone => drone.id === selectedDroneId) ||
+            droneData.find(drone => drone.mode === currentMode) ||
+            droneData[0];
+
+        selectedDroneId = matchedDrone.id;
+        document.getElementById("selected-drone-text").innerText = matchedDrone.id;
+
+        const stream = document.getElementById("stream-video");
+        const video = document.getElementById("file-video");
+
+        if (!stream || !video) return;
+
+        if ((matchedDrone.videoUrl || "").endsWith(".mp4")) {
+            stream.style.display = "none";
+            video.style.display = "block";
+            video.src = matchedDrone.videoUrl;
+            video.load();
+            video.play().catch(() => {});
+        } else {
+            video.pause();
+            video.style.display = "none";
+            stream.style.display = "block";
+            stream.src = matchedDrone.videoUrl + "?t=" + new Date().getTime();
+        }
+    }
+
+    function updateCardTitles() {
+        if (currentMode === "crowd") {
+            document.getElementById("card1-label").innerText = "평균 밀집";
+            document.getElementById("card2-label").innerText = "최대 밀집(시간별)";
+            document.getElementById("card3-label").innerText = "밀집도 증가율";
+            document.getElementById("card1-sub").innerText = "현재 선택된 드론 기준";
+            document.getElementById("card2-sub").innerText = "시간대별 최대값";
+            document.getElementById("card3-sub").innerText = "이전 구간 대비";
+        } else {
+            document.getElementById("card1-label").innerText = "총 침입 수";
+            document.getElementById("card2-label").innerText = "시간당 침입 횟수";
+            document.getElementById("card3-label").innerText = "평균 체류 시간";
+            document.getElementById("card1-sub").innerText = "위험 이벤트 기준";
+            document.getElementById("card2-sub").innerText = "시간 단위 집계";
+            document.getElementById("card3-sub").innerText = "체류 시간 데이터 미연동";
+        }
+    }
+
+    function updateTableHeaders() {
+        if (currentMode === "crowd") {
+            document.getElementById("table-col-1").innerText = "총 인원 수";
+            document.getElementById("table-col-2").innerText = "평균 밀집도";
+        } else {
+            document.getElementById("table-col-1").innerText = "침입 횟수";
+            document.getElementById("table-col-2").innerText = "평균 체류 시간";
+        }
+    }
+
+    function getDensityStatus(value) {
+        if (value >= 0.8) return { text: "위험", rowClass: "danger-row" };
+        if (value >= 0.5) return { text: "주의", rowClass: "warning-row" };
+        return { text: "정상", rowClass: "safe-row" };
+    }
+
+    function getSelectedDrone() {
+        return droneData.find(drone => drone.id === selectedDroneId) || droneData[0];
+    }
+
+    function getCrowdDensityValue(item) {
+        return Number(
+            item.averageDensityValue ??
+            item.densityValue ??
+            item.averageDensity ??
+            item.density ??
+            0
+        );
+    }
+
+    function getCrowdPeopleCount(item) {
+        return Number(
+            item.totalPeopleCount ??
+            item.peopleCount ??
+            item.detectedCount ??
+            0
+        );
+    }
+
+    function getCrowdLabel(item) {
+        return item.hour ?? item.time ?? item.label ?? item.measuredAt ?? "-";
+    }
+
+    function getDangerLogsOnly(data) {
+        return (data || []).filter(log =>
+            (log.status_text || "").includes("침입") ||
+            log.level_color === "#ff4d4f" ||
+            log.isAlert === true
+        );
+    }
+
+    function drawCrowdChart(data) {
+        const canvas = document.getElementById("mainChart");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        const labels = data.map(item => getCrowdLabel(item));
+        const densityValues = data.map(item => getCrowdDensityValue(item));
+        const colors = getChartColors();
+
+        if (mainChart) {
+            mainChart.destroy();
+        }
+
+        mainChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "평균 밀집도",
+                    data: densityValues,
+                    borderColor: colors.line,
+                    backgroundColor: colors.fill,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
             },
-            {
-                id: "DRONE-02",
-                lat: 37.5651,
-                lng: 126.9895,
-                switchUrl: "http://127.0.0.1:5001/switch/drone1",
-                videoUrl: "http://127.0.0.1:5001/video",
-                mode: "crowd",
-                cameraId: 2
-            },
-            {
-                id: "DRONE-03",
-                lat: 37.5700,
-                lng: 126.9820,
-                switchUrl: "http://127.0.0.1:5001/switch/drone2",
-                videoUrl: "http://127.0.0.1:5001/video",
-                mode: "danger",
-                cameraId: 3
-            }
-        ];
-
-        function getChartColors() {
-            const style = getComputedStyle(document.body);
-            return {
-                grid: style.getPropertyValue("--chart-grid").trim() || "rgba(148, 163, 184, 0.25)",
-                tick: style.getPropertyValue("--chart-tick").trim() || "#475569",
-                line: style.getPropertyValue("--chart-line").trim() || "#2563eb",
-                fill: style.getPropertyValue("--chart-fill").trim() || "rgba(37, 99, 235, 0.15)"
-            };
-        }
-
-        function refreshChartTheme() {
-            if (currentMode === "crowd") {
-                loadCrowdHourly();
-            } else {
-                drawDangerChart();
-            }
-        }
-
-        function formatDateTimeLocal(date) {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, "0");
-            const d = String(date.getDate()).padStart(2, "0");
-            const hh = String(date.getHours()).padStart(2, "0");
-            const mm = String(date.getMinutes()).padStart(2, "0");
-            return `${y}-${m}-${d}T${hh}:${mm}`;
-        }
-
-        function formatDateTimeParam(value) {
-            return value + ":00";
-        }
-
-        function setTodayRange() {
-            const now = new Date();
-            const start = new Date();
-            start.setHours(0, 0, 0, 0);
-
-            document.getElementById("start").value = formatDateTimeLocal(start);
-            document.getElementById("end").value = formatDateTimeLocal(now);
-        }
-
-        function getRangeParams() {
-            const startValue = document.getElementById("start").value;
-            const endValue = document.getElementById("end").value;
-
-            if (!startValue || !endValue) {
-                alert("시작 시간과 종료 시간을 입력해주세요.");
-                return null;
-            }
-
-            if (startValue > endValue) {
-                alert("시작 시간이 종료 시간보다 늦을 수 없습니다.");
-                return null;
-            }
-
-            return {
-                start: formatDateTimeParam(startValue),
-                end: formatDateTimeParam(endValue)
-            };
-        }
-
-        function switchMode(mode) {
-            currentMode = mode;
-
-            document.getElementById("crowd-btn").classList.remove("active");
-            document.getElementById("danger-btn").classList.remove("active");
-
-            const sideInfo = document.querySelector(".side-info");
-            sideInfo.classList.remove("active-crowd", "active-danger");
-
-            if (mode === "crowd") {
-                document.getElementById("crowd-btn").classList.add("active");
-                document.getElementById("selected-mode-text").innerText = "밀집 관제";
-                document.getElementById("selected-status-badge").innerText = "밀집";
-                document.getElementById("selected-status-badge").className = "status-badge badge-crowd";
-                sideInfo.classList.add("active-crowd");
-            } else {
-                document.getElementById("danger-btn").classList.add("active");
-                document.getElementById("selected-mode-text").innerText = "위험 관제";
-                document.getElementById("selected-status-badge").innerText = "위험";
-                document.getElementById("selected-status-badge").className = "status-badge badge-danger";
-                sideInfo.classList.add("active-danger");
-            }
-
-            updateVideoByMode();
-            updateCardTitles();
-            updateTableHeaders();
-            loadDashboardData();
-        }
-
-        function updateVideoByMode() {
-            const matchedDrone =
-                droneData.find(drone => drone.id === selectedDroneId) ||
-                droneData.find(drone => drone.mode === currentMode) ||
-                droneData[0];
-
-            selectedDroneId = matchedDrone.id;
-            document.getElementById("selected-drone-text").innerText = matchedDrone.id;
-
-            const stream = document.getElementById("stream-video");
-            const video = document.getElementById("file-video");
-
-            if (!stream || !video) return;
-
-            if ((matchedDrone.videoUrl || "").endsWith(".mp4")) {
-                stream.style.display = "none";
-                video.style.display = "block";
-                video.src = matchedDrone.videoUrl;
-                video.load();
-                video.play().catch(() => {});
-            } else {
-                video.pause();
-                video.style.display = "none";
-                stream.style.display = "block";
-                stream.src = matchedDrone.videoUrl + "?t=" + new Date().getTime();
-            }
-        }
-
-        function updateCardTitles() {
-            if (currentMode === "crowd") {
-                document.getElementById("card1-label").innerText = "평균 밀집";
-                document.getElementById("card2-label").innerText = "최대 밀집(시간별)";
-                document.getElementById("card3-label").innerText = "밀집도 증가율";
-                document.getElementById("card1-sub").innerText = "현재 선택된 드론 기준";
-                document.getElementById("card2-sub").innerText = "시간대별 최대값";
-                document.getElementById("card3-sub").innerText = "이전 구간 대비";
-            } else {
-                document.getElementById("card1-label").innerText = "총 침입 수";
-                document.getElementById("card2-label").innerText = "시간당 침입 횟수";
-                document.getElementById("card3-label").innerText = "평균 체류 시간";
-                document.getElementById("card1-sub").innerText = "위험 구역 누적 이벤트";
-                document.getElementById("card2-sub").innerText = "시간 단위 집계";
-                document.getElementById("card3-sub").innerText = "침입 이벤트 기준";
-            }
-        }
-
-        function updateTableHeaders() {
-            if (currentMode === "crowd") {
-                document.getElementById("table-col-1").innerText = "총 인원 수";
-                document.getElementById("table-col-2").innerText = "평균 밀집도";
-            } else {
-                document.getElementById("table-col-1").innerText = "침입 횟수";
-                document.getElementById("table-col-2").innerText = "평균 체류 시간";
-            }
-        }
-
-        function getDensityStatus(value) {
-            if (value >= 0.8) return { text: "위험", rowClass: "danger-row" };
-            if (value >= 0.5) return { text: "주의", rowClass: "warning-row" };
-            return { text: "정상", rowClass: "safe-row" };
-        }
-
-        function getSelectedDrone() {
-            return droneData.find(drone => drone.id === selectedDroneId) || droneData[0];
-        }
-
-        function getCrowdDensityValue(item) {
-            return Number(
-                item.averageDensityValue ??
-                item.densityValue ??
-                item.averageDensity ??
-                item.density ??
-                0
-            );
-        }
-
-        function getCrowdPeopleCount(item) {
-            return Number(
-                item.totalPeopleCount ??
-                item.peopleCount ??
-                item.detectedCount ??
-                0
-            );
-        }
-
-        function getCrowdLabel(item) {
-            return item.hour ?? item.time ?? item.label ?? item.measuredAt ?? "-";
-        }
-
-        function loadCrowdSummaryByData(data) {
-            const totalCount = data.length;
-
-            const avgDensity = totalCount > 0
-                ? data.reduce((sum, item) => sum + getCrowdDensityValue(item), 0) / totalCount
-                : 0;
-
-            const maxPeople = totalCount > 0
-                ? Math.max(...data.map(item => getCrowdPeopleCount(item)))
-                : 0;
-
-            let growthRate = 0;
-            if (data.length >= 2) {
-                const first = getCrowdDensityValue(data[0]);
-                const last = getCrowdDensityValue(data[data.length - 1]);
-                growthRate = first !== 0 ? ((last - first) / first) * 100 : 0;
-            }
-
-            document.getElementById("card1-value").innerText = avgDensity.toFixed(2);
-            document.getElementById("card2-value").innerText = maxPeople;
-            document.getElementById("card3-value").innerText = growthRate.toFixed(1) + "%";
-        }
-
-        function drawCrowdChart(data) {
-            const canvas = document.getElementById("mainChart");
-            if (!canvas) return;
-
-            const ctx = canvas.getContext("2d");
-            const labels = data.map(item => getCrowdLabel(item));
-            const densityValues = data.map(item => getCrowdDensityValue(item));
-            const colors = getChartColors();
-
-            if (mainChart) {
-                mainChart.destroy();
-            }
-
-            mainChart = new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "평균 밀집도",
-                        data: densityValues,
-                        borderColor: colors.line,
-                        backgroundColor: colors.fill,
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: colors.tick
+                        }
+                    }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                color: colors.tick
-                            }
+                scales: {
+                    x: {
+                        ticks: {
+                            color: colors.tick
+                        },
+                        grid: {
+                            color: colors.grid
                         }
                     },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: colors.tick
-                            },
-                            grid: {
-                                color: colors.grid
-                            }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: colors.tick
                         },
-                        y: {
-                            beginAtZero: true,
-                            suggestedMax: 1,
-                            ticks: {
-                                color: colors.tick
-                            },
-                            grid: {
-                                color: colors.grid
-                            }
+                        grid: {
+                            color: colors.grid
                         }
                     }
                 }
-            });
+            }
+        });
+    }
+
+    function drawDangerChart(data) {
+        const canvas = document.getElementById("mainChart");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        const colors = getChartColors();
+        const labels = (data || []).map(item => item.hour);
+        const values = (data || []).map(item => item.intrusionCount);
+
+        if (mainChart) {
+            mainChart.destroy();
         }
 
-        function drawDangerChart() {
-            const canvas = document.getElementById("mainChart");
-            if (!canvas) return;
-
-            const ctx = canvas.getContext("2d");
-            const colors = getChartColors();
-
-            if (mainChart) {
-                mainChart.destroy();
-            }
-
-            mainChart = new Chart(ctx, {
-                type: "bar",
-                data: {
-                    labels: ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00"],
-                    datasets: [{
-                        label: "시간당 침입 횟수",
-                        data: [2, 4, 1, 3, 5, 2],
-                        backgroundColor: colors.fill,
-                        borderColor: colors.line,
-                        borderWidth: 2
-                    }]
+        mainChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "시간당 침입 횟수",
+                    data: values,
+                    backgroundColor: colors.fill,
+                    borderColor: colors.line,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: colors.tick
+                        }
+                    }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                color: colors.tick
-                            }
+                scales: {
+                    x: {
+                        ticks: {
+                            color: colors.tick
+                        },
+                        grid: {
+                            color: colors.grid
                         }
                     },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: colors.tick
-                            },
-                            grid: {
-                                color: colors.grid
-                            }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: colors.tick
                         },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: colors.tick
-                            },
-                            grid: {
-                                color: colors.grid
-                            }
+                        grid: {
+                            color: colors.grid
                         }
                     }
                 }
-            });
-        }
-
-        function loadCrowdHourly() {
-            const range = getRangeParams();
-            if (!range) return;
-
-            const selectedDrone = getSelectedDrone();
-            let url = `/api/statistics/crowd/hourly?start=${range.start}&end=${range.end}`;
-
-            if (selectedDrone.cameraId) {
-                url += `&cameraId=${selectedDrone.cameraId}`;
             }
+        });
+    }
 
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    const tbody = document.getElementById("hourly-body");
-                    tbody.innerHTML = "";
+    function loadCrowdHourly() {
+        const range = getRangeParams();
+        if (!range) return;
 
-                    if (!data || !data.length) {
-                        tbody.innerHTML = `<tr><td colspan="4">선택한 날짜 범위에 밀집 데이터가 없습니다.</td></tr>`;
-                        if (mainChart) {
-                            mainChart.destroy();
-                            mainChart = null;
-                        }
-                        return;
-                    }
+        const selectedDrone = getSelectedDrone();
+        let url = `/api/statistics/crowd/hourly?start=${range.start}&end=${range.end}`;
 
-                    data.forEach(item => {
-                        const density = getCrowdDensityValue(item);
-                        const peopleCount = getCrowdPeopleCount(item);
-                        const hourText = getCrowdLabel(item);
-                        const status = getDensityStatus(density);
-
-                        tbody.innerHTML += `
-                            <tr class="${status.rowClass}">
-                                <td>${hourText}</td>
-                                <td>${peopleCount}</td>
-                                <td>${density.toFixed(2)}</td>
-                                <td>${status.text}</td>
-                            </tr>
-                        `;
-                    });
-
-                    drawCrowdChart(data);
-                })
-                .catch(error => {
-                    console.error("밀집 시간별 통계 조회 실패:", error);
-                    document.getElementById("hourly-body").innerHTML =
-                        `<tr><td colspan="4">시간별 통계 조회 실패</td></tr>`;
-                });
+        if (selectedDrone.cameraId) {
+            url += `&cameraId=${selectedDrone.cameraId}`;
         }
 
-        function loadDangerSummary() {
-            document.getElementById("card1-value").innerText = "14";
-            document.getElementById("card2-value").innerText = "3";
-            document.getElementById("card3-value").innerText = "27분";
-        }
-
-        function loadDangerHourly() {
-            const tbody = document.getElementById("hourly-body");
-            tbody.innerHTML = `
-                <tr class="warning-row">
-                    <td>10:00</td>
-                    <td>2</td>
-                    <td>18분</td>
-                    <td>주의</td>
-                </tr>
-                <tr class="danger-row">
-                    <td>11:00</td>
-                    <td>4</td>
-                    <td>31분</td>
-                    <td>위험</td>
-                </tr>
-                <tr class="safe-row">
-                    <td>12:00</td>
-                    <td>1</td>
-                    <td>9분</td>
-                    <td>정상</td>
-                </tr>
-                <tr class="warning-row">
-                    <td>13:00</td>
-                    <td>3</td>
-                    <td>14분</td>
-                    <td>주의</td>
-                </tr>
-                <tr class="danger-row">
-                    <td>14:00</td>
-                    <td>5</td>
-                    <td>22분</td>
-                    <td>위험</td>
-                </tr>
-                <tr class="safe-row">
-                    <td>15:00</td>
-                    <td>2</td>
-                    <td>8분</td>
-                    <td>정상</td>
-                </tr>
-            `;
-
-            drawDangerChart();
-        }
-
-        function loadLogs() {
-            fetch("http://127.0.0.1:8081/get_logs")
-                .then(response => {
-                    if (!response.ok) throw new Error();
-                    return response.json();
-                })
-                .then(data => {
-                    const box = document.getElementById("log-box");
-
-                    if (data.error) {
-                        box.innerHTML = `<div class="log-item log-danger">에러: ${data.error}</div>`;
-                        return;
-                    }
-
-                    updateAlertPanel(data);
-
-                    box.innerHTML = "";
-
-                    data.forEach(log => {
-                        box.innerHTML += `
-                            <div class="log-item" style="border-left: 4px solid ${log.level_color}; margin-bottom: 5px; padding-left: 8px;">
-                                <span style="color: ${log.level_color}; font-weight: bold;">
-                                    ${log.status_text}
-                                </span>
-                                인원: ${log.people_count}명 |
-                                시간: ${log.created_at}
-                            </div>
-                        `;
-                    });
-                })
-                .catch(() => {
-                    document.getElementById("log-box").innerHTML =
-                        `<div class="log-item log-danger">Flask 로그 서버 연결 실패</div>`;
-
-                    const badge = document.getElementById("alert-badge");
-                    const list = document.getElementById("alert-list");
-
-                    if (badge) badge.innerText = "!";
-                    if (list) {
-                        list.innerHTML = `<div class="alert-empty">로그 서버 연결 실패</div>`;
-                    }
-                });
-        }
-
-        function loadDashboardData() {
-            if (currentMode === "crowd") {
-                const selectedDrone = getSelectedDrone();
-                let url = `/api/statistics/crowd`;
-
-                if (selectedDrone.cameraId) {
-                    url += `?cameraId=${selectedDrone.cameraId}`;
-                }
-
-                fetch(url)
-                    .then(res => res.json())
-                    .then(data => {
-                        loadCrowdSummaryByData(data);
-                        loadCrowdHourly();
-                    })
-                    .catch(() => {
-                        document.getElementById("card1-value").innerText = "-";
-                        document.getElementById("card2-value").innerText = "-";
-                        document.getElementById("card3-value").innerText = "-";
-                    });
-            } else {
-                loadDangerSummary();
-                loadDangerHourly();
-            }
-        }
-
-        function getReportSampleLabels() {
-            if (selectedReportTab === "day") {
-                return ["09시", "10시", "11시", "12시", "13시", "14시"];
-            } else if (selectedReportTab === "week") {
-                return ["월", "화", "수", "목", "금", "토", "일"];
-            } else if (selectedReportTab === "month") {
-                return ["1주", "2주", "3주", "4주"];
-            } else {
-                return ["1월", "2월", "3월", "4월", "5월", "6월"];
-            }
-        }
-
-        function padReportValues(baseValues, targetLength) {
-            const result = [...baseValues];
-            while (result.length < targetLength) {
-                result.push(baseValues[result.length % baseValues.length]);
-            }
-            return result.slice(0, targetLength);
-        }
-
-        function getReportValues() {
-            const labels = getReportSampleLabels();
-
-            if (currentMode === "crowd") {
-                if (selectedCardKey === "card1") {
-                    return {
-                        title: "평균 밀집 상세 통계",
-                        datasetLabel: "평균 밀집도",
-                        values: padReportValues([0.22, 0.35, 0.48, 0.62, 0.71, 0.58, 0.44], labels.length),
-                        unit: ""
-                    };
-                } else if (selectedCardKey === "card2") {
-                    return {
-                        title: "최대 밀집 상세 통계",
-                        datasetLabel: "최대 밀집 인원",
-                        values: padReportValues([8, 11, 14, 18, 22, 16, 12], labels.length),
-                        unit: "명"
-                    };
-                } else {
-                    return {
-                        title: "밀집도 증가율 상세 통계",
-                        datasetLabel: "밀집도 증가율",
-                        values: padReportValues([5, 12, 18, 27, 15, 9, 6], labels.length),
-                        unit: "%"
-                    };
-                }
-            } else {
-                if (selectedCardKey === "card1") {
-                    return {
-                        title: "총 침입 수 상세 통계",
-                        datasetLabel: "침입 건수",
-                        values: padReportValues([1, 2, 3, 5, 4, 2, 1], labels.length),
-                        unit: "건"
-                    };
-                } else if (selectedCardKey === "card2") {
-                    return {
-                        title: "시간당 침입 횟수 상세 통계",
-                        datasetLabel: "시간당 침입 횟수",
-                        values: padReportValues([0, 1, 2, 4, 3, 1, 2], labels.length),
-                        unit: "건"
-                    };
-                } else {
-                    return {
-                        title: "평균 체류 시간 상세 통계",
-                        datasetLabel: "평균 체류 시간",
-                        values: padReportValues([4, 8, 12, 17, 10, 6, 9], labels.length),
-                        unit: "분"
-                    };
-                }
-            }
-        }
-
-        function openReportModal(cardKey) {
-            selectedCardKey = cardKey;
-            document.getElementById("report-modal-backdrop").style.display = "flex";
-            renderReportModal();
-        }
-
-        function renderReportModal() {
-            const report = getReportValues();
-            const labels = getReportSampleLabels();
-            const colors = getChartColors();
-
-            document.getElementById("modal-title").innerText = report.title;
-
-            const summary = document.getElementById("report-summary");
-            if (summary) {
-                summary.innerHTML = `
-                    현재 선택 모드: <strong>${currentMode === "crowd" ? "밀집" : "위험"}</strong><br>
-                    선택 드론: <strong>${selectedDroneId}</strong><br>
-                    선택 항목: <strong>${report.datasetLabel}</strong><br>
-                    선택 기간: <strong>${selectedReportTab}</strong>
-                `;
-            }
-
-            const tbody = document.getElementById("report-table-body");
-            if (tbody) {
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById("hourly-body");
                 tbody.innerHTML = "";
 
-                labels.forEach((label, index) => {
+                if (!data || !data.length) {
+                    tbody.innerHTML = `<tr><td colspan="4">선택한 날짜 범위에 밀집 데이터가 없습니다.</td></tr>`;
+                    if (mainChart) {
+                        mainChart.destroy();
+                        mainChart = null;
+                    }
+                    return;
+                }
+
+                data.forEach(item => {
+                    const density = getCrowdDensityValue(item);
+                    const peopleCount = getCrowdPeopleCount(item);
+                    const hourText = getCrowdLabel(item);
+                    const status = getDensityStatus(density);
+
+                    tbody.innerHTML += `
+                        <tr class="${status.rowClass}">
+                            <td>${hourText}</td>
+                            <td>${peopleCount}</td>
+                            <td>${density.toFixed(2)}</td>
+                            <td>${status.text}</td>
+                        </tr>
+                    `;
+                });
+
+                drawCrowdChart(data);
+            })
+            .catch(error => {
+                console.error("밀집 시간별 통계 조회 실패:", error);
+                document.getElementById("hourly-body").innerHTML =
+                    `<tr><td colspan="4">시간별 통계 조회 실패</td></tr>`;
+            });
+    }
+
+    function loadCrowdSummary() {
+        const range = getRangeParams();
+        if (!range) return;
+
+        const selectedDrone = getSelectedDrone();
+        let url = `/api/statistics/crowd/summary?start=${range.start}&end=${range.end}`;
+
+        if (selectedDrone.cameraId) {
+            url += `&cameraId=${selectedDrone.cameraId}`;
+        }
+
+        fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error("summary api error");
+                return res.json();
+            })
+            .then(data => {
+                document.getElementById("card1-value").innerText =
+                    Number(data.averageDensityValue ?? 0).toFixed(2);
+
+                document.getElementById("card2-value").innerText =
+                    Number(data.maxPeopleCount ?? 0);
+
+                document.getElementById("card3-value").innerText =
+                    Number(data.averageIncreaseRate ?? 0).toFixed(1) + "%";
+            })
+            .catch(error => {
+                console.error("밀집 요약 통계 조회 실패:", error);
+                document.getElementById("card1-value").innerText = "-";
+                document.getElementById("card2-value").innerText = "-";
+                document.getElementById("card3-value").innerText = "-";
+            });
+    }
+
+    function loadDangerSummary() {
+        fetch("http://127.0.0.1:8081/get_logs")
+            .then(res => {
+                if (!res.ok) throw new Error("danger summary api error");
+                return res.json();
+            })
+            .then(data => {
+                const dangerLogs = getDangerLogsOnly(data);
+                const totalIntrusion = dangerLogs.length;
+
+                const hourMap = {};
+                dangerLogs.forEach(log => {
+                    const timeText = log.created_at || "";
+                    const hour = timeText.length >= 13 ? timeText.substring(11, 13) : "00";
+                    hourMap[hour] = (hourMap[hour] || 0) + 1;
+                });
+
+                const maxHourlyIntrusion = Object.values(hourMap).length
+                    ? Math.max(...Object.values(hourMap))
+                    : 0;
+
+                document.getElementById("card1-value").innerText = totalIntrusion;
+                document.getElementById("card2-value").innerText = maxHourlyIntrusion;
+                document.getElementById("card3-value").innerText = "-";
+            })
+            .catch(error => {
+                console.error("위험 요약 통계 조회 실패:", error);
+                document.getElementById("card1-value").innerText = "-";
+                document.getElementById("card2-value").innerText = "-";
+                document.getElementById("card3-value").innerText = "-";
+            });
+    }
+
+    function loadDangerHourly() {
+        fetch("http://127.0.0.1:8081/get_logs")
+            .then(res => {
+                if (!res.ok) throw new Error("danger hourly api error");
+                return res.json();
+            })
+            .then(data => {
+                const tbody = document.getElementById("hourly-body");
+                tbody.innerHTML = "";
+
+                const dangerLogs = getDangerLogsOnly(data);
+
+                if (!dangerLogs.length) {
+                    tbody.innerHTML = `<tr><td colspan="4">위험 탐지 데이터가 없습니다.</td></tr>`;
+                    if (mainChart) {
+                        mainChart.destroy();
+                        mainChart = null;
+                    }
+                    return;
+                }
+
+                const grouped = {};
+
+                dangerLogs.forEach(log => {
+                    const timeText = log.created_at || "";
+                    const hour = timeText.length >= 13 ? timeText.substring(11, 13) + ":00" : "00:00";
+
+                    if (!grouped[hour]) {
+                        grouped[hour] = { count: 0 };
+                    }
+                    grouped[hour].count += 1;
+                });
+
+                const chartData = Object.keys(grouped)
+                    .sort()
+                    .map(hour => ({
+                        hour: hour,
+                        intrusionCount: grouped[hour].count
+                    }));
+
+                chartData.forEach(item => {
+                    const status = item.intrusionCount >= 3 ? "위험" : "주의";
+                    const rowClass = item.intrusionCount >= 3 ? "danger-row" : "warning-row";
+
+                    tbody.innerHTML += `
+                        <tr class="${rowClass}">
+                            <td>${item.hour}</td>
+                            <td>${item.intrusionCount}</td>
+                            <td>-</td>
+                            <td>${status}</td>
+                        </tr>
+                    `;
+                });
+
+                drawDangerChart(chartData);
+            })
+            .catch(error => {
+                console.error("위험 시간별 통계 조회 실패:", error);
+                document.getElementById("hourly-body").innerHTML =
+                    `<tr><td colspan="4">위험 시간별 통계 조회 실패</td></tr>`;
+            });
+    }
+
+    function loadLogs() {
+        fetch("http://127.0.0.1:8081/get_logs")
+            .then(response => {
+                if (!response.ok) throw new Error();
+                return response.json();
+            })
+            .then(data => {
+                const box = document.getElementById("log-box");
+
+                if (data.error) {
+                    box.innerHTML = `<div class="log-item log-danger">에러: ${data.error}</div>`;
+                    return;
+                }
+
+                updateAlertPanel(data);
+                box.innerHTML = "";
+
+                data.forEach(log => {
+                    box.innerHTML += `
+                        <div class="log-item" style="border-left: 4px solid ${log.level_color}; margin-bottom: 5px; padding-left: 8px;">
+                            <span style="color: ${log.level_color}; font-weight: bold;">
+                                ${log.status_text}
+                            </span>
+                            인원: ${log.people_count}명 |
+                            시간: ${log.created_at}
+                        </div>
+                    `;
+                });
+            })
+            .catch(() => {
+                document.getElementById("log-box").innerHTML =
+                    `<div class="log-item log-danger">Flask 로그 서버 연결 실패</div>`;
+
+                const badge = document.getElementById("alert-badge");
+                const list = document.getElementById("alert-list");
+
+                if (badge) badge.innerText = "!";
+                if (list) {
+                    list.innerHTML = `<div class="alert-empty">로그 서버 연결 실패</div>`;
+                }
+            });
+    }
+
+    function loadDashboardData() {
+        if (currentMode === "crowd") {
+            loadCrowdSummary();
+            loadCrowdHourly();
+        } else {
+            loadDangerSummary();
+            loadDangerHourly();
+        }
+    }
+
+    function getCurrentReportData() {
+        const rows = Array.from(document.querySelectorAll("#hourly-body tr"));
+        const labels = [];
+        const values = [];
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            if (currentMode === "crowd" && cells.length >= 3) {
+                labels.push(cells[0].innerText.trim());
+                values.push(Number(cells[2].innerText.trim()) || 0);
+            } else if (currentMode === "danger" && cells.length >= 2) {
+                labels.push(cells[0].innerText.trim());
+                values.push(Number(cells[1].innerText.trim()) || 0);
+            }
+        });
+
+        if (currentMode === "crowd") {
+            if (selectedCardKey === "card1") {
+                return {
+                    title: "평균 밀집 상세 통계",
+                    datasetLabel: "평균 밀집도",
+                    labels,
+                    values,
+                    unit: ""
+                };
+            }
+            if (selectedCardKey === "card2") {
+                return {
+                    title: "최대 밀집 상세 통계",
+                    datasetLabel: "총 인원 수",
+                    labels,
+                    values: Array.from(document.querySelectorAll("#hourly-body tr")).map(row => {
+                        const cells = row.querySelectorAll("td");
+                        return cells.length >= 2 ? Number(cells[1].innerText.trim()) || 0 : 0;
+                    }),
+                    unit: "명"
+                };
+            }
+            return {
+                title: "밀집도 증가율 상세 통계",
+                datasetLabel: "평균 밀집도",
+                labels,
+                values,
+                unit: ""
+            };
+        }
+
+        return {
+            title: selectedCardKey === "card1"
+                ? "총 침입 수 상세 통계"
+                : selectedCardKey === "card2"
+                    ? "시간당 침입 횟수 상세 통계"
+                    : "평균 체류 시간 상세 통계",
+            datasetLabel: selectedCardKey === "card3" ? "평균 체류 시간" : "시간당 침입 횟수",
+            labels,
+            values,
+            unit: selectedCardKey === "card3" ? "분" : "건"
+        };
+    }
+
+    function openReportModal(cardKey) {
+        selectedCardKey = cardKey;
+        document.getElementById("report-modal-backdrop").style.display = "flex";
+        renderReportModal();
+    }
+
+    function renderReportModal() {
+        const report = getCurrentReportData();
+        const colors = getChartColors();
+
+        document.getElementById("modal-title").innerText = report.title;
+
+        const summary = document.getElementById("report-summary");
+        if (summary) {
+            summary.innerHTML = `
+                현재 선택 모드: <strong>${currentMode === "crowd" ? "밀집" : "위험"}</strong><br>
+                선택 드론: <strong>${selectedDroneId}</strong><br>
+                선택 항목: <strong>${report.datasetLabel}</strong><br>
+                선택 기간: <strong>${selectedReportTab}</strong>
+            `;
+        }
+
+        const tbody = document.getElementById("report-table-body");
+        if (tbody) {
+            tbody.innerHTML = "";
+
+            if (!report.labels.length) {
+                tbody.innerHTML = `<tr><td colspan="3">데이터 없음</td></tr>`;
+            } else {
+                report.labels.forEach((label, index) => {
                     tbody.innerHTML += `
                         <tr>
                             <td>${label}</td>
@@ -1121,254 +1098,260 @@
                     `;
                 });
             }
+        }
 
-            const canvas = document.getElementById("reportChart");
-            if (!canvas) return;
+        const canvas = document.getElementById("reportChart");
+        if (!canvas) return;
 
-            const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d");
 
-            if (reportChart) {
-                reportChart.destroy();
-            }
+        if (reportChart) {
+            reportChart.destroy();
+        }
 
-            reportChart = new Chart(ctx, {
-                type: currentMode === "crowd" ? "line" : "bar",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: report.datasetLabel,
-                        data: report.values,
-                        borderColor: colors.line,
-                        backgroundColor: colors.fill,
-                        borderWidth: 2,
-                        fill: currentMode === "crowd",
-                        tension: 0.3,
-                        pointRadius: currentMode === "crowd" ? 4 : 0,
-                        pointHoverRadius: currentMode === "crowd" ? 6 : 0
-                    }]
+        reportChart = new Chart(ctx, {
+            type: currentMode === "crowd" ? "line" : "bar",
+            data: {
+                labels: report.labels,
+                datasets: [{
+                    label: report.datasetLabel,
+                    data: report.values,
+                    borderColor: colors.line,
+                    backgroundColor: colors.fill,
+                    borderWidth: 2,
+                    fill: currentMode === "crowd",
+                    tension: 0.3,
+                    pointRadius: currentMode === "crowd" ? 4 : 0,
+                    pointHoverRadius: currentMode === "crowd" ? 6 : 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: colors.tick
+                        }
+                    }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                color: colors.tick
-                            }
+                scales: {
+                    x: {
+                        ticks: {
+                            color: colors.tick
+                        },
+                        grid: {
+                            color: colors.grid
                         }
                     },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: colors.tick
-                            },
-                            grid: {
-                                color: colors.grid
-                            }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: colors.tick
                         },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: colors.tick
-                            },
-                            grid: {
-                                color: colors.grid
-                            }
+                        grid: {
+                            color: colors.grid
                         }
                     }
                 }
+            }
+        });
+    }
+
+    function closeReportModal() {
+        document.getElementById("report-modal-backdrop").style.display = "none";
+        if (reportChart) {
+            reportChart.destroy();
+            reportChart = null;
+        }
+    }
+
+    function setReportTab(button, tab) {
+        selectedReportTab = tab;
+        document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+        button.classList.add("active");
+        renderReportModal();
+    }
+
+    function downloadPdf() {
+        alert("PDF 다운로드 기능 연결 예정");
+    }
+
+    function downloadExcel() {
+        alert("EXCEL 다운로드 기능 연결 예정");
+    }
+
+    function toggleAlertPanel() {
+        const panel = document.getElementById("alert-panel");
+        if (panel) {
+            panel.classList.toggle("show");
+        }
+    }
+
+    function updateAlertPanel(data) {
+        const badge = document.getElementById("alert-badge");
+        const list = document.getElementById("alert-list");
+        if (!badge || !list) return;
+
+    // 1. 🚩 백엔드에서 보낸 isAlert가 true인 것만 정확히 필터링
+        const highAlerts = data.filter(log => log.alert === true);
+
+    // 2. 🚩 필터링된 개수만큼 종 모양 숫자 업데이트
+        badge.innerText = highAlerts.length;
+
+    // 3. 🚩 종 모양 클릭 시 나오는 리스트도 HIGH 상황만 출력
+        list.innerHTML = highAlerts.slice().map(log => `
+            <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px; padding: 10px; background: #fff1f0;">
+                <strong style="color: ${log.level_color};">${log.status_text}</strong><br>
+                인원: ${log.people_count}명<br>
+                <small style="color: #888;">${log.created_at}</small>
+            </div>
+        `).join("");
+
+    // 4. 🚩 실시간 빨간색 팝업 알림 (가장 최근 데이터가 HIGH일 때만)
+        const latestLog = highAlerts[0];
+        if (latestLog && latestLog.alert === true && latestLog.created_at !== lastDismissedTime) {
+            showDangerPopup(latestLog);
+        }
+    }
+
+    function showDangerPopup(log) {
+        const oldPopup = document.getElementById("dynamic-danger-alert");
+        if (oldPopup) return;
+
+        const popup = document.createElement("div");
+        popup.id = "dynamic-danger-alert";
+
+        Object.assign(popup.style, {
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: "10000",
+            width: "350px",
+            padding: "25px",
+            backgroundColor: log.level_color,
+            color: "white",
+            borderRadius: "15px",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
+            textAlign: "center",
+            fontWeight: "bold",
+            border: "2px solid white"
+        });
+
+        popup.innerHTML = `
+            <div style="font-size: 24px; margin-bottom: 10px;">🚨 ${log.status_text} 🚨</div>
+            <div style="font-size: 18px;">현재 인원: ${log.people_count}명</div>
+            <div style="font-size: 14px; margin-top: 15px; opacity: 0.9;">${log.created_at}</div>
+            <button onclick="lastDismissedTime='${log.created_at}'; this.parentElement.remove();"
+                    style="margin-top: 20px; padding: 8px 20px; border: none; cursor: pointer; background: white; color: ${log.level_color}; font-weight: bold;">
+                닫기
+            </button>
+        `;
+
+        document.body.appendChild(popup);
+
+        setTimeout(() => {
+            if (document.getElementById("dynamic-danger-alert")) {
+                popup.remove();
+            }
+        }, 5000);
+    }
+
+    function initKakaoMap() {
+        const mapContainer = document.getElementById("map");
+
+        const mapOption = {
+            center: new kakao.maps.LatLng(37.5665, 126.9780),
+            level: 5
+        };
+
+        map = new kakao.maps.Map(mapContainer, mapOption);
+        markers = [];
+
+        droneData.forEach(drone => {
+            const position = new kakao.maps.LatLng(drone.lat, drone.lng);
+
+            const markerImageSrc = drone.mode === "crowd"
+                ? "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"
+                : "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png";
+
+            const markerImage = new kakao.maps.MarkerImage(
+                markerImageSrc,
+                new kakao.maps.Size(24, 35)
+            );
+
+            const marker = new kakao.maps.Marker({
+                position: position,
+                title: drone.id,
+                image: markerImage
             });
-        }
 
-        function closeReportModal() {
-            document.getElementById("report-modal-backdrop").style.display = "none";
-            if (reportChart) {
-                reportChart.destroy();
-                reportChart = null;
-            }
-        }
+            marker.setMap(map);
+            markers.push(marker);
 
-        function setReportTab(button, tab) {
-            selectedReportTab = tab;
-            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
-            button.classList.add("active");
-            renderReportModal();
-        }
+            kakao.maps.event.addListener(marker, "click", function () {
+                const applyDroneSelection = () => {
+                    selectedDroneId = drone.id;
+                    currentMode = drone.mode;
 
-        function downloadPdf() {
-            alert("PDF 다운로드 기능 연결 예정");
-        }
+                    markers.forEach(m => m.setZIndex(1));
+                    marker.setZIndex(999);
+                    map.panTo(position);
 
-        function downloadExcel() {
-            alert("EXCEL 다운로드 기능 연결 예정");
-        }
+                    document.getElementById("selected-drone-text").innerText = drone.id;
+                    switchMode(drone.mode);
+                    updateVideoByMode();
+                };
 
-        function toggleAlertPanel() {
-            const panel = document.getElementById("alert-panel");
-            if (panel) {
-                panel.classList.toggle("show");
-            }
-        }
-
-        function updateAlertPanel(data) {
-            const badge = document.getElementById("alert-badge");
-            const list = document.getElementById("alert-list");
-            if (!badge || !list) return;
-
-            badge.innerText = data.length;
-            list.innerHTML = data.slice().map(log => `
-                <div class="alert-item" style="border-left: 5px solid ${log.level_color}; margin-bottom: 8px;">
-                    <strong style="color: ${log.level_color};">${log.status_text}</strong><br>
-                    인원: ${log.people_count}명<br>
-                    시간: ${log.created_at}
-                </div>
-            `).join("");
-
-            const latestLog = data[0];
-
-            if (latestLog && latestLog.showAlertText === true && latestLog.created_at !== lastDismissedTime) {
-                showDangerPopup(latestLog);
-            }
-        }
-
-        function showDangerPopup(log) {
-            const oldPopup = document.getElementById("dynamic-danger-alert");
-            if (oldPopup) return;
-
-            const popup = document.createElement("div");
-            popup.id = "dynamic-danger-alert";
-
-            Object.assign(popup.style, {
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: "10000",
-                width: "350px",
-                padding: "25px",
-                backgroundColor: log.level_color,
-                color: "white",
-                borderRadius: "15px",
-                boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
-                textAlign: "center",
-                fontWeight: "bold",
-                border: "2px solid white"
-            });
-
-            popup.innerHTML = `
-                <div style="font-size: 24px; margin-bottom: 10px;">🚨 ${log.status_text} 🚨</div>
-                <div style="font-size: 18px;">현재 인원: ${log.people_count}명</div>
-                <div style="font-size: 14px; margin-top: 15px; opacity: 0.9;">${log.created_at}</div>
-                <button onclick="lastDismissedTime='${log.created_at}'; this.parentElement.remove();"
-                        style="margin-top: 20px; padding: 8px 20px; border: none; cursor: pointer; background: white; color: ${log.level_color}; font-weight: bold;">
-                    닫기
-                </button>
-            `;
-
-            document.body.appendChild(popup);
-
-            setTimeout(() => {
-                if (document.getElementById("dynamic-danger-alert")) {
-                    popup.remove();
+                if (drone.switchUrl) {
+                    fetch(drone.switchUrl)
+                        .then(() => applyDroneSelection())
+                        .catch(() => applyDroneSelection());
+                } else {
+                    applyDroneSelection();
                 }
-            }, 5000);
-        }
-
-        function initKakaoMap() {
-            const mapContainer = document.getElementById("map");
-
-            const mapOption = {
-                center: new kakao.maps.LatLng(37.5665, 126.9780),
-                level: 5
-            };
-
-            map = new kakao.maps.Map(mapContainer, mapOption);
-            markers = [];
-
-            droneData.forEach(drone => {
-                const position = new kakao.maps.LatLng(drone.lat, drone.lng);
-
-                const markerImageSrc = drone.mode === "crowd"
-                    ? "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"
-                    : "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png";
-
-                const markerImage = new kakao.maps.MarkerImage(
-                    markerImageSrc,
-                    new kakao.maps.Size(24, 35)
-                );
-
-                const marker = new kakao.maps.Marker({
-                    position: position,
-                    title: drone.id,
-                    image: markerImage
-                });
-
-                marker.setMap(map);
-                markers.push(marker);
-
-                kakao.maps.event.addListener(marker, "click", function () {
-                    const applyDroneSelection = () => {
-                        selectedDroneId = drone.id;
-                        currentMode = drone.mode;
-
-                        markers.forEach(m => m.setZIndex(1));
-                        marker.setZIndex(999);
-                        map.panTo(position);
-
-                        document.getElementById("selected-drone-text").innerText = drone.id;
-                        switchMode(drone.mode);
-                        updateVideoByMode();
-                    };
-
-                    if (drone.switchUrl) {
-                        fetch(drone.switchUrl)
-                            .then(() => applyDroneSelection())
-                            .catch(() => applyDroneSelection());
-                    } else {
-                        applyDroneSelection();
-                    }
-                });
             });
+        });
+    }
+
+    document.addEventListener("click", function (event) {
+        const wrapper = document.querySelector(".alert-wrapper");
+        const panel = document.getElementById("alert-panel");
+
+        if (!wrapper || !panel) return;
+
+        if (!wrapper.contains(event.target)) {
+            panel.classList.remove("show");
         }
+    });
 
-        document.addEventListener("click", function (event) {
-            const wrapper = document.querySelector(".alert-wrapper");
-            const panel = document.getElementById("alert-panel");
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeReportModal();
+        }
+    });
 
-            if (!wrapper || !panel) return;
+    document.getElementById("report-modal-backdrop").addEventListener("click", function (event) {
+        if (event.target === this) {
+            closeReportModal();
+        }
+    });
 
-            if (!wrapper.contains(event.target)) {
-                panel.classList.remove("show");
-            }
-        });
+    kakao.maps.load(function () {
+        applySavedTheme();
+        setTodayRange();
+        initKakaoMap();
+        updateVideoByMode();
+        updateCardTitles();
+        updateTableHeaders();
+        loadDashboardData();
+        loadLogs();
 
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape") {
-                closeReportModal();
-            }
-        });
-
-        document.getElementById("report-modal-backdrop").addEventListener("click", function (event) {
-            if (event.target === this) {
-                closeReportModal();
-            }
-        });
-
-        kakao.maps.load(function () {
-            applySavedTheme();
-            setTodayRange();
-            initKakaoMap();
-            updateVideoByMode();
-            updateCardTitles();
-            updateTableHeaders();
-            loadDashboardData();
-            loadLogs();
-
-            setInterval(loadLogs, 2000);
-            setInterval(loadDashboardData, 5000);
-        });
-    </script>
-
-    </body>
-    </html>
+        setInterval(loadLogs, 2000);
+        setInterval(loadDashboardData, 5000);
+    });
+</script>
+</body>
+</html>

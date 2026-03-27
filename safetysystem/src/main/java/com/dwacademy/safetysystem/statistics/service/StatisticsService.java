@@ -163,7 +163,14 @@ public class StatisticsService {
 
         stat.setCameraId(event.getCameraId() != null ? event.getCameraId().longValue() : 0L);
         stat.setDangerZoneId(event.getDangerZoneId() != null ? event.getDangerZoneId().longValue() : null);
-        stat.setMeasuredAt(event.getCreatedAt() != null ? event.getCreatedAt() : LocalDateTime.now());
+        stat.setMeasuredAt(
+                event.getEventTime() != null
+                        ? LocalDateTime.ofInstant(
+                        java.time.Instant.ofEpochSecond(event.getEventTime()),
+                        java.time.ZoneId.of("Asia/Seoul")
+                )
+                        : (event.getCreatedAt() != null ? event.getCreatedAt() : LocalDateTime.now())
+        );
         stat.setPeopleCount(event.getDetectedCount() != null ? event.getDetectedCount() : 0);
 
         // 일단 발표/연동용 기본값

@@ -7,6 +7,10 @@ function applySavedTheme() {
     }
     updateThemeButtonText();
     updateLogoByTheme();
+
+    if (typeof refreshChartTheme === "function") {
+        refreshChartTheme();
+    }
 }
 
 function toggleTheme() {
@@ -15,6 +19,10 @@ function toggleTheme() {
     localStorage.setItem("dashboard-theme", isDark ? "dark" : "light");
     updateThemeButtonText();
     updateLogoByTheme();
+
+    if (typeof refreshChartTheme === "function") {
+        refreshChartTheme();
+    }
 }
 
 function updateThemeButtonText() {
