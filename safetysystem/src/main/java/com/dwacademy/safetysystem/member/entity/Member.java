@@ -22,36 +22,38 @@ import java.time.LocalDateTime;
 public class Member {
 
     @Id
-    @Column(name="NO")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int  id;       // 회원 고유 ID
+    @Column(name = "no")
+    private int id; // 회원 고유 ID
 
     @Email
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", nullable = false, unique = true)
     private String email; // 로그인 이메일
 
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     private String password; // 암호화된 비밀번호
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name; // 사용자 이름
 
+    @Column(name = "phone", nullable = false)
     private String phone; // 연락처
 
-    @Column(name = "postcode")
-    private String postcode;  // 우편 번호
+    @Column(name = "postcode", nullable = false)
+    private String postcode; // 우편 번호
 
+    @Column(name = "address", nullable = false)
     private String address; // 주소
 
     @Column(name = "detail_address")
-    private String detailAddress;  // 상세 주소
+    private String detailAddress; // 상세 주소 (선택)
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false)
     private RoleType role; // USER, ADMIN
 
-    @Column(nullable = false)
-    private String status; // PENDING, ACTIVE 등
+    @Column(name = "status", nullable = false)
+    private String status; // PENDING, ACTIVE, REJECTED, WITHDRAWN
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -62,7 +64,7 @@ public class Member {
     private LocalDateTime updatedAt; // 수정일
 
     @Column(name = "approved_at")
-    private LocalDateTime approvedAt; // 관리자 승인일
+    private LocalDateTime approvedAt; // 승인일 (ACTIVE 될 때)
 
     @Column(name = "withdrawn_at")
     private LocalDateTime withdrawnAt; // 탈퇴일
@@ -70,12 +72,12 @@ public class Member {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt; // 마지막 로그인
 
-    // 반려 사유 저장
     @Column(name = "rejected_at")
-    private LocalDateTime rejectedAt;
+    private LocalDateTime rejectedAt; // 반려일
 
     @Column(name = "reject_reason", length = 100)
     @Size(max = 100, message = "반려 사유는 100자 이하로 입력하세요.")
-    private String rejectReason;
-
+    private String rejectReason; // 반려 사유
 }
+
+
