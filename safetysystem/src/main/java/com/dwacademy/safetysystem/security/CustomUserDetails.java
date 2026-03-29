@@ -14,7 +14,7 @@ public class CustomUserDetails extends User {
 
     public CustomUserDetails(Member member,
                              Collection<? extends GrantedAuthority> authorities) {
-        super(member.getName(), member.getPassword(), authorities);
+        super(member.getEmail(), member.getPassword(), authorities);
         this.member = member;
     }
 }

@@ -85,21 +85,5 @@ public class MemberRestController {
 
     }
 
-    // 권한 변경(Postman 테스트 하려고...)
-    @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{id}/role")
-    public ResponseEntity<String> changeRole(@PathVariable int id,
-                                             @RequestParam String role) {
-
-        log.info("--- [MemberRestController] changeRole() ---");
-
-        try {
-            memberService.changeRole(id, role);
-            return ResponseEntity.ok("권한 변경 완료");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
 
 }
