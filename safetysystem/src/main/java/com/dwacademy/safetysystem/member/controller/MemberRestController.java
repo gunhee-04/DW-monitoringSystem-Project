@@ -37,7 +37,7 @@ public class MemberRestController {
     }
 
     // 승인 처리
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/approve")
     public ResponseEntity<String> approveMember(@PathVariable int id) {
         log.info("--- [MemberRestController] approveMember() ---");
@@ -52,7 +52,7 @@ public class MemberRestController {
     }
 
     // 반려 처리
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/reject")
     public ResponseEntity<String> rejectMember(
             @PathVariable int id,
@@ -71,7 +71,7 @@ public class MemberRestController {
     }
 
     // 탈퇴 처리 (실제 삭제 X)
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> withdrawMember(@PathVariable int id) {
         log.info("--- [MemberRestController] withdrawMember() ---");
