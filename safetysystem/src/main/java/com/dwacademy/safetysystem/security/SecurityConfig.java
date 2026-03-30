@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final MemberRepository memberRepository;
+    private final CustomLoginFailureHandler customLoginFailureHandler;
 
     // 필터를 Bean으로 등록 (이게 핵심)
     @Bean
@@ -29,6 +30,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -59,7 +62,7 @@ public class SecurityConfig {
                         .usernameParameter("email")
                         .passwordParameter("password")
                         .defaultSuccessUrl("/", true)
-                        .failureUrl("/member/login?error")
+                        .failureHandler(customLoginFailureHandler)
                         .permitAll()
                 )
 
