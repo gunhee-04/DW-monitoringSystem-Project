@@ -40,7 +40,6 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/api/members/**",
-                                "/member/list",
                                 "/member/login",
                                 "/member/loginProc",
                                 "/member/create",
