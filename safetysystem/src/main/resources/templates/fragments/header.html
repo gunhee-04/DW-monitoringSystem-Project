@@ -82,21 +82,56 @@
     </div>
 </div>
 
-<script>
-    function toggleUserMenu() {
-        const menu = document.getElementById("user-menu");
-        menu.classList.toggle("show");
-    }
-
-    window.addEventListener("click", function(e) {
-        const dropdown = document.querySelector(".user-dropdown");
-        const menu = document.getElementById("user-menu");
-
-        if (!dropdown.contains(e.target)) {
-            menu.classList.remove("show");
+    <script>
+        function toggleUserMenu() {
+            const menu = document.getElementById("user-menu");
+            if (menu) {
+                menu.classList.toggle("show");
+            }
         }
-    });
-</script>
+
+        function toggleAlertPanel() {
+            const panel = document.getElementById("alert-panel");
+            const badge = document.getElementById("alert-badge");
+
+            if (!panel) return;
+
+            const isOpen = panel.style.display === "block";
+
+            if (isOpen) {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+                panel.style.position = "absolute";
+                panel.style.top = "48px";
+                panel.style.right = "0";
+                panel.style.zIndex = "9999";
+
+                // 종 패널 열 때 읽음 처리
+                if (badge) {
+                    badge.innerText = "0";
+                    badge.style.display = "none";
+                }
+            }
+        }
+
+        window.addEventListener("click", function(e) {
+            const dropdown = document.querySelector(".user-dropdown");
+            const menu = document.getElementById("user-menu");
+
+            if (dropdown && menu && !dropdown.contains(e.target)) {
+                menu.classList.remove("show");
+            }
+
+            const alertWrapper = document.querySelector(".alert-wrapper");
+            const alertPanel = document.getElementById("alert-panel");
+
+            if (alertWrapper && alertPanel && !alertWrapper.contains(e.target)) {
+                alertPanel.style.display = "none";
+            }
+        });
+    </script>
+</div>
 
 </body>
 </html>

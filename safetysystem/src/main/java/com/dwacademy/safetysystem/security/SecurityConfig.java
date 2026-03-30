@@ -29,9 +29,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // POST 요청(YOLO 데이터 전송)을 위해 필수
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -41,7 +40,11 @@ public class SecurityConfig {
                                 "/member/create",
                                 "/css/**",
                                 "/js/**",
-                                "/images/**"
+                                "/images/**",
+                                // 🚩 아래 경로들을 추가하여 누구나(혹은 서버끼리) 접근 가능하게 합니다.
+                                "/api/**",       // 모든 API 경로 (통계, SSE 등)
+                                "/get_logs",      // 로그 조회 경로
+                                "/video/**"       // 혹시 모를 비디오 스트리밍 경로
                         ).permitAll()
 
                         .requestMatchers("/member/list").hasRole("ADMIN")
