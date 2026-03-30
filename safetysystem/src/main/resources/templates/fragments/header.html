@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<body>
+<div th:fragment="header(title)"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<div th:fragment="header(title)">
     <div class="topbar">
 
         <!-- 왼쪽 -->
@@ -18,13 +16,8 @@
             </a>
         </div>
 
-
         <!-- 오른쪽 -->
         <div class="topbar-right">
-            <!-- 🔥 디버깅용 (권한 확인) -->
-            <div sec:authorize="isAuthenticated()">
-                <span sec:authentication="principal.authorities"></span>
-            </div>
 
             <!-- 다크모드 -->
             <button id="theme-toggle-btn"
@@ -60,13 +53,12 @@
                 </button>
 
                 <div id="user-menu" class="user-menu">
-                    <!-- 관리자만 보이기 -->
                     <a th:href="@{/admin/home}"
                        class="user-menu-item"
                        sec:authorize="hasRole('ADMIN')">
                         관리자 페이지
                     </a>
-                    <!-- ----------- -->
+
                     <a th:href="@{/member/list}"
                        class="user-menu-item"
                        sec:authorize="hasRole('ADMIN')">
@@ -79,24 +71,25 @@
                 </div>
             </div>
 
+        </div>
     </div>
-</div>
 
-<script>
-    function toggleUserMenu() {
-        const menu = document.getElementById("user-menu");
-        menu.classList.toggle("show");
-    }
-
-    window.addEventListener("click", function(e) {
-        const dropdown = document.querySelector(".user-dropdown");
-        const menu = document.getElementById("user-menu");
-
-        if (!dropdown.contains(e.target)) {
-            menu.classList.remove("show");
+    <script>
+        function toggleUserMenu() {
+            const menu = document.getElementById("user-menu");
+            if (menu) {
+                menu.classList.toggle("show");
+            }
         }
-    });
-</script>
 
-</body>
-</html>
+        window.addEventListener("click", function(e) {
+            const dropdown = document.querySelector(".user-dropdown");
+            const menu = document.getElementById("user-menu");
+
+            if (dropdown && menu && !dropdown.contains(e.target)) {
+                menu.classList.remove("show");
+            }
+        });
+    </script>
+
+</div>
