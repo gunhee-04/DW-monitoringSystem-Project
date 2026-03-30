@@ -274,7 +274,7 @@
             <div class="panel-title">🎥 실시간 드론 영상</div>
             <div class="video-frame">
                 <img id="stream-video"
-                     src="http://127.0.0.1:5001/video"
+                     src="http://localhost:5001/video"
                      alt="드론 영상"
                      onerror="this.src='https://dummyimage.com/1200x700/0f172a/ffffff&text=Drone+Offline'">
 
@@ -444,8 +444,8 @@
             id: "DRONE-01",
             lat: 37.5665,
             lng: 126.9780,
-            switchUrl: "http://127.0.0.1:5001/switch/webcam",
-            videoUrl: "http://127.0.0.1:5001/video",
+            switchUrl: "http://localhost:5001/switch/webcam",
+            videoUrl: "http://localhost:5001/video",
             mode: "crowd",
             cameraId: 1
         },
@@ -453,8 +453,8 @@
             id: "DRONE-02",
             lat: 37.5651,
             lng: 126.9895,
-            switchUrl: "http://127.0.0.1:5001/switch/drone1",
-            videoUrl: "http://127.0.0.1:5001/video",
+            switchUrl: "http://localhost:5001/switch/drone1",
+            videoUrl: "http://localhost:5001/video",
             mode: "crowd",
             cameraId: 2
         },
@@ -462,8 +462,8 @@
             id: "DRONE-03",
             lat: 37.5700,
             lng: 126.9820,
-            switchUrl: "http://127.0.0.1:5001/switch/drone2",
-            videoUrl: "http://127.0.0.1:5001/video",
+            switchUrl: "http://localhost:5001/switch/drone2",
+            videoUrl: "http://localhost:5001/video",
             mode: "danger",
             cameraId: 3
         }
@@ -487,32 +487,32 @@
     };
 
     function safeNumber(value, fallback = 0) {
-        const n = Number(value);
-        return Number.isFinite(n) ? n : fallback;
-    }
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+}
 
-    function getSelectedDrone() {
-        return droneData.find(d => d.id === state.selectedDroneId) || droneData[0];
-    }
+function getSelectedDrone() {
+    return droneData.find(d => d.id === state.selectedDroneId) || droneData[0];
+}
 
-    function getChartColors() {
-        const style = getComputedStyle(document.body);
-        return {
-            grid: style.getPropertyValue("--chart-grid").trim() || "rgba(148, 163, 184, 0.25)",
-            tick: style.getPropertyValue("--chart-tick").trim() || "#475569",
-            line: style.getPropertyValue("--chart-line").trim() || "#2563eb",
-            fill: style.getPropertyValue("--chart-fill").trim() || "rgba(37, 99, 235, 0.15)"
-        };
-    }
+function getChartColors() {
+    const style = getComputedStyle(document.body);
+    return {
+        grid: style.getPropertyValue("--chart-grid").trim() || "rgba(148, 163, 184, 0.25)",
+        tick: style.getPropertyValue("--chart-tick").trim() || "#475569",
+        line: style.getPropertyValue("--chart-line").trim() || "#2563eb",
+        fill: style.getPropertyValue("--chart-fill").trim() || "rgba(37, 99, 235, 0.15)"
+    };
+}
 
-    function formatDateTimeLocal(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, "0");
-        const d = String(date.getDate()).padStart(2, "0");
-        const hh = String(date.getHours()).padStart(2, "0");
-        const mm = String(date.getMinutes()).padStart(2, "0");
-        return `${y}-${m}-${d}T${hh}:${mm}`;
-    }
+function formatDateTimeLocal(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    const hh = String(date.getHours()).padStart(2, "0");
+    const mm = String(date.getMinutes()).padStart(2, "0");
+    return `${y}-${m}-${d}T${hh}:${mm}`;
+}
 
     function formatDateTimeParam(value) {
         return value + ":00";
@@ -626,7 +626,6 @@
         updateCardTitles();
         updateTableHeaders();
         updateVideoByMode();
-        refreshRealtime();
     }
 
     async function fetchCrowdRealtime(signal) {
@@ -660,7 +659,7 @@
                 status: "-",
                 rowClass: ""
             })),
-            logs: null
+            logs: state.realtimeLogs || []
         };
     }
 
@@ -741,9 +740,6 @@
 
         if (d.logs) {
             renderLogs(d.logs);
-        } else {
-            document.getElementById("log-box").innerHTML =
-                `<div class="log-item">현재 모드에서는 로그 연동이 없습니다.</div>`;
         }
 
         if (document.getElementById("report-modal-backdrop").style.display === "flex") {
@@ -834,38 +830,38 @@
     }
 
     function showDangerPopup(log) {
-        const oldPopup = document.getElementById("dynamic-danger-alert");
-        if (oldPopup) return;
+    const oldPopup = document.getElementById("dynamic-danger-alert");
+    if (oldPopup) return;
 
-        const popup = document.createElement("div");
-        popup.id = "dynamic-danger-alert";
-        popup.innerHTML = `
-            <div style="font-size:24px; margin-bottom:10px;">🚨 ${log.status_text || "위험 감지"} 🚨</div>
-            <div style="font-size:18px;">인원: ${safeNumber(log.people_count)}명</div>
-            <div style="font-size:14px; margin-top:10px;">${log.created_at || "-"}</div>
-            <button onclick="state.lastDismissedTime='${log.created_at}'; this.parentElement.remove();"
-                    style="margin-top:15px; padding:8px 20px; border:none; cursor:pointer;">
-                닫기
-            </button>
-        `;
-        popup.style.position = "fixed";
-        popup.style.top = "50%";
-        popup.style.left = "50%";
-        popup.style.transform = "translate(-50%, -50%)";
-        popup.style.background = "#ef4444";
-        popup.style.color = "white";
-        popup.style.padding = "25px";
-        popup.style.borderRadius = "15px";
-        popup.style.zIndex = "10000";
-        popup.style.textAlign = "center";
-        popup.style.boxShadow = "0 10px 40px rgba(0,0,0,0.4)";
-        document.body.appendChild(popup);
+    const popup = document.createElement("div");
+    popup.id = "dynamic-danger-alert";
+    popup.innerHTML = `
+        <div style="font-size:24px; margin-bottom:10px;">🚨 ${log.status_text || "위험 감지"} 🚨</div>
+        <div style="font-size:18px;">인원: ${safeNumber(log.people_count)}명</div>
+        <div style="font-size:14px; margin-top:10px;">${log.created_at || "-"}</div>
+        <button onclick="state.lastDismissedTime='${log.created_at}'; this.parentElement.remove();"
+            style="margin-top:15px; padding:8px 20px; border:none; cursor:pointer;">
+           닫기
+        </button>
+    `;
+    popup.style.position = "fixed";
+    popup.style.top = "50%";
+    popup.style.left = "50%";
+    popup.style.transform = "translate(-50%, -50%)";
+    popup.style.background = "#ef4444";
+    popup.style.color = "white";
+    popup.style.padding = "25px";
+    popup.style.borderRadius = "15px";
+    popup.style.zIndex = "10000";
+    popup.style.textAlign = "center";
+    popup.style.boxShadow = "0 10px 40px rgba(0,0,0,0.4)";
+    document.body.appendChild(popup);
 
-        setTimeout(() => {
-            const nowPopup = document.getElementById("dynamic-danger-alert");
-            if (nowPopup) nowPopup.remove();
-        }, 5000);
-    }
+    setTimeout(() => {
+        const nowPopup = document.getElementById("dynamic-danger-alert");
+        if (nowPopup) nowPopup.remove();
+    }, 5000);
+}
 
     function getCurrentReportData() {
         const hourly = state.realtimeData?.hourly || [];
@@ -1050,28 +1046,65 @@
     }
 
     function connectSse() {
-        const es = new EventSource(API.sse());
+    const es = new EventSource(API.sse());
 
-        es.addEventListener("newDetection", e => {
-            const log = JSON.parse(e.data);
-            state.realtimeLogs.unshift(log);
-            state.realtimeLogs = state.realtimeLogs.slice(0, 50);
-            renderLogs(state.realtimeLogs);
+    es.addEventListener("newDetection", e => {
+        const log = JSON.parse(e.data);
+        state.realtimeLogs.unshift(log);
+        state.realtimeLogs = state.realtimeLogs.slice(0, 50);
+        renderLogs(state.realtimeLogs);
+    });
+
+    es.addEventListener("danger_alert", e => {
+    const log = JSON.parse(e.data);
+
+    const unreadBadge = document.getElementById("alert-badge");
+    if (unreadBadge) {
+        let count = parseInt(unreadBadge.innerText) || 0;
+        unreadBadge.innerText = count + 1;
+        unreadBadge.style.display = "flex";
+    }
+
+    const alertList = document.getElementById("alert-list");
+    if (alertList) {
+        const empty = alertList.querySelector(".alert-empty");
+        if (empty) {
+            empty.remove();
+        }
+
+    const item = document.createElement("div");
+        item.className = "alert-item danger";
+
+        item.innerHTML = `
+            <div><strong>${log.status_text || "위험 감지"}</strong></div>
+            <div>인원: ${safeNumber(log.people_count)}명</div>
+            <div>${log.created_at || "-"}</div>
+        `;
+
+        alertList.prepend(item);
+        }
+
+        if (log.created_at !== state.lastDismissedTime) {
+            showDangerPopup(log);
+        }
         });
 
-        es.onerror = () => {
-            es.close();
-            setTimeout(connectSse, 3000);
-        };
-    }
+            es.onerror = () => {
+                es.close();
+                setTimeout(connectSse, 3000);
+            };
+        }
 
     async function loadInitialLogs() {
         try {
             const res = await fetch(API.logs());
-            state.realtimeLogs = await res.json();
+            const data = await res.json();
+
+            state.realtimeLogs = Array.isArray(data.logs) ? data.logs : [];
             renderLogs(state.realtimeLogs);
         } catch (e) {
             state.realtimeLogs = [];
+            renderLogs(state.realtimeLogs);
         }
     }
 
@@ -1147,11 +1180,15 @@
         }
     });
 
-    document.getElementById("report-modal-backdrop").addEventListener("click", function (event) {
-        if (event.target === this) {
-            closeReportModal();
-        }
-    });
+    const modal = document.getElementById("report-modal-backdrop");
+
+    if (modal) {
+        modal.addEventListener("click", function (event) {
+            if (event.target === this) {
+                closeReportModal();
+            }
+        });
+    }
 
     kakao.maps.load(function () {
         setTodayRange();
