@@ -4,74 +4,64 @@
     <meta charset="UTF-8">
     <title>카메라 상세</title>
 
-    <!-- 공통 CSS -->
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <!-- 커스텀 CSS -->
     <link rel="stylesheet" th:href="@{/css/camera.css}">
-
     <script th:src="@{/js/theme.js}"></script>
 </head>
+<body>
 
 <div th:replace="fragments/header :: header('카메라 상세')"></div>
 
-<body>
+<div class="camera-page camera-page--narrow">
 
-<div class="page-container">
+    <h2 class="camera-page__title">카메라 상세</h2>
 
-    <h2 class="page-title">카메라 상세</h2>
+    <div class="camera-detail-card">
+        <table class="camera-detail-table">
+            <tbody>
+            <tr>
+                <th>카메라 코드</th>
+                <td th:text="${dto.cameraCode}">CAM-02</td>
+            </tr>
+            <tr>
+                <th>카메라 이름</th>
+                <td th:text="${dto.cameraName}">드론 카메라</td>
+            </tr>
+            <tr>
+                <th>카메라 타입</th>
+                <td th:text="${dto.cameraType}">DRONE</td>
+            </tr>
+            <tr>
+                <th>IP 주소</th>
+                <td th:text="${dto.ipAddress}">192.168.0.10</td>
+            </tr>
+            <tr>
+                <th>스트림 URL</th>
+                <td th:text="${dto.streamUrl}">http://192.168.0.28:5000/video</td>
+            </tr>
+            <tr>
+                <th>위치 이름</th>
+                <td th:text="${dto.locationName}">야외</td>
+            </tr>
+            <tr>
+                <th>위도</th>
+                <td th:text="${dto.latitude}">36.351</td>
+            </tr>
+            <tr>
+                <th>경도</th>
+                <td th:text="${dto.longitude}">127.385</td>
+            </tr>
+            <tr>
+                <th>상태</th>
+                <td th:text="${dto.status}">ACTIVE</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
-    <div class="form-card">
-
-        <div class="form-row">
-            <label>카메라 코드</label>
-            <input type="text" th:value="${dto.cameraCode}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label>카메라 이름</label>
-            <input type="text" th:value="${dto.cameraName}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label>카메라 타입</label>
-            <input type="text" th:value="${dto.cameraType}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label>IP 주소</label>
-            <input type="text" th:value="${dto.ipAddress}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label>스트림 URL</label>
-            <input type="text" th:value="${dto.streamUrl}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label>위치 이름</label>
-            <input type="text" th:value="${dto.locationName}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label>위도</label>
-            <input type="text" th:value="${dto.latitude}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label>경도</label>
-            <input type="text" th:value="${dto.longitude}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label>상태</label>
-            <input type="text" th:value="${dto.status}" readonly>
-        </div>
-
-        <div class="camera-detail-actions">
-            <a th:href="@{/admin/camera/{id}/update(id=${dto.cameraId})}" class="btn btn-primary">수정</a>
-            <a th:href="@{/admin/camera/list}" class="btn btn-secondary">목록</a>
-        </div>
-
+    <div class="camera-detail-actions">
+        <a th:href="@{/admin/camera/{id}/update(id=${dto.cameraId})}" class="btn btn-primary">수정</a>
+        <a th:href="@{/admin/camera/list}" class="btn btn-secondary">목록</a>
     </div>
 
 </div>

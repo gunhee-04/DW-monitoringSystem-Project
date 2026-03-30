@@ -41,7 +41,8 @@ body[data-theme="dark"] {
     --shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
 }
 
-html, body {
+html,
+body {
     min-height: 100%;
 }
 
@@ -81,10 +82,10 @@ body {
 .camera-card,
 .camera-form-card,
 .camera-detail-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
+    background: transparent;
+    border: none;
     border-radius: 22px;
-    box-shadow: var(--shadow);
+    box-shadow: none;
     overflow: hidden;
     backdrop-filter: blur(10px);
 }
@@ -297,7 +298,7 @@ input.btn.btn-primary:hover {
     justify-content: flex-end;
     gap: 12px;
     flex-wrap: wrap;
-    margin-top: 8px;
+    margin-top: 18px;
 }
 
 .camera-detail-table {
@@ -308,8 +309,9 @@ input.btn.btn-primary:hover {
 .camera-detail-table th,
 .camera-detail-table td {
     padding: 16px 18px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     text-align: left;
+    vertical-align: middle;
 }
 
 .camera-detail-table tr:last-child th,
