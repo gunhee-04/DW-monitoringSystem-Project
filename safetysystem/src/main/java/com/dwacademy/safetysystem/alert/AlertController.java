@@ -35,4 +35,15 @@ public class AlertController {
         return alertService.getRecentWarnings();
     }
 
+    // AlertController에 추가 요청
+    @PatchMapping("/read-all")
+    public void markAllAsRead() {
+        alertService.markAllAsRead(); // 모든 is_read를 true로 바꾸는 기능
+    }
+
+    // AlertController에 추가 요청
+    @PatchMapping("/{id}/delete")
+    public void deleteAlert(@PathVariable Long id) {
+        alertService.softDelete(id); // is_deleted를 true로 바꾸는 기능
+    }
 }

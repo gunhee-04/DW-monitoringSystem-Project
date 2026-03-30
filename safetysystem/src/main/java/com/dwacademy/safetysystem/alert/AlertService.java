@@ -56,8 +56,10 @@ public class AlertService {
     @Transactional
     public void createAlert(Long detectionEventId, String alertType, String severityStr, String message) {
 
-        if (severityStr == null || severityStr.isBlank()) {
-            severityStr = "NORMAL"; // 기본값 설정
+        // [수정] NORMAL(정상) 이거나 MEDIUM(주의)이면 알림을 생성하지 않고 종료!
+        if ("NORMAL".equalsIgnoreCase(severityStr) || "MEDIUM".equalsIgnoreCase(severityStr)) {
+            log.info("🚫 {} 등급은 알림 생성을 차단합니다.", severityStr);
+            return;
         }
 
         EventLevel severity;
@@ -107,4 +109,28 @@ public class AlertService {
         });
     }
 
+    // 1. [추가] 모든 알림 읽음 처리 (종 모양 숫자 초기화용)
+    @Transactional
+    public void markAllAsRead() {
+        // DB에서 아직 읽지 않은(isRead가 false인) 모든 알림을 가져옵니다.
+        List<AlertLog> unreadAlerts = alertRepository.findAllByIsReadFalse();
+
+        for (AlertLog alert : unreadAlerts) {
+            alert.setIsRead(true);
+            alert.setReadAt(LocalDateTime.now());
+        }
+        // JPA의 Dirty Checking(변경 감지) 기능으로 자동 업데이트됩니다.
+    }
+
+    // 2. [추가] 알림 소프트 삭제 (X 버튼 클릭 시 리스트에서 제거)
+    @Transactional
+    public void softDelete(Long id) {
+        AlertLog alert = alertRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 알림 없음: " + id));
+
+        // 엔티티에 isDeleted 필드가 있다면 true로 변경
+        // 만약 엔티티에 필드가 없다면 우선은 repository.delete(alert)로 실제 삭제 처리하세요.
+        alertRepository.delete(alert);
+        log.info("알림 삭제 완료: id={}", id);
+    }
 }
