@@ -1,21 +1,21 @@
 :root {
-    --bg: #f3f6fb;
-    --bg-accent: radial-gradient(circle at top, rgba(46, 99, 255, 0.10), transparent 34%), linear-gradient(180deg, #f7f9fd 0%, #eef3fb 100%);
-    --panel: rgba(255, 255, 255, 0.94);
+    --bg: #f4f6fb;
+    --bg-accent: linear-gradient(180deg, #f4f6fb 0%, #f4f6fb 100%);
+    --panel: #ffffff;
     --panel-2: #ffffff;
-    --border: #d8e2f0;
-    --border-strong: #c9d6eb;
+    --border: #d9e2f1;
+    --border-strong: #b8c7e3;
     --text: #17233b;
     --text-muted: #5f6f89;
-    --head: #eef4ff;
-    --head-text: #1b2f66;
-    --input-bg: #fbfdff;
-    --primary: #2f63ff;
-    --primary-hover: #1f53ef;
-    --primary-soft: rgba(47, 99, 255, 0.12);
+    --head: #e9f0fb;
+    --head-text: #1c2f63;
+    --input-bg: #ffffff;
+    --primary: #3f6df6;
+    --primary-hover: #2f63ef;
+    --primary-soft: #e8eefc;
     --danger: #e25555;
-    --danger-soft: rgba(226, 85, 85, 0.1);
-    --shadow: 0 16px 36px rgba(24, 39, 75, 0.08);
+    --danger-soft: #fff1f1;
+    --shadow: 0 8px 22px rgba(31, 50, 89, 0.06);
 }
 
 html.dark-mode,
@@ -52,6 +52,7 @@ body {
     transition: background 0.25s ease, color 0.25s ease;
 }
 
+/* 공통 페이지 */
 .camera-page {
     max-width: 1180px;
     margin: 0 auto;
@@ -59,13 +60,13 @@ body {
 }
 
 .camera-page--narrow {
-    max-width: 900px;
+    max-width: 980px;
 }
 
 .camera-page__title {
-    margin: 8px 0 28px;
+    margin: 8px 0 32px;
     text-align: center;
-    font-size: clamp(30px, 4.4vw, 46px);
+    font-size: clamp(32px, 4.4vw, 54px);
     font-weight: 800;
     letter-spacing: -0.03em;
     color: var(--text);
@@ -79,17 +80,18 @@ body {
     margin: 0 0 18px;
 }
 
+/* 카드 */
 .camera-card,
 .camera-form-card,
 .camera-detail-card {
-    background: transparent;
-    border: none;
-    border-radius: 22px;
-    box-shadow: none;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
     overflow: hidden;
-    backdrop-filter: blur(10px);
 }
 
+/* 목록 */
 .camera-table-wrap {
     overflow-x: auto;
 }
@@ -105,7 +107,7 @@ body {
     background: var(--head);
     color: var(--head-text);
     padding: 18px 16px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     text-align: center;
     border-bottom: 1px solid var(--border);
@@ -113,11 +115,11 @@ body {
 }
 
 .camera-table thead th:first-child {
-    border-top-left-radius: 22px;
+    border-top-left-radius: 18px;
 }
 
 .camera-table thead th:last-child {
-    border-top-right-radius: 22px;
+    border-top-right-radius: 18px;
 }
 
 .camera-table tbody td {
@@ -134,7 +136,7 @@ body {
 }
 
 .camera-table tbody tr:hover td {
-    background: var(--primary-soft);
+    background: rgba(63, 109, 246, 0.04);
 }
 
 .camera-empty {
@@ -142,45 +144,29 @@ body {
     color: var(--text-muted) !important;
 }
 
-.camera-actions,
-.camera-actions-inline {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.camera-actions {
-    justify-content: center;
-}
-
-.camera-actions-inline form,
-.camera-actions form {
-    margin: 0;
-}
-
+/* 배지 */
 .status-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 86px;
-    padding: 8px 12px;
+    min-width: 72px;
+    padding: 7px 14px;
     border-radius: 999px;
     font-size: 13px;
     font-weight: 700;
     background: var(--primary-soft);
     color: var(--primary);
-    margin-right: 8px;
 }
 
+/* 버튼 */
 .btn,
 .camera-page a.btn,
 .camera-page button.btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 44px;
-    padding: 11px 18px;
+    min-height: 42px;
+    padding: 10px 18px;
     border-radius: 12px;
     border: 1px solid var(--border-strong);
     background: var(--panel-2);
@@ -197,7 +183,7 @@ body {
 .camera-page a.btn:hover,
 .camera-page button.btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 10px 22px rgba(47, 99, 255, 0.12);
+    box-shadow: 0 8px 18px rgba(63, 109, 246, 0.10);
 }
 
 a.btn.btn-primary,
@@ -216,7 +202,9 @@ input.btn.btn-primary:hover {
 }
 
 .btn-secondary {
-    background: transparent;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
 }
 
 .btn-danger {
@@ -225,8 +213,35 @@ input.btn.btn-primary:hover {
     border-color: rgba(226, 85, 85, 0.28);
 }
 
-.camera-form-card,
-.camera-detail-card {
+/* 액션 영역 */
+.camera-actions,
+.camera-actions-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.camera-actions {
+    justify-content: center;
+}
+
+.camera-actions-inline form,
+.camera-actions form {
+    margin: 0;
+}
+
+.camera-form-actions,
+.camera-detail-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+/* 등록/수정 폼 */
+.camera-form-card {
     padding: 34px 30px;
 }
 
@@ -238,13 +253,12 @@ input.btn.btn-primary:hover {
 
 .form-row {
     display: grid;
-    grid-template-columns: 130px minmax(0, 1fr);
-    align-items: start;
+    grid-template-columns: 150px minmax(0, 1fr);
+    align-items: center;
     gap: 16px;
 }
 
 .form-row > label {
-    padding-top: 14px;
     font-weight: 700;
     color: var(--text);
 }
@@ -265,15 +279,21 @@ input.btn.btn-primary:hover {
     color: var(--text);
     outline: none;
     font-size: 15px;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
     box-sizing: border-box;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.form-row textarea {
+    min-height: 120px;
+    padding: 14px 16px;
+    resize: vertical;
 }
 
 .form-row input:focus,
 .form-row select:focus,
 .form-row textarea:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px var(--primary-soft);
+    box-shadow: 0 0 0 4px rgba(63, 109, 246, 0.12);
 }
 
 .error {
@@ -285,20 +305,16 @@ input.btn.btn-primary:hover {
 
 .global-error {
     border: 1px solid rgba(255, 107, 107, 0.35);
-    background: rgba(255, 107, 107, 0.1);
-    color: #ff8080;
+    background: rgba(255, 107, 107, 0.08);
+    color: #d84c4c;
     padding: 14px 16px;
     border-radius: 14px;
-    margin-bottom: 2px;
+    margin-bottom: 8px;
 }
 
-.camera-form-actions,
-.camera-detail-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 18px;
+/* 상세 */
+.camera-detail-card {
+    padding: 0;
 }
 
 .camera-detail-table {
@@ -308,8 +324,8 @@ input.btn.btn-primary:hover {
 
 .camera-detail-table th,
 .camera-detail-table td {
-    padding: 16px 18px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
     text-align: left;
     vertical-align: middle;
 }
@@ -320,7 +336,7 @@ input.btn.btn-primary:hover {
 }
 
 .camera-detail-table th {
-    width: 180px;
+    width: 220px;
     background: var(--head);
     color: var(--head-text);
     font-weight: 700;
@@ -332,24 +348,28 @@ input.btn.btn-primary:hover {
     word-break: break-all;
 }
 
+/* 반응형 */
 @media (max-width: 900px) {
     .camera-page {
         padding: 36px 16px 60px;
     }
 
+    .camera-page__title {
+        margin-bottom: 24px;
+    }
+
     .camera-form-card,
     .camera-detail-card {
-        padding: 22px 18px;
-        border-radius: 18px;
+        border-radius: 16px;
     }
 
     .form-row {
         grid-template-columns: 1fr;
+        align-items: start;
         gap: 8px;
     }
 
     .form-row > label {
-        padding-top: 0;
         font-size: 14px;
     }
 
@@ -386,7 +406,7 @@ input.btn.btn-primary:hover {
     .camera-detail-table th,
     .camera-detail-table td {
         border-bottom: 0;
-        padding: 8px 10px;
+        padding: 8px 12px;
     }
 
     .camera-detail-table th {
@@ -396,10 +416,6 @@ input.btn.btn-primary:hover {
 }
 
 @media (max-width: 560px) {
-    .camera-page__title {
-        margin-bottom: 20px;
-    }
-
     .camera-table {
         min-width: 720px;
     }
@@ -407,13 +423,13 @@ input.btn.btn-primary:hover {
     .btn,
     .camera-page a.btn,
     .camera-page button.btn {
-        min-height: 42px;
+        min-height: 40px;
         padding: 10px 14px;
         font-size: 13px;
     }
 
     .status-badge {
         display: block;
-        margin: 0 0 8px;
+        margin: 0 auto;
     }
 }
