@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -20,13 +21,13 @@ public class AlertService {
     }
 
     //조회 작업할 때
-    public List<AlertLog> getRecentAlerts(){
+    public List<AlertLog> getRecentAlerts() {
         return alertRepository.findTop10ByOrderByCreatedAtDesc();
     }
 
     //읽음 처리 할 때
     @Transactional
-    public void markAsRead(long id){
+    public void markAsRead(long id) {
         AlertLog alert = alertRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 알림 없음: " + id));
 
@@ -39,19 +40,21 @@ public class AlertService {
     }
 
     //최근 경고 로그 관련 필터도 아직 안됨
-    public List<AlertLog> getRecentWarnings(){
+    public List<AlertLog> getRecentWarnings() {
         return alertRepository.findTop10BySeverityInOrderByCreatedAtDesc(
                 List.of(EventLevel.MEDIUM, EventLevel.HIGH)
         );
     }
 
     //이벤트 알림 생성
+
     /**
      * 이벤트 발생 시 알림 생성
+     *
      * @param detectionEventId detection_event 테이블 ID
-     * @param alertType 이벤트 타입 (예: INTRUSION)
-     * @param severityStr 위험도 문자열 (예: "NORMAL", "WARNING", "ALERT")
-     * @param message 전달받은 메시지 (null이면 기본 메시지 생성)
+     * @param alertType        이벤트 타입 (예: INTRUSION)
+     * @param severityStr      위험도 문자열 (예: "NORMAL", "WARNING", "ALERT")
+     * @param message          전달받은 메시지 (null이면 기본 메시지 생성)
      */
     @Transactional
     public void createAlert(Long detectionEventId, String alertType, String severityStr, String message) {
@@ -96,7 +99,9 @@ public class AlertService {
 
     // 🔥 Alert 전용 SSE (핵심)
     public void sendAlertSse(AlertLog alert) {
-        SseController.emitters.forEach(emitter -> {
+        Iterator<SseEmitter> it = SseController.emitters.iterator();
+        while (it.hasNext()) {
+            SseEmitter emitter = it.next();
             try {
                 emitter.send(
                         SseEmitter.event()
@@ -104,9 +109,9 @@ public class AlertService {
                                 .data(new AlertResponseDto(alert))     // 🔥 전체 객체 전송
                 );
             } catch (Exception e) {
-                SseController.emitters.remove(emitter);
+                it.remove();
             }
-        });
+        }
     }
 
     // 1. [추가] 모든 알림 읽음 처리 (종 모양 숫자 초기화용)
