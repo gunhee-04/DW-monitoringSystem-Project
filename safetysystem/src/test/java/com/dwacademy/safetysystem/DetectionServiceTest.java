@@ -30,7 +30,7 @@ public class DetectionServiceTest {
 
         // 주의: DTO에 Setter가 없다면 필드를 직접 수정하거나 생성자를 활용해야 합니다.
         // 여기서는 일반적인 세팅 방식을 예시로 듭니다.
-        dto.setCameraId(1);
+        dto.setCameraId("1");
         dto.setEventType("INTRUSION"); // 침입 상황 설정
         dto.setDetectedCount(1);
         dto.setEventLevel("NORMAL"); // 서비스에서 분석 후 ALERT로 바뀔 예정

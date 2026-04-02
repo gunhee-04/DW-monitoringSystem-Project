@@ -30,11 +30,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-
-
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // POST 요청(YOLO 데이터 전송)을 위해 필수
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -46,7 +43,10 @@ public class SecurityConfig {
                                 "/api/members/check-email",
                                 "/css/**",
                                 "/js/**",
-                                "/images/**"
+                                "/images/**",
+                                "/api/**",       // 모든 API 경로 (통계, SSE 등)
+                                "/get_logs",     // 로그 조회 경로
+                                "/video/**"      // 혹시 모를 비디오 스트리밍 경로
                         ).permitAll()
 
                         .requestMatchers("/member/list").hasRole("ADMIN")
@@ -73,7 +73,7 @@ public class SecurityConfig {
                         .permitAll()
                 )
 
-                //  Bean으로 등록된 필터 사용 (이게 진짜 중요)
+                // Bean으로 등록된 필터 사용 (이게 진짜 중요)
                 .addFilterAfter(
                         memberRefreshFilter(),
                         UsernamePasswordAuthenticationFilter.class
