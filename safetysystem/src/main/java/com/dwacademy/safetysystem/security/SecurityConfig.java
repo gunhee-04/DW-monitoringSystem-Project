@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final MemberRepository memberRepository;
+    private final CustomLoginFailureHandler customLoginFailureHandler;
 
     // 필터를 Bean으로 등록 (이게 핵심)
     @Bean
@@ -35,16 +36,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
+                                "/api/members/**",
                                 "/member/login",
                                 "/member/loginProc",
                                 "/member/create",
+                                "/api/members/check-email",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
-                                // 🚩 아래 경로들을 추가하여 누구나(혹은 서버끼리) 접근 가능하게 합니다.
                                 "/api/**",       // 모든 API 경로 (통계, SSE 등)
-                                "/get_logs",      // 로그 조회 경로
-                                "/video/**"       // 혹시 모를 비디오 스트리밍 경로
+                                "/get_logs",     // 로그 조회 경로
+                                "/video/**"      // 혹시 모를 비디오 스트리밍 경로
                         ).permitAll()
 
                         .requestMatchers("/member/list").hasRole("ADMIN")
@@ -59,7 +61,7 @@ public class SecurityConfig {
                         .usernameParameter("email")
                         .passwordParameter("password")
                         .defaultSuccessUrl("/", true)
-                        .failureUrl("/member/login?error")
+                        .failureHandler(customLoginFailureHandler)
                         .permitAll()
                 )
 
@@ -71,7 +73,7 @@ public class SecurityConfig {
                         .permitAll()
                 )
 
-                //  Bean으로 등록된 필터 사용 (이게 진짜 중요)
+                // Bean으로 등록된 필터 사용 (이게 진짜 중요)
                 .addFilterAfter(
                         memberRefreshFilter(),
                         UsernamePasswordAuthenticationFilter.class

@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <title>로그인</title>
 
-    <div th:replace="fragments/header :: header('로그인')"></div>
-
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/member.css}">
 
@@ -13,6 +11,7 @@
 
 </head>
 <body>
+    <div th:replace="fragments/header :: header('로그인')"></div>
 
     <!-- 본문 -->
     <div class="login-page">
@@ -26,72 +25,64 @@
             <!-- 로그인 박스 -->
             <div class="login-panel">
 
-                <form th:action="@{/member/loginProc}" method="post">
+                <!-- 로그인 메시지 -->
+                <div th:if="${param.error != null and param.error[0] == 'login'}" class="login-error">
+                    아이디 또는 비밀번호를 확인해주세요.
+                </div>
 
-                    <!-- 아이디 / 비밀번호 입력 -->
+                <div th:if="${param.error != null and param.error[0] == 'pending'}" class="login-error">
+                    승인 대기 중인 계정입니다.
+                </div>
+
+                <!-- 로그인 폼 -->
+                <form th:action="@{/member/loginProc}" method="post" onsubmit="return validateLogin()">
+
                     <div class="login-input-group">
-                        <input
-                                type="text"
-                                name="email"
-                                placeholder="아이디"
-                        >
-
+                        <input type="text" name="email" placeholder="아이디">
                         <div class="login-input-divider"></div>
-
-                        <input
-                                type="password"
-                                name="password"
-                                placeholder="비밀번호"
-                        >
+                        <input type="password" name="password" placeholder="비밀번호">
                     </div>
 
-                    <!-- 로그인 버튼 -->
                     <button type="submit" class="login-btn">
                         로그인
                     </button>
 
-                    <!-- 구분선 -->
                     <div class="login-divider">
                         계정이 없다면
                     </div>
 
-                    <!-- 회원가입 버튼 -->
-                    <button
-                            type="button"
-                            class="signup-btn"
-                            onclick="location.href='/member/create'"
-                    >
+                    <button type="button" class="signup-btn"
+                            onclick="location.href='/member/create'">
                         회원가입
                     </button>
 
                 </form>
             </div>
 
-            <!-- 하단 링크 -->
-            <div class="login-links">
-                <a href="#">비밀번호 찾기</a>
-                <span>|</span>
-                <a href="#">아이디 찾기</a>
-                <span>|</span>
-                <a href="/member/create">회원가입</a>
-            </div>
 
-            <!-- 로그인 실패 메시지 -->
-            <div th:if="${param.error}" class="login-error">
-                이메일 또는 비밀번호가 올바르지 않습니다.
-            </div>
-
-            <!-- 로그아웃 메시지 -->
-            <div th:if="${param.logout}" class="login-logout">
-                로그아웃되었습니다.
-            </div>
-
-            <div th:if="${param.withdraw}" class="login-msg error">
-                탈퇴 처리된 계정입니다.
-            </div>
 
         </div>
     </div>
+
+    <script>
+        function validateLogin() {
+            const email = document.querySelector('input[name="email"]').value.trim();
+            const password = document.querySelector('input[name="password"]').value.trim();
+
+            if (!email || !password) {
+                alert("아이디와 비밀번호를 입력해주세요.");
+                return false;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert("아이디는 이메일 형식으로 입력해주세요.");
+                return false;
+            }
+
+            return true;
+        }
+    </script>
 
 </body>
 </html>
