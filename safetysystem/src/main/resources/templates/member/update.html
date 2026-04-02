@@ -12,7 +12,7 @@
 </head>
 <body>
 
-    <div th:replace="fragments/header :: header('회원 수정')"></div>
+<div th:replace="fragments/header :: header('회원 수정')"></div>
 
     <div class="member-edit-page">
         <div class="member-edit-wrap">
@@ -20,7 +20,7 @@
 
             <div th:if="${errorMsg}" class="member-edit-error" th:text="${errorMsg}"></div>
 
-            <form th:action="@{|/member/${member.id}/edit|}" method="post" class="member-edit-form">
+            <form th:action="@{|/member/${member.id}/edit|}" method="post" class="member-edit-form" id="memberEditForm">
                 <table class="member-edit-table">
                     <tbody>
                     <tr>
@@ -94,9 +94,7 @@
                         <th>상태</th>
                         <td>
                             <select name="status" class="member-edit-select">
-                                <option value="PENDING" th:selected="${member.status == 'PENDING'}">PENDING</option>
                                 <option value="ACTIVE" th:selected="${member.status == 'ACTIVE'}">ACTIVE</option>
-                                <option value="REJECTED" th:selected="${member.status == 'REJECTED'}">REJECTED</option>
                                 <option value="WITHDRAWN" th:selected="${member.status == 'WITHDRAWN'}">WITHDRAWN</option>
                             </select>
                         </td>
@@ -119,14 +117,31 @@
                 </table>
 
                 <div class="member-edit-btn-area">
-                    <button type="submit" class="member-edit-submit-btn">완료</button>
+                    <button type="button" class="member-edit-submit-btn" onclick="confirmMemberEdit()">완료</button>
                     <button type="button" class="member-edit-list-btn" onclick="location.href='/member/list'">목록</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
+    <!-- 공용 확인 모달 -->
+    <div id="memberConfirmModal" class="member-confirm-modal" aria-hidden="true">
+        <div class="member-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="memberConfirmTitle">
+            <button type="button" class="member-confirm-close" onclick="closeMemberConfirmModal()">×</button>
+
+            <div class="member-confirm-icon">!</div>
+
+            <h3 id="memberConfirmTitle" class="member-confirm-title">확인</h3>
+            <p id="memberConfirmMessage" class="member-confirm-message">회원 정보를 수정하시겠습니까?</p>
+
+            <div class="member-confirm-btn-area">
+                <button type="button" class="member-confirm-cancel-btn" onclick="closeMemberConfirmModal()">취소</button>
+                <button type="button" id="memberConfirmOkBtn" class="member-confirm-ok-btn">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
         function execDaumPostcode() {
             new daum.Postcode({
                 oncomplete: function(data) {
@@ -156,6 +171,60 @@
                     document.getElementById("detailAddress").focus();
                 }
             }).open();
+        }
+
+        const memberConfirmModal = document.getElementById("memberConfirmModal");
+        const memberConfirmTitle = document.getElementById("memberConfirmTitle");
+        const memberConfirmMessage = document.getElementById("memberConfirmMessage");
+        const memberConfirmOkBtn = document.getElementById("memberConfirmOkBtn");
+        const memberEditForm = document.getElementById("memberEditForm");
+
+        let memberConfirmCallback = null;
+
+        function openMemberConfirmModal(title, message, callback) {
+            memberConfirmTitle.textContent = title;
+            memberConfirmMessage.textContent = message;
+            memberConfirmCallback = callback;
+
+            memberConfirmModal.classList.add("show");
+            memberConfirmModal.setAttribute("aria-hidden", "false");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeMemberConfirmModal() {
+            memberConfirmModal.classList.remove("show");
+            memberConfirmModal.setAttribute("aria-hidden", "true");
+            document.body.style.overflow = "";
+            memberConfirmCallback = null;
+        }
+
+        memberConfirmOkBtn.addEventListener("click", function() {
+            if (typeof memberConfirmCallback === "function") {
+                memberConfirmCallback();
+            }
+            closeMemberConfirmModal();
+        });
+
+        memberConfirmModal.addEventListener("click", function(e) {
+            if (e.target === memberConfirmModal) {
+                closeMemberConfirmModal();
+            }
+        });
+
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape" && memberConfirmModal.classList.contains("show")) {
+                closeMemberConfirmModal();
+            }
+        });
+
+        function confirmMemberEdit() {
+            openMemberConfirmModal(
+                "회원 정보 수정",
+                "회원 정보를 수정하시겠습니까?",
+                function() {
+                    memberEditForm.submit();
+                }
+            );
         }
     </script>
 
