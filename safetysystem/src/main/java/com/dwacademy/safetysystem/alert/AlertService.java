@@ -71,7 +71,6 @@ public class AlertService {
         // 지금 구조상 종 알림/팝업은 HIGH만 생성
         // 나중에 MEDIUM도 띄우고 싶으면 이 조건에서 MEDIUM 제거하면 됨
         if ("NORMAL".equalsIgnoreCase(severityStr)) {
-            log.info("🚫 {} 등급은 알림 생성을 차단합니다.", severityStr);
             return;
         }
 
@@ -100,36 +99,7 @@ public class AlertService {
 
         AlertLog saved = alertRepository.save(alert);
 
-        DetectionEntity detection = detectionRepository
-                .findById(saved.getDetectionEventId().intValue())
-                .orElse(null);
-
-        String location = "-";
-        String droneId = "-";
-
-        if (detection != null) {
-
-            if (detection.getEventAddress() != null && !detection.getEventAddress().isBlank()) {
-                location = detection.getEventAddress();
-            }
-
-            if (detection.getCameraId() != null) {
-                var cameraOpt = cameraRepository.findById(detection.getCameraId().longValue());
-
-                if (cameraOpt.isPresent()) {
-                    var camera = cameraOpt.get();
-
-                    if (camera.getCameraCode() != null && !camera.getCameraCode().isBlank()) {
-                        droneId = camera.getCameraCode();
-                    } else {
-                        droneId = "DRONE-" + detection.getCameraId();
-                    }
-                }
-            }
-        }
-
-        AlertResponseDto dto = new AlertResponseDto(saved, location, droneId);
-
+        AlertResponseDto dto = toDto(saved);
         sendAlertSse(dto);
     }
 
@@ -168,4 +138,57 @@ public class AlertService {
         alertRepository.delete(alert);
         log.info("알림 삭제 완료: id={}", id);
     }
+
+    public List<AlertResponseDto> getRecentAlertDtos() {
+        return alertRepository.findTop10ByOrderByCreatedAtDesc()
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    public AlertResponseDto toDto(AlertLog alert) {
+        String location = "-";
+        String droneId = "-";
+
+        if (alert.getDetectionEventId() != null) {
+            DetectionEntity detection = detectionRepository
+                    .findById(alert.getDetectionEventId().intValue())
+                    .orElse(null);
+
+            if (detection != null) {
+                if (detection.getEventAddress() != null && !detection.getEventAddress().isBlank()) {
+                    location = detection.getEventAddress();
+                }
+
+                if (detection.getCameraId() != null) {
+                    var cameraOpt = cameraRepository.findById(detection.getCameraId().longValue());
+
+                    if (cameraOpt.isPresent()) {
+                        var camera = cameraOpt.get();
+
+                        if (camera.getCameraCode() != null && !camera.getCameraCode().isBlank()) {
+                            droneId = camera.getCameraCode();
+                        } else {
+                            droneId = "DRONE-" + detection.getCameraId();
+                        }
+                    } else {
+                        droneId = "DRONE-" + detection.getCameraId();
+                    }
+                }
+
+                if ("-".equals(location)) {
+                    if ("CAM-01".equals(droneId)) {
+                        location = "서울특별시 중구 세종대로 110 서울시청";
+                    } else if ("CAM-02".equals(droneId)) {
+                        location = "서울특별시 중구 을지로 281 DDP";
+                    } else if ("CAM-03".equals(droneId)) {
+                        location = "서울특별시 종로구 세종대로 일대";
+                    }
+                }
+            }
+        }
+
+        return new AlertResponseDto(alert, location, droneId);
+    }
+
 }

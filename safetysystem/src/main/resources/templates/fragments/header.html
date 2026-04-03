@@ -82,10 +82,8 @@
             }
         }
 
-        async function toggleAlertPanel() {
+        function toggleAlertPanel() {
             const panel = document.getElementById("alert-panel");
-            const badge = document.getElementById("alert-badge");
-
             if (!panel) return;
 
             const isOpen = panel.style.display === "block";
@@ -98,19 +96,6 @@
                 panel.style.top = "48px";
                 panel.style.right = "0";
                 panel.style.zIndex = "9999";
-
-                if (badge) {
-                    badge.innerText = "0";
-                    badge.style.display = "none";
-                }
-
-                try {
-                    await fetch("/alerts/read-all", {
-                        method: "PATCH"
-                    });
-                } catch (e) {
-                    console.error("전체 읽음 처리 실패:", e);
-                }
             }
         }
 
@@ -125,6 +110,19 @@
             return date.toLocaleString("ko-KR");
         }
 
+        function updateAlertBadge(unreadCount) {
+            const badge = document.getElementById("alert-badge");
+            if (!badge) return;
+
+            if (unreadCount > 0) {
+                badge.innerText = String(unreadCount);
+                badge.style.display = "inline-flex";
+            } else {
+                badge.innerText = "0";
+                badge.style.display = "none";
+            }
+        }
+
         async function markAlertAsRead(alertId, element) {
             try {
                 const res = await fetch(`/alerts/${alertId}/read`, {
@@ -137,6 +135,7 @@
 
                 if (element) {
                     element.style.opacity = "0.55";
+                    element.classList.add("read");
                 }
             } catch (e) {
                 console.error("알림 읽음 처리 실패:", e);
@@ -145,13 +144,16 @@
 
         function addAlertToPanel(alert) {
             const alertList = document.getElementById("alert-list");
-            const badge = document.getElementById("alert-badge");
-
             if (!alertList) return;
 
             const empty = alertList.querySelector(".alert-empty");
             if (empty) {
                 empty.remove();
+            }
+
+            const exists = alertList.querySelector(`[data-alert-id="${alert.id}"]`);
+            if (exists) {
+                return;
             }
 
             const severity = (alert.severity || "").toUpperCase();
@@ -164,6 +166,8 @@
             } else if (severity === "MEDIUM") {
                 severityClass = "medium";
                 severityText = "MEDIUM";
+            } else {
+                return;
             }
 
             const item = document.createElement("div");
@@ -189,49 +193,96 @@
             confirmBtn.addEventListener("click", async function () {
                 await markAlertAsRead(alert.id, item);
 
-                item.style.opacity = "0.5";
-                item.classList.add("read");
-
-                // 🔥 버튼 비활성화
                 confirmBtn.disabled = true;
                 confirmBtn.innerText = "확인됨";
 
                 const badge = document.getElementById("alert-badge");
-
                 if (badge) {
                     let current = parseInt(badge.innerText || "0", 10) || 0;
                     current = Math.max(0, current - 1);
-                    badge.innerText = String(current);
+                    updateAlertBadge(current);
+                }
 
-                    if (current === 0) {
-                        badge.style.display = "none";
-                    }
+                const floating = document.querySelector(`.floating-alert-card[data-alert-id="${alert.id}"]`);
+                if (floating) {
+                    floating.remove();
                 }
             });
 
-            alertList.prepend(item);
+            if (alert.isRead) {
+                item.style.opacity = "0.55";
+                item.classList.add("read");
+                confirmBtn.disabled = true;
+                confirmBtn.innerText = "확인됨";
+            }
 
-            if (badge) {
-                let current = parseInt(badge.innerText || "0", 10) || 0;
-                current = current + 1;
-                badge.innerText = String(current);
-                badge.style.display = "inline-flex";
+            alertList.prepend(item);
+        }
+
+        async function loadUnreadAlerts() {
+            const alertList = document.getElementById("alert-list");
+            const floatingContainer = document.getElementById("floating-alert-container");
+
+            if (!alertList) return;
+
+            try {
+                const res = await fetch("/alerts/recent");
+                if (!res.ok) {
+                    throw new Error("최근 알림 조회 실패");
+                }
+
+                const alerts = await res.json();
+
+                alertList.innerHTML = "";
+
+                if (floatingContainer) {
+                    floatingContainer.innerHTML = "";
+                }
+
+                let unreadCount = 0;
+
+                alerts.slice().reverse().forEach(alert => {
+                    addAlertToPanel(alert);
+
+                    if (!alert.isRead) {
+                        unreadCount++;
+                    }
+
+                    const severity = (alert.severity || "").toUpperCase();
+                    if (!alert.isRead && (severity === "HIGH" || severity === "MEDIUM")) {
+                        if (typeof addFloatingAlert === "function") {
+                            addFloatingAlert(alert);
+                        }
+                    }
+                });
+
+                if (!alertList.children.length) {
+                    alertList.innerHTML = `<div class="alert-empty">로그 없음</div>`;
+                }
+
+                updateAlertBadge(unreadCount);
+            } catch (e) {
+                console.error("초기 알림 조회 실패:", e);
+                if (!alertList.children.length) {
+                    alertList.innerHTML = `<div class="alert-empty">로그 없음</div>`;
+                }
             }
         }
 
-        window.addEventListener("click", function(e) {
-            const dropdown = document.querySelector(".user-dropdown");
-            const menu = document.getElementById("user-menu");
+        window.loadUnreadAlerts = loadUnreadAlerts;
 
-            if (dropdown && menu && !dropdown.contains(e.target)) {
-                menu.classList.remove("show");
+        document.addEventListener("click", function (event) {
+            const panel = document.getElementById("alert-panel");
+            const wrapper = document.querySelector(".alert-wrapper");
+            const userMenu = document.getElementById("user-menu");
+            const userDropdown = document.querySelector(".user-dropdown");
+
+            if (panel && wrapper && !wrapper.contains(event.target)) {
+                panel.style.display = "none";
             }
 
-            const alertWrapper = document.querySelector(".alert-wrapper");
-            const alertPanel = document.getElementById("alert-panel");
-
-            if (alertWrapper && alertPanel && !alertWrapper.contains(e.target)) {
-                alertPanel.style.display = "none";
+            if (userMenu && userDropdown && !userDropdown.contains(event.target)) {
+                userMenu.classList.remove("show");
             }
         });
     </script>

@@ -2051,6 +2051,7 @@
 
         const severity = (alert.severity || "").toUpperCase();
         if (severity !== "HIGH" && severity !== "MEDIUM") return;
+        if (alert.isRead) return;
 
         const severityClass = severity === "HIGH" ? "high" : "medium";
         const severityText = severity === "HIGH" ? "HIGH" : "MEDIUM";
@@ -2092,6 +2093,27 @@
                 confirmBtn.disabled = true;
                 confirmBtn.innerText = "확인됨";
                 card.remove();
+
+                const panelItem = document.querySelector(`.alert-item[data-alert-id="${alert.id}"]`);
+                if (panelItem) {
+                    panelItem.style.opacity = "0.55";
+                    panelItem.classList.add("read");
+
+                    const panelBtn = panelItem.querySelector(".alert-confirm-btn");
+                    if (panelBtn) {
+                        panelBtn.disabled = true;
+                        panelBtn.innerText = "확인됨";
+                    }
+                }
+
+                const badge = document.getElementById("alert-badge");
+                if (badge) {
+                    let current = parseInt(badge.innerText || "0", 10) || 0;
+                    current = Math.max(0, current - 1);
+                    if (typeof updateAlertBadge === "function") {
+                        updateAlertBadge(current);
+                    }
+                }
             } catch (e) {
                 console.error("팝업 알림 처리 실패:", e);
             }
