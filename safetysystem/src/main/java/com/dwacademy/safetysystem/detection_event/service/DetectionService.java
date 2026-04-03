@@ -1,8 +1,9 @@
 package com.dwacademy.safetysystem.detection_event.service;
 
-import com.dwacademy.safetysystem.alert.AlertService;
 import com.dwacademy.safetysystem.camera.Camera;
 import com.dwacademy.safetysystem.camera.CameraRepository;
+import com.dwacademy.safetysystem.dangerzone.DangerZone;
+import com.dwacademy.safetysystem.dangerzone.DangerZoneService;
 import com.dwacademy.safetysystem.detection_event.controller.SseController;
 import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
 import com.dwacademy.safetysystem.detection_event.dto.DetectionRequestDto;
@@ -35,14 +36,30 @@ import java.util.Map;
 public class DetectionService {
 
     private final DetectionEventRepository repository;
-    private final AlertService alertService;
     private final StatisticsService statisticsService;
     private final CameraRepository cameraRepository;
+    private final DangerZoneService dangerZoneService;
 
     @Value("${kakao.rest-api-key:}")
     private String kakaoRestApiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();
+
+    private Integer parseCameraId(String rawCameraId) {
+        if (rawCameraId == null || rawCameraId.isBlank()) {
+            return 1;
+        }
+
+        try {
+            String onlyNumber = rawCameraId.replaceAll("[^0-9]", "");
+            if (onlyNumber.isBlank()) {
+                return 1;
+            }
+            return Integer.parseInt(onlyNumber);
+        } catch (Exception e) {
+            return 1;
+        }
+    }
 
     @Transactional
     public EventResponseDto processEvent(DetectionRequestDto dto) {
@@ -52,27 +69,32 @@ public class DetectionService {
 
         DetectionEntity entity = dto.toEntity(message, level);
 
-        Integer cameraId = entity.getCameraId();
-        if (cameraId != null) {
-            cameraRepository.findById(cameraId.longValue()).ifPresentOrElse(camera -> {
-                entity.setEventLatitude(camera.getLatitude());
-                entity.setEventLongitude(camera.getLongitude());
-                entity.setEventAddress(buildAddressFromCamera(camera));
+        // camera 연결
+        Integer numericCameraId = parseCameraId(dto.getCameraId());
 
-                log.info(">>> cameraId={} / camera.locationName={} / lat={} / lng={} / resolvedAddress={}",
-                        cameraId,
-                        camera.getLocationName(),
-                        entity.getEventLatitude(),
-                        entity.getEventLongitude(),
-                        entity.getEventAddress());
-            }, () -> {
-                log.warn(">>> cameraId={} 에 해당하는 카메라를 찾지 못했습니다.", cameraId);
-                entity.setEventAddress("-");
-            });
+        Camera camera = cameraRepository.findById(numericCameraId.longValue())
+                .orElseThrow(() -> new IllegalArgumentException("카메라 없음: " + dto.getCameraId()));
+        entity.setCamera(camera);
+
+        // dangerZone 연결 (선택)
+        if (dto.getDangerZoneId() != null && dto.getDangerZoneId() > 0) {
+            DangerZone zone = dangerZoneService.findById(dto.getDangerZoneId().longValue());
+            entity.setDangerZone(zone);
         } else {
-            log.warn(">>> 이벤트에 cameraId가 없습니다.");
-            entity.setEventAddress("-");
+            entity.setDangerZone(null);
         }
+
+        // 카메라 정보로 위치/주소 세팅
+        entity.setEventLatitude(camera.getLatitude());
+        entity.setEventLongitude(camera.getLongitude());
+        entity.setEventAddress(buildAddressFromCamera(camera));
+
+        log.info(">>> cameraId={} / camera.locationName={} / lat={} / lng={} / resolvedAddress={}",
+                camera.getId(),
+                camera.getLocationName(),
+                entity.getEventLatitude(),
+                entity.getEventLongitude(),
+                entity.getEventAddress());
 
         if (level == EventLevel.HIGH) {
             entity.setIsRead(0);
@@ -88,19 +110,6 @@ public class DetectionService {
             statisticsService.saveFromDetection(saved);
         } catch (Exception e) {
             log.error("통계 저장 실패", e);
-        }
-
-        if (level == EventLevel.HIGH) {
-            try {
-                alertService.createAlert(
-                        saved.getId().longValue(),
-                        saved.getEventType().name(),
-                        saved.getEventLevel().name(),
-                        saved.getMessage()
-                );
-            } catch (Exception e) {
-                log.error("알림 생성 실패", e);
-            }
         }
 
         log.info(">>> 저장 완료: id={}, eventAddress={}, eventLatitude={}, eventLongitude={}",
@@ -271,7 +280,7 @@ public class DetectionService {
     }
 
     public List<DetectionEntity> getEventsByCamera(Integer cameraId) {
-        return repository.findByCameraIdOrderByIdDesc(cameraId);
+        return repository.findByCamera_IdOrderByIdDesc(cameraId);
     }
 
     public List<EventResponseDto> getAllEventsForFront() {
@@ -293,5 +302,10 @@ public class DetectionService {
         }
 
         log.info(">>> ✅ {}건의 알림을 읽음 처리했습니다. 이제 숫자가 0이 됩니다.", unreadEvents.size());
+    }
+
+    public DetectionEntity findById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("없음"));
     }
 }

@@ -24,8 +24,8 @@ public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "no")
-    private int id; // 회원 고유 ID
+    @Column(name = "id")
+    private Long id; // 회원 고유 ID
 
     @Email
     @Column(name = "email", nullable = false, unique = true)

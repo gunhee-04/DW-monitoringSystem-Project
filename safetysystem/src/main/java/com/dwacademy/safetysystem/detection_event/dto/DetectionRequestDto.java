@@ -67,8 +67,6 @@ public class DetectionRequestDto {
         String finalAddress = normalizeAddress(this.eventAddress, this.eventLatitude, this.eventLongitude);
 
         return DetectionEntity.builder()
-                .cameraId(numericCameraId)
-                .dangerZoneId(this.dangerZoneId != null ? this.dangerZoneId : 0)
                 .eventType(type)
                 .eventLevel(calculatedLevel)
                 .objectType(this.objectType)

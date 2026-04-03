@@ -51,7 +51,7 @@ public class StatisticsService {
         validateRange(start, end);
 
         if (cameraId != null) {
-            return crowdStatRepository.findByCameraIdAndMeasuredAtBetween(cameraId, start, end);
+            return crowdStatRepository.findByCamera_IdAndMeasuredAtBetween(cameraId, start, end);
         }
 
         return crowdStatRepository.findByMeasuredAtBetween(start, end);
@@ -66,8 +66,8 @@ public class StatisticsService {
         if (event.getEventType() == null || event.getEventType() != EventType.CROWD) return;
 
         CrowdStat stat = new CrowdStat();
-        stat.setCameraId(event.getCameraId() != null ? event.getCameraId().longValue() : 0L);
-        stat.setDangerZoneId(event.getDangerZoneId() != null ? event.getDangerZoneId().longValue() : null);
+        stat.setCamera(event.getCamera());
+        stat.setDangerZone(event.getDangerZone());
         stat.setMeasuredAt(toSeoulDateTime(event.getEventTime()));
         stat.setPeopleCount(event.getDetectedCount() != null ? event.getDetectedCount() : 0);
         stat.setDensityValue((double) stat.getPeopleCount());
@@ -151,7 +151,7 @@ public class StatisticsService {
         long endEpoch = end.atZone(java.time.ZoneId.of("Asia/Seoul")).toEpochSecond();
 
         if (cameraId != null) {
-            return detectionEventRepository.findByCameraIdAndEventTypeAndEventTimeBetweenOrderByIdDesc(
+            return detectionEventRepository.findByCamera_IdAndEventTypeAndEventTimeBetweenOrderByIdDesc(
                     cameraId.intValue(),
                     EventType.INTRUSION,
                     startEpoch,

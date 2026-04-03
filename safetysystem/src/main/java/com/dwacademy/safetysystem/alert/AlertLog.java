@@ -17,7 +17,7 @@ public class AlertLog {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "detectionEventId", nullable = false)
+    @JoinColumn(name = "detection_event_id", nullable = false)
     private DetectionEntity detectionEntity;
 
     @Column(nullable = false)

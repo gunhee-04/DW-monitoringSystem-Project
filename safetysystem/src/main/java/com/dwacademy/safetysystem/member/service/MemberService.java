@@ -44,7 +44,7 @@ public class MemberService {
     @Transactional(readOnly = true)
     public Member getMemberById(int id) {
         log.info("--- [MemberService] getMemberById() ---");
-        return memberRepository.findById(id)
+        return memberRepository.findById((long) id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID(" + id + ")의 회원을 찾을 수 없습니다."));
     }
 
@@ -167,7 +167,7 @@ public class MemberService {
     public void updateMember(MemberDto memberDto) {
         log.info("--- [MemberService] updateMember() ---");
 
-        Member member = memberRepository.findById(memberDto.getId())
+        Member member = memberRepository.findById((long) memberDto.getId())
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
 
         validatePhone(memberDto.getPhone());
@@ -203,7 +203,7 @@ public class MemberService {
     public void approveMember(int memberId) {
         log.info("--- [MemberService] approveMember() ---");
 
-        Member member = memberRepository.findById(memberId)
+        Member member = memberRepository.findById((long) memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
 
         if (member.getStatus() == Status.ACTIVE) {
@@ -225,7 +225,7 @@ public class MemberService {
     public void rejectMember(int memberId, String rejectReason) {
         log.info("--- [MemberService] rejectMember() ---");
 
-        Member member = memberRepository.findById(memberId)
+        Member member = memberRepository.findById((long) memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
 
         if (rejectReason == null || rejectReason.isBlank()) {
@@ -248,7 +248,7 @@ public class MemberService {
     public void withdrawMember(int memberId) {
         log.info("--- [MemberService] withdrawMember() ---");
 
-        Member member = memberRepository.findById(memberId)
+        Member member = memberRepository.findById((long) memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
 
         if (member.getStatus() == Status.WITHDRAWN) {

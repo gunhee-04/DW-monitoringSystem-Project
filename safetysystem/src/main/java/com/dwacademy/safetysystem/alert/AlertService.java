@@ -5,6 +5,7 @@ import com.dwacademy.safetysystem.detection_event.controller.SseController;
 import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
 import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
 import com.dwacademy.safetysystem.detection_event.repository.DetectionEventRepository;
+import com.dwacademy.safetysystem.detection_event.service.DetectionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -19,17 +20,14 @@ public class AlertService {
             org.slf4j.LoggerFactory.getLogger(AlertService.class);
 
     private final AlertLogRepository alertRepository;
-    private final DetectionEventRepository detectionRepository;
-    private final CameraRepository cameraRepository;
+    private final DetectionService detectionService;
 
     public AlertService(
             AlertLogRepository alertRepository,
-            DetectionEventRepository detectionRepository,
-            CameraRepository cameraRepository
+            DetectionService detectionService
     ) {
         this.alertRepository = alertRepository;
-        this.detectionRepository = detectionRepository;
-        this.cameraRepository = cameraRepository;
+        this.detectionService = detectionService;
     }
 
     // 최근 알림 조회
@@ -90,8 +88,10 @@ public class AlertService {
             };
         }
 
+        DetectionEntity detectionEntity = detectionService.findById(detectionEventId);
+
         AlertLog alert = new AlertLog();
-        alert.setDetectionEventId(detectionEventId);
+        alert.setDetectionEntity(detectionEntity);
         alert.setAlertType(alertType);
         alert.setSeverity(severity);
         alert.setAlertMessage(message);
@@ -150,40 +150,30 @@ public class AlertService {
         String location = "-";
         String droneId = "-";
 
-        if (alert.getDetectionEventId() != null) {
-            DetectionEntity detection = detectionRepository
-                    .findById(alert.getDetectionEventId().intValue())
-                    .orElse(null);
+        if (alert.getDetectionEntity() != null) {
+            DetectionEntity detection = alert.getDetectionEntity();
 
-            if (detection != null) {
-                if (detection.getEventAddress() != null && !detection.getEventAddress().isBlank()) {
-                    location = detection.getEventAddress();
+            if (detection.getEventAddress() != null && !detection.getEventAddress().isBlank()) {
+                location = detection.getEventAddress();
+            }
+
+            if (detection.getCamera() != null) {
+                var camera = detection.getCamera();
+
+                if (camera.getCameraCode() != null && !camera.getCameraCode().isBlank()) {
+                    droneId = camera.getCameraCode();
+                } else {
+                    droneId = "DRONE-" + camera.getId();
                 }
+            }
 
-                if (detection.getCameraId() != null) {
-                    var cameraOpt = cameraRepository.findById(detection.getCameraId().longValue());
-
-                    if (cameraOpt.isPresent()) {
-                        var camera = cameraOpt.get();
-
-                        if (camera.getCameraCode() != null && !camera.getCameraCode().isBlank()) {
-                            droneId = camera.getCameraCode();
-                        } else {
-                            droneId = "DRONE-" + detection.getCameraId();
-                        }
-                    } else {
-                        droneId = "DRONE-" + detection.getCameraId();
-                    }
-                }
-
-                if ("-".equals(location)) {
-                    if ("CAM-01".equals(droneId)) {
-                        location = "서울특별시 중구 세종대로 110 서울시청";
-                    } else if ("CAM-02".equals(droneId)) {
-                        location = "서울특별시 중구 을지로 281 DDP";
-                    } else if ("CAM-03".equals(droneId)) {
-                        location = "서울특별시 종로구 세종대로 일대";
-                    }
+            if ("-".equals(location)) {
+                if ("CAM-01".equals(droneId)) {
+                    location = "서울특별시 중구 세종대로 110 서울시청";
+                } else if ("CAM-02".equals(droneId)) {
+                    location = "서울특별시 중구 을지로 281 DDP";
+                } else if ("CAM-03".equals(droneId)) {
+                    location = "서울특별시 종로구 세종대로 일대";
                 }
             }
         }

@@ -7,9 +7,9 @@ import java.util.Optional;
 
 public interface DangerZoneRepository extends JpaRepository<DangerZone,Long> {
 
-    List<DangerZone> findByCameraId(Long cameraId);
+    List<DangerZone> findByCamera_Id(Long cameraId);
 
-    List<DangerZone> findByCameraIdAndIsActiveTrue(Long cameraId);
+    List<DangerZone> findByCamera_IdAndIsActiveTrue(Long cameraId);
 
-    Optional<DangerZone> findFirstByCameraIdAndIsActiveTrueOrderByUpdatedAtDesc(Long cameraId);
+    Optional<DangerZone> findFirstByCamera_IdAndIsActiveTrueOrderByUpdatedAtDesc(Long cameraId);
 }
