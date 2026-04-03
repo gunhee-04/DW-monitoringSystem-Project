@@ -751,3 +751,343 @@
     background: var(--primary);
     color: #fff;
 }
+
+/* =========================
+   공용 확인 모달
+========================= */
+.member-confirm-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: var(--backdrop-bg);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.member-confirm-modal.show {
+    display: flex;
+}
+
+.member-confirm-dialog {
+    position: relative;
+    width: 100%;
+    max-width: 430px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 22px;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18);
+    padding: 34px 28px 24px;
+    text-align: center;
+}
+
+.member-confirm-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.member-confirm-close:hover {
+    background: var(--bg-soft);
+    color: var(--text-main);
+}
+
+.member-confirm-icon {
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--bg-soft-2);
+    border: 1px solid var(--border-color);
+    color: var(--primary);
+    font-size: 28px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.member-confirm-title {
+    margin: 0 0 10px;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.member-confirm-message {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-sub);
+    word-break: keep-all;
+}
+
+.member-confirm-btn-area {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.member-confirm-ok-btn,
+.member-confirm-cancel-btn {
+    min-width: 120px;
+    height: 46px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.member-confirm-ok-btn {
+    border: none;
+    background: var(--primary);
+    color: #fff;
+}
+
+.member-confirm-ok-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.member-confirm-cancel-btn {
+    border: 1px solid var(--border-color);
+    background: var(--bg-soft);
+    color: var(--text-main);
+}
+
+.member-confirm-cancel-btn:hover {
+    background: var(--bg-soft-2);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+@media (max-width: 600px) {
+    .member-confirm-dialog {
+        max-width: 100%;
+        border-radius: 18px;
+        padding: 28px 18px 20px;
+    }
+
+    .member-confirm-title {
+        font-size: 20px;
+    }
+
+    .member-confirm-message {
+        font-size: 15px;
+    }
+
+    .member-confirm-btn-area {
+        flex-direction: column-reverse;
+    }
+
+    .member-confirm-ok-btn,
+    .member-confirm-cancel-btn {
+        width: 100%;
+    }
+}
+
+/* =========================
+   공용 확인 모달
+========================= */
+.member-confirm-modal,
+.member-reject-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: var(--backdrop-bg);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.member-confirm-modal.show,
+.member-reject-modal.show {
+    display: flex;
+}
+
+.member-confirm-dialog,
+.member-reject-dialog {
+    position: relative;
+    width: 100%;
+    max-width: 430px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 22px;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18);
+    padding: 34px 28px 24px;
+    text-align: center;
+}
+
+.member-confirm-close,
+.member-reject-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.member-confirm-close:hover,
+.member-reject-close:hover {
+    background: var(--bg-soft);
+    color: var(--text-main);
+}
+
+.member-confirm-icon {
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--bg-soft-2);
+    border: 1px solid var(--border-color);
+    color: var(--primary);
+    font-size: 28px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.member-confirm-title,
+.member-reject-title {
+    margin: 0 0 10px;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.member-confirm-message,
+.member-reject-desc {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-sub);
+    word-break: keep-all;
+}
+
+.member-confirm-btn-area,
+.member-reject-btn-area {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.member-confirm-ok-btn,
+.member-confirm-cancel-btn,
+.member-reject-submit-btn,
+.member-reject-cancel-btn {
+    min-width: 120px;
+    height: 46px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.member-confirm-ok-btn,
+.member-reject-submit-btn {
+    border: none;
+    background: var(--primary);
+    color: #fff;
+}
+
+.member-confirm-ok-btn:hover,
+.member-reject-submit-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.member-confirm-cancel-btn,
+.member-reject-cancel-btn {
+    border: 1px solid var(--border-color);
+    background: var(--bg-soft);
+    color: var(--text-main);
+}
+
+.member-confirm-cancel-btn:hover,
+.member-reject-cancel-btn:hover {
+    background: var(--bg-soft-2);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.member-reject-textarea {
+    width: 100%;
+    min-height: 140px;
+    margin-top: 18px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.member-reject-textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(31, 59, 87, 0.12);
+}
+
+.member-reject-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+    .member-confirm-dialog,
+    .member-reject-dialog {
+        max-width: 100%;
+        border-radius: 18px;
+        padding: 28px 18px 20px;
+    }
+
+    .member-confirm-title,
+    .member-reject-title {
+        font-size: 20px;
+    }
+
+    .member-confirm-message,
+    .member-reject-desc {
+        font-size: 15px;
+    }
+
+    .member-confirm-btn-area,
+    .member-reject-btn-area {
+        flex-direction: column-reverse;
+    }
+
+    .member-confirm-ok-btn,
+    .member-confirm-cancel-btn,
+    .member-reject-submit-btn,
+    .member-reject-cancel-btn {
+        width: 100%;
+    }
+}

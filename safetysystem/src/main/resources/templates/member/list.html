@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <title>회원 목록</title>
 
-
-
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/member.css}">
     <script th:src="@{/js/theme.js}"></script>
-
 </head>
 <body>
 
@@ -47,7 +44,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="member : ${memberList.content}"
-                            th:if="${member.status == 'PENDING'}">
+                            th:if="${member.status.name() == 'PENDING'}">
                             <td th:text="${member.id}"></td>
                             <td th:text="${member.name}"></td>
                             <td th:text="${member.email}"></td>
@@ -59,17 +56,17 @@
                             <td class="member-manage-col">
                                 <div class="member-action-group">
                                     <button type="button" class="member-action-btn approve-btn"
-                                            th:onclick="|approveMember(${member.id})|">
+                                            th:onclick="|confirmApprove(${member.id})|">
                                         승인
                                     </button>
                                     <button type="button" class="member-action-btn reject-btn"
-                                            th:onclick="|rejectMember(${member.id})|">
+                                            th:onclick="|openRejectModal(${member.id})|">
                                         반려
                                     </button>
                                 </div>
                             </td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(memberList.content.?[status == 'PENDING'])}">
+                        <tr th:if="${#lists.isEmpty(memberList.content.?[status.name() == 'PENDING'])}">
                             <td colspan="9" class="member-empty">가입 대기 회원이 없습니다.</td>
                         </tr>
                         </tbody>
@@ -98,7 +95,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="member : ${memberList.content}"
-                            th:if="${member.status == 'ACTIVE'}">
+                            th:if="${member.status.name() == 'ACTIVE'}">
                             <td th:text="${member.id}"></td>
                             <td th:text="${member.name}"></td>
                             <td th:text="${member.email}"></td>
@@ -114,13 +111,13 @@
                                         수정
                                     </button>
                                     <button type="button" class="member-action-btn withdraw-btn"
-                                            th:onclick="|withdrawMember(${member.id})|">
+                                            th:onclick="|confirmWithdraw(${member.id})|">
                                         탈퇴
                                     </button>
                                 </div>
                             </td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(memberList.content.?[status == 'ACTIVE'])}">
+                        <tr th:if="${#lists.isEmpty(memberList.content.?[status.name() == 'ACTIVE'])}">
                             <td colspan="9" class="member-empty">승인 회원이 없습니다.</td>
                         </tr>
                         </tbody>
@@ -148,7 +145,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="member : ${memberList.content}"
-                            th:if="${member.status == 'WITHDRAWN'}">
+                            th:if="${member.status.name() == 'WITHDRAWN'}">
                             <td th:text="${member.id}"></td>
                             <td th:text="${member.name}"></td>
                             <td th:text="${member.email}"></td>
@@ -158,7 +155,7 @@
                             <td th:text="${member.status}"></td>
                             <td th:text="${member.withdrawnAt != null ? #temporals.format(member.withdrawnAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(memberList.content.?[status == 'WITHDRAWN'])}">
+                        <tr th:if="${#lists.isEmpty(memberList.content.?[status.name() == 'WITHDRAWN'])}">
                             <td colspan="8" class="member-empty">탈퇴 회원이 없습니다.</td>
                         </tr>
                         </tbody>
@@ -187,7 +184,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="member : ${memberList.content}"
-                            th:if="${member.status == 'REJECTED'}">
+                            th:if="${member.status.name() == 'REJECTED'}">
                             <td th:text="${member.id}"></td>
                             <td th:text="${member.name}"></td>
                             <td th:text="${member.email}"></td>
@@ -205,7 +202,7 @@
                                 </button>
                             </td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(memberList.content.?[status == 'REJECTED'])}">
+                        <tr th:if="${#lists.isEmpty(memberList.content.?[status.name() == 'REJECTED'])}">
                             <td colspan="9" class="member-empty">반려 회원이 없습니다.</td>
                         </tr>
                         </tbody>
@@ -216,7 +213,43 @@
         </div>
     </div>
 
-    <!-- 반려사유 모달 -->
+    <!-- 공용 확인 모달 -->
+    <div id="memberConfirmModal" class="member-confirm-modal" aria-hidden="true">
+        <div class="member-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="memberConfirmTitle">
+            <button type="button" class="member-confirm-close" onclick="closeMemberConfirmModal()">×</button>
+
+            <div class="member-confirm-icon">!</div>
+
+            <h3 id="memberConfirmTitle" class="member-confirm-title">확인</h3>
+            <p id="memberConfirmMessage" class="member-confirm-message">정말 진행하시겠습니까?</p>
+
+            <div class="member-confirm-btn-area">
+                <button type="button" class="member-confirm-cancel-btn" onclick="closeMemberConfirmModal()">취소</button>
+                <button type="button" id="memberConfirmOkBtn" class="member-confirm-ok-btn">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 반려 입력 모달 -->
+    <div id="memberRejectModal" class="member-reject-modal" aria-hidden="true">
+        <div class="member-reject-dialog" role="dialog" aria-modal="true" aria-labelledby="memberRejectTitle">
+            <button type="button" class="member-reject-close" onclick="closeRejectModal()">×</button>
+
+            <h3 id="memberRejectTitle" class="member-reject-title">회원 반려</h3>
+            <p class="member-reject-desc">반려 사유를 입력해주세요.</p>
+
+            <textarea id="memberRejectReason"
+                      class="member-reject-textarea"
+                      placeholder="예: 제출 정보가 누락되어 가입 승인이 보류되었습니다."></textarea>
+
+            <div class="member-reject-btn-area">
+                <button type="button" class="member-reject-cancel-btn" onclick="closeRejectModal()">취소</button>
+                <button type="button" class="member-reject-submit-btn" onclick="submitReject()">반려</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 반려사유 조회 모달 -->
     <div id="rejectReasonModal" class="custom-modal">
         <div class="custom-modal-content">
             <div class="custom-modal-header">
@@ -227,76 +260,169 @@
         </div>
     </div>
 
-    <script>
-        async function approveMember(id) {
-            if (!confirm("이 회원을 승인하시겠습니까?")) return;
+    <script th:inline="javascript">
+        const csrfToken = /*[[${_csrf != null ? _csrf.token : ''}]]*/ "";
+        const csrfHeaderName = /*[[${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}]]*/ "X-CSRF-TOKEN";
 
-            try {
-                const response = await fetch(`/api/members/${id}/approve`, {
-                    method: "PATCH"
-                });
+        const memberConfirmModal = document.getElementById("memberConfirmModal");
+        const memberConfirmTitle = document.getElementById("memberConfirmTitle");
+        const memberConfirmMessage = document.getElementById("memberConfirmMessage");
+        const memberConfirmOkBtn = document.getElementById("memberConfirmOkBtn");
 
-                const msg = await response.text();
-                alert(msg);
+        const memberRejectModal = document.getElementById("memberRejectModal");
+        const memberRejectReason = document.getElementById("memberRejectReason");
 
-                if (response.ok) {
-                    location.href = "/member/list";
-                }
-            } catch (e) {
-                console.error(e);
-                alert("회원 승인 중 오류가 발생했습니다.");
-            }
+        let memberConfirmCallback = null;
+        let rejectTargetId = null;
+
+        function lockScroll() {
+            document.body.style.overflow = "hidden";
         }
 
-        async function rejectMember(id) {
-            const reason = prompt("반려 사유를 입력하세요.");
+        function unlockScroll() {
+            document.body.style.overflow = "";
+        }
 
-            if (reason === null) return;
-            if (reason.trim() === "") {
+        function buildHeaders(isJson = false) {
+            const headers = {};
+            if (csrfToken) {
+                headers[csrfHeaderName] = csrfToken;
+            }
+            if (isJson) {
+                headers["Content-Type"] = "application/json";
+            }
+            return headers;
+        }
+
+        function openMemberConfirmModal(title, message, callback) {
+            memberConfirmTitle.textContent = title;
+            memberConfirmMessage.textContent = message;
+            memberConfirmCallback = callback;
+
+            memberConfirmModal.classList.add("show");
+            memberConfirmModal.setAttribute("aria-hidden", "false");
+            lockScroll();
+        }
+
+        function closeMemberConfirmModal() {
+            memberConfirmModal.classList.remove("show");
+            memberConfirmModal.setAttribute("aria-hidden", "true");
+            memberConfirmCallback = null;
+            unlockScroll();
+        }
+
+        async function executeConfirmAction() {
+            if (typeof memberConfirmCallback === "function") {
+                await memberConfirmCallback();
+            }
+            closeMemberConfirmModal();
+        }
+
+        memberConfirmOkBtn.addEventListener("click", executeConfirmAction);
+
+        function openRejectModal(id) {
+            rejectTargetId = id;
+            memberRejectReason.value = "";
+            memberRejectModal.classList.add("show");
+            memberRejectModal.setAttribute("aria-hidden", "false");
+            lockScroll();
+            setTimeout(() => memberRejectReason.focus(), 50);
+        }
+
+        function closeRejectModal() {
+            memberRejectModal.classList.remove("show");
+            memberRejectModal.setAttribute("aria-hidden", "true");
+            memberRejectReason.value = "";
+            rejectTargetId = null;
+            unlockScroll();
+        }
+
+        async function approveMember(id) {
+            const response = await fetch(`/api/members/${id}/approve`, {
+                method: "PATCH",
+                headers: buildHeaders(false)
+            });
+
+            const msg = await response.text();
+
+            if (!response.ok) {
+                alert(msg || "회원 승인 중 오류가 발생했습니다.");
+                return;
+            }
+
+            location.href = "/member/list";
+        }
+
+        async function rejectMember(id, reason) {
+            const response = await fetch(`/api/members/${id}/reject`, {
+                method: "PATCH",
+                headers: buildHeaders(true),
+                body: JSON.stringify({
+                    rejectReason: reason
+                })
+            });
+
+            const msg = await response.text();
+
+            if (!response.ok) {
+                alert(msg || "회원 반려 처리 중 오류가 발생했습니다.");
+                return;
+            }
+
+            location.href = "/member/list";
+        }
+
+        async function withdrawMember(id) {
+            const response = await fetch(`/api/members/${id}`, {
+                method: "DELETE",
+                headers: buildHeaders(false)
+            });
+
+            const msg = await response.text();
+
+            if (!response.ok) {
+                alert(msg || "회원 탈퇴 처리 중 오류가 발생했습니다.");
+                return;
+            }
+
+            location.href = "/member/list";
+        }
+
+        function confirmApprove(id) {
+            openMemberConfirmModal(
+                "회원 승인",
+                "이 회원을 승인하시겠습니까?",
+                async function() {
+                    await approveMember(id);
+                }
+            );
+        }
+
+        function confirmWithdraw(id) {
+            openMemberConfirmModal(
+                "회원 탈퇴 처리",
+                "탈퇴 처리 하시겠습니까?",
+                async function() {
+                    await withdrawMember(id);
+                }
+            );
+        }
+
+        async function submitReject() {
+            const reason = memberRejectReason.value.trim();
+
+            if (!reason) {
                 alert("반려 사유를 입력해야 합니다.");
+                memberRejectReason.focus();
                 return;
             }
 
             try {
-                const response = await fetch(`/api/members/${id}/reject`, {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        rejectReason: reason
-                    })
-                });
-
-                const msg = await response.text();
-                alert(msg);
-
-                if (response.ok) {
-                    location.href = "/member/list";
-                }
+                await rejectMember(rejectTargetId, reason);
+                closeRejectModal();
             } catch (e) {
                 console.error(e);
                 alert("회원 반려 처리 중 오류가 발생했습니다.");
-            }
-        }
-
-        async function withdrawMember(id) {
-            if (!confirm("탈퇴 처리 하시겠습니까?")) return;
-
-            try {
-                const response = await fetch(`/api/members/${id}`, {
-                    method: "DELETE"
-                });
-
-                const msg = await response.text();
-                alert(msg);
-
-                if (response.ok) {
-                    location.href = "/member/list";
-                }
-            } catch (e) {
-                console.error(e);
-                alert("회원 탈퇴 처리 중 오류가 발생했습니다.");
             }
         }
 
@@ -304,16 +430,45 @@
             const reason = button.getAttribute("data-reason") || "반려 사유가 없습니다.";
             document.getElementById("rejectReasonText").textContent = reason;
             document.getElementById("rejectReasonModal").style.display = "flex";
+            lockScroll();
         }
 
         function closeRejectReasonModal() {
             document.getElementById("rejectReasonModal").style.display = "none";
+            unlockScroll();
         }
 
+        memberConfirmModal.addEventListener("click", function(e) {
+            if (e.target === memberConfirmModal) {
+                closeMemberConfirmModal();
+            }
+        });
+
+        memberRejectModal.addEventListener("click", function(e) {
+            if (e.target === memberRejectModal) {
+                closeRejectModal();
+            }
+        });
+
         window.addEventListener("click", function(e) {
-            const modal = document.getElementById("rejectReasonModal");
-            if (e.target === modal) {
+            const reasonModal = document.getElementById("rejectReasonModal");
+            if (e.target === reasonModal) {
                 closeRejectReasonModal();
+            }
+        });
+
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape") {
+                if (memberConfirmModal.classList.contains("show")) {
+                    closeMemberConfirmModal();
+                }
+                if (memberRejectModal.classList.contains("show")) {
+                    closeRejectModal();
+                }
+                const reasonModal = document.getElementById("rejectReasonModal");
+                if (reasonModal.style.display === "flex") {
+                    closeRejectReasonModal();
+                }
             }
         });
     </script>

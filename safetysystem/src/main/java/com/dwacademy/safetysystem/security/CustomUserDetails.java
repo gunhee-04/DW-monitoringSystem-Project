@@ -1,5 +1,6 @@
 package com.dwacademy.safetysystem.security;
 
+import com.dwacademy.safetysystem.config.Status;
 import com.dwacademy.safetysystem.member.entity.Member;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,7 +21,6 @@ public class CustomUserDetails extends User {
 
     @Override // 이 메서드가 false면 Spring Security가 막아주고, 그 때 DisabledException 쪽으로 감
     public boolean isEnabled() {
-        return "ACTIVE".equals(member.getStatus());
+        return member.getStatus() == Status.ACTIVE;
     }
-
 }

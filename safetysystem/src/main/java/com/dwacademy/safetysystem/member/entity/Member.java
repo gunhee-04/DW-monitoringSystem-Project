@@ -1,6 +1,7 @@
 package com.dwacademy.safetysystem.member.entity;
 
 import com.dwacademy.safetysystem.config.RoleType;
+import com.dwacademy.safetysystem.config.Status;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
@@ -52,8 +53,9 @@ public class Member {
     @Column(name = "role", nullable = false)
     private RoleType role; // USER, ADMIN
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status; // PENDING, ACTIVE, REJECTED, WITHDRAWN
+    private Status status; // PENDING, ACTIVE, REJECTED, WITHDRAWN
 
     @CreationTimestamp
     @Column(name = "created_at")

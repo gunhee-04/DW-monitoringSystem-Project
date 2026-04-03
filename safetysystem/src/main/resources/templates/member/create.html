@@ -12,187 +12,246 @@
 </head>
 <body>
 
-<div th:replace="fragments/header :: header('회원 등록')"></div>
+    <div th:replace="fragments/header :: header('회원 등록')"></div>
 
-<div class="signup-page">
-    <div class="signup-wrap">
+        <div class="signup-page">
+            <div class="signup-wrap">
 
-        <div class="signup-title">회원 등록</div>
+                <div class="signup-title">회원 등록</div>
 
-        <div class="signup-panel">
-            <form th:action="@{/member/create}" method="post"
-                  class="signup-form"
-                  onsubmit="return validateForm()">
+                <div class="signup-panel">
+                    <form th:action="@{/member/create}" method="post"
+                          class="signup-form"
+                          id="signupForm">
 
-                <!-- 이름 -->
-                <div class="signup-field">
-                    <label class="signup-label">이름</label>
-                    <input type="text" name="name" class="signup-input"
-                           th:value="${memberDto != null ? memberDto.name : ''}" required>
+                        <!-- 이름 -->
+                        <div class="signup-field">
+                            <label class="signup-label">이름</label>
+                            <input type="text" name="name" class="signup-input"
+                                   th:value="${memberDto != null ? memberDto.name : ''}" required>
+                        </div>
+
+                        <!-- 이메일 + 중복확인 -->
+                        <div class="signup-field">
+                            <label class="signup-label">이메일</label>
+
+                            <div style="display:flex; gap:10px;">
+                                <input type="email" id="email" name="email" class="signup-input"
+                                       th:value="${memberDto != null ? memberDto.email : ''}"
+                                       placeholder="이메일은 ID로 사용됩니다."
+                                       oninput="resetEmailCheck()" required>
+
+                                <button type="button" class="signup-check-btn" onclick="checkEmail()">
+                                    중복확인
+                                </button>
+                            </div>
+
+                            <div id="emailCheckMsg" style="font-size:13px; margin-top:5px;"></div>
+                        </div>
+
+                        <!-- 비밀번호 -->
+                        <div class="signup-field">
+                            <label class="signup-label">비밀번호</label>
+                            <input type="password" name="password" class="signup-input" required>
+                        </div>
+
+                        <!-- 연락처 -->
+                        <div class="signup-field">
+                            <label class="signup-label">연락처</label>
+                            <input type="text" name="phone" class="signup-input"
+                                   th:value="${memberDto != null ? memberDto.phone : ''}"
+                                   placeholder="010-0000-0000 형식으로 입력해주십시오." required>
+                        </div>
+
+                        <!-- 우편번호 -->
+                        <div class="signup-field">
+                            <label class="signup-label">우편번호</label>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" id="postcode" name="postcode" class="signup-input" readonly
+                                       th:value="${memberDto != null ? memberDto.postcode : ''}" required>
+                                <button type="button" class="signup-list-btn" onclick="execDaumPostcode()">
+                                    주소 검색
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 기본주소 -->
+                        <div class="signup-field">
+                            <label class="signup-label">기본주소</label>
+                            <input type="text" id="address" name="address" class="signup-input" readonly
+                                   th:value="${memberDto != null ? memberDto.address : ''}" required>
+                        </div>
+
+                        <!-- 상세주소 -->
+                        <div class="signup-field">
+                            <label class="signup-label">상세주소</label>
+                            <input type="text" id="detailAddress" name="detailAddress" class="signup-input"
+                                   th:value="${memberDto != null ? memberDto.detailAddress : ''}"
+                                   placeholder="상세주소를 입력하세요">
+                        </div>
+
+                        <!-- 버튼 -->
+                        <div class="signup-btn-area">
+                            <button type="button" class="signup-submit-btn" onclick="confirmSignup()">등록</button>
+                        </div>
+
+                    </form>
                 </div>
 
-                <!-- 이메일 + 중복확인 -->
-                <div class="signup-field">
-                    <label class="signup-label">이메일</label>
-
-                    <div style="display:flex; gap:10px;">
-                        <input type="email" id="email" name="email" class="signup-input"
-                               th:value="${memberDto != null ? memberDto.email : ''}"
-                               placeholder="이메일은 ID로 사용됩니다."
-                               oninput="resetEmailCheck()" required>
-
-                        <button type="button" class="signup-check-btn" onclick="checkEmail()">
-                            중복확인
-                        </button>
-                    </div>
-
-                    <div id="emailCheckMsg" style="font-size:13px; margin-top:5px;"></div>
-                </div>
-
-                <!-- 비밀번호 -->
-                <div class="signup-field">
-                    <label class="signup-label">비밀번호</label>
-                    <input type="password" name="password" class="signup-input" required>
-                </div>
-
-                <!-- 연락처 -->
-                <div class="signup-field">
-                    <label class="signup-label">연락처</label>
-                    <input type="text" name="phone" class="signup-input"
-                           th:value="${memberDto != null ? memberDto.phone : ''}"
-                           placeholder="010-0000-0000 형식으로 입력해주십시오." required>
-                </div>
-
-                <!-- 우편번호 -->
-                <div class="signup-field">
-                    <label class="signup-label">우편번호</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="postcode" name="postcode" class="signup-input" readonly
-                               th:value="${memberDto != null ? memberDto.postcode : ''}" required>
-                        <button type="button" class="signup-list-btn" onclick="execDaumPostcode()">
-                            주소 검색
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 기본주소 -->
-                <div class="signup-field">
-                    <label class="signup-label">기본주소</label>
-                    <input type="text" id="address" name="address" class="signup-input" readonly
-                           th:value="${memberDto != null ? memberDto.address : ''}" required>
-                </div>
-
-                <!-- 상세주소 -->
-                <div class="signup-field">
-                    <label class="signup-label">상세주소</label>
-                    <input type="text" id="detailAddress" name="detailAddress" class="signup-input"
-                           th:value="${memberDto != null ? memberDto.detailAddress : ''}"
-                           placeholder="상세주소를 입력하세요">
-                </div>
-
-                <!-- 버튼 -->
-                <div class="signup-btn-area">
-                    <button type="submit" class="signup-submit-btn">등록</button>
-                </div>
-
-            </form>
+            </div>
         </div>
 
-    </div>
-</div>
+        <!-- 회원 등록 확인 모달 -->
+        <div id="signupConfirmModal" class="member-confirm-modal" aria-hidden="true">
+            <div class="member-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="signupConfirmTitle">
+                <button type="button" class="member-confirm-close" onclick="closeSignupConfirmModal()">×</button>
 
-<!-- 🔥 에러 alert -->
-<script th:inline="javascript">
-    const errorMsg = /*[[${errorMsg}]]*/ null;
+                <div class="member-confirm-icon">!</div>
 
-    if (errorMsg) {
-        alert(errorMsg);
-    }
-</script>
+                <h3 id="signupConfirmTitle" class="member-confirm-title">회원 등록</h3>
+                <p id="signupConfirmMessage" class="member-confirm-message">회원 등록하시겠습니까?</p>
 
-<!-- 🔥 이메일 중복 체크 -->
-<script>
-    let isEmailChecked = false;
+                <div class="member-confirm-btn-area">
+                    <button type="button" class="member-confirm-cancel-btn" onclick="closeSignupConfirmModal()">취소</button>
+                    <button type="button" id="signupConfirmOkBtn" class="member-confirm-ok-btn">확인</button>
+                </div>
+            </div>
+        </div>
 
-    function checkEmail() {
+        <!-- 에러 alert -->
+        <script th:inline="javascript">
+            const errorMsg = /*[[${errorMsg}]]*/ null;
 
-        const email = document.getElementById("email").value;
+            if (errorMsg) {
+                alert(errorMsg);
+            }
+        </script>
 
-        if (!email) {
-            alert("이메일을 입력해주세요.");
-            return;
-        }
+        <!-- 이메일 중복 체크 + 등록 확인 -->
+        <script>
+            let isEmailChecked = false;
 
-        fetch(`/api/members/check-email?email=${email}`)
-            .then(res => res.text().then(text => ({
-                ok: res.ok,
-                text: text
-            })))
-            .then(data => {
+            const signupConfirmModal = document.getElementById("signupConfirmModal");
+            const signupConfirmOkBtn = document.getElementById("signupConfirmOkBtn");
+            const signupForm = document.getElementById("signupForm");
 
-                const msg = document.getElementById("emailCheckMsg");
+            function checkEmail() {
+                const email = document.getElementById("email").value;
 
-                if (data.ok) {
-                    msg.innerText = data.text;
-                    msg.style.color = "green";
-                    isEmailChecked = true;
-                } else {
-                    msg.innerText = data.text;
-                    msg.style.color = "red";
-                    isEmailChecked = false;
+                if (!email) {
+                    alert("이메일을 입력해주세요.");
+                    return;
+                }
+
+                fetch(`/api/members/check-email?email=${email}`)
+                    .then(res => res.text().then(text => ({
+                        ok: res.ok,
+                        text: text
+                    })))
+                    .then(data => {
+                        const msg = document.getElementById("emailCheckMsg");
+
+                        if (data.ok) {
+                            msg.innerText = data.text;
+                            msg.style.color = "green";
+                            isEmailChecked = true;
+                        } else {
+                            msg.innerText = data.text;
+                            msg.style.color = "red";
+                            isEmailChecked = false;
+                        }
+                    });
+            }
+
+            function resetEmailCheck() {
+                isEmailChecked = false;
+                document.getElementById("emailCheckMsg").innerText = "";
+            }
+
+            function validateForm() {
+                if (!isEmailChecked) {
+                    alert("이메일 중복 확인은 필수입니다.");
+                    return false;
+                }
+
+                return true;
+            }
+
+            function openSignupConfirmModal() {
+                signupConfirmModal.classList.add("show");
+                signupConfirmModal.setAttribute("aria-hidden", "false");
+                document.body.style.overflow = "hidden";
+            }
+
+            function closeSignupConfirmModal() {
+                signupConfirmModal.classList.remove("show");
+                signupConfirmModal.setAttribute("aria-hidden", "true");
+                document.body.style.overflow = "";
+            }
+
+            function confirmSignup() {
+                if (!validateForm()) {
+                    return;
+                }
+
+                if (!signupForm.reportValidity()) {
+                    return;
+                }
+
+                openSignupConfirmModal();
+            }
+
+            signupConfirmOkBtn.addEventListener("click", function() {
+                closeSignupConfirmModal();
+                signupForm.submit();
+            });
+
+            signupConfirmModal.addEventListener("click", function(e) {
+                if (e.target === signupConfirmModal) {
+                    closeSignupConfirmModal();
                 }
             });
-    }
 
-    function resetEmailCheck() {
-        isEmailChecked = false;
-        document.getElementById("emailCheckMsg").innerText = "";
-    }
-
-    function validateForm() {
-
-        if (!isEmailChecked) {
-            alert("이메일 중복 확인은 필수입니다.");
-            return false;
-        }
-
-        return true;
-    }
-</script>
-
-<!-- 주소 API -->
-<script>
-    function execDaumPostcode() {
-        new daum.Postcode({
-            oncomplete: function(data) {
-                let addr = "";
-                let extraAddr = "";
-
-                if (data.userSelectedType === 'R') {
-                    addr = data.roadAddress;
-                } else {
-                    addr = data.jibunAddress;
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Escape" && signupConfirmModal.classList.contains("show")) {
+                    closeSignupConfirmModal();
                 }
+            });
+        </script>
 
-                if (data.userSelectedType === 'R') {
-                    if (data.bname !== '' && /[동|로|가]$/g.test(data.bname)) {
-                        extraAddr += data.bname;
-                    }
-                    if (data.buildingName !== '' && data.apartment === 'Y') {
-                        extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
-                    }
-                    if (extraAddr !== '') {
-                        extraAddr = ' (' + extraAddr + ')';
-                    }
-                }
+        <!-- 주소 API -->
+        <script>
+            function execDaumPostcode() {
+                new daum.Postcode({
+                    oncomplete: function(data) {
+                        let addr = "";
+                        let extraAddr = "";
 
-                document.getElementById("postcode").value = data.zonecode;
-                document.getElementById("address").value = addr + extraAddr;
-                document.getElementById("detailAddress").focus();
+                        if (data.userSelectedType === 'R') {
+                            addr = data.roadAddress;
+                        } else {
+                            addr = data.jibunAddress;
+                        }
+
+                        if (data.userSelectedType === 'R') {
+                            if (data.bname !== '' && /[동|로|가]$/g.test(data.bname)) {
+                                extraAddr += data.bname;
+                            }
+                            if (data.buildingName !== '' && data.apartment === 'Y') {
+                                extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                            }
+                            if (extraAddr !== '') {
+                                extraAddr = ' (' + extraAddr + ')';
+                            }
+                        }
+
+                        document.getElementById("postcode").value = data.zonecode;
+                        document.getElementById("address").value = addr + extraAddr;
+                        document.getElementById("detailAddress").focus();
+                    }
+                }).open();
             }
-        }).open();
-    }
-</script>
+        </script>
 
 </body>
 </html>

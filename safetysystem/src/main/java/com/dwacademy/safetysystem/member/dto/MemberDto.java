@@ -1,6 +1,7 @@
 package com.dwacademy.safetysystem.member.dto;
 
 import com.dwacademy.safetysystem.config.RoleType;
+import com.dwacademy.safetysystem.config.Status;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -21,7 +22,7 @@ public class MemberDto {
     private String address; // 주소
     private String detailAddress; // 상세주소
     private RoleType role; // USER, ADMIN
-    private String status; // PENDING, ACTIVE 등
+    private Status status; // PENDING, ACTIVE 등
     private LocalDateTime createdAt; // 가입일
     private LocalDateTime updatedAt; // 수정일
     private LocalDateTime approvedAt; // 관리자 승인일
