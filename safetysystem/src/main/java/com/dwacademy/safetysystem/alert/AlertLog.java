@@ -1,6 +1,7 @@
 package com.dwacademy.safetysystem.alert;
 
 import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
+import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,13 +16,18 @@ public class AlertLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long detectionEventId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "detectionEventId", nullable = false)
+    private DetectionEntity detectionEntity;
 
+    @Column(nullable = false)
     private String alertType;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private EventLevel severity;
 
+    @Column(nullable = false)
     private String alertMessage;
 
     @Column(nullable = false)

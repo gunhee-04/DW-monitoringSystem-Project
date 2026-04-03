@@ -1,6 +1,7 @@
 package com.dwacademy.safetysystem.dangerzone;
 
 
+import com.dwacademy.safetysystem.camera.Camera;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,8 +21,9 @@ public class DangerZone {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable=false)
-    private Long cameraId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "camera_id", nullable=false)
+    private Camera camera;
 
     @Column(nullable=false)
     private String zoneName;

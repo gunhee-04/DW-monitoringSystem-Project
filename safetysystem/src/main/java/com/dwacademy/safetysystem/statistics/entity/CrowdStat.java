@@ -1,5 +1,7 @@
 package com.dwacademy.safetysystem.statistics.entity;
 
+import com.dwacademy.safetysystem.camera.Camera;
+import com.dwacademy.safetysystem.dangerzone.DangerZone;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,11 +25,13 @@ public class CrowdStat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "camera_id", nullable = false)
-    private Long cameraId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "camera_id", nullable = false)
+    private Camera camera;
 
-    @Column(name = "danger_zone_id")
-    private Long dangerZoneId;
+    @ManyToOne(fetch = FetchType.LAZY )
+    @JoinColumn(name = "danger_zone_id")
+    private DangerZone dangerZone;
 
     @Column(name = "measured_at", nullable = false)
     private LocalDateTime measuredAt;

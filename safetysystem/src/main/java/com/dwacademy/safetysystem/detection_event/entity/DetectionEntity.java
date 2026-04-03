@@ -1,5 +1,7 @@
 package com.dwacademy.safetysystem.detection_event.entity;
 
+import com.dwacademy.safetysystem.camera.Camera;
+import com.dwacademy.safetysystem.dangerzone.DangerZone;
 import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
 import com.dwacademy.safetysystem.detection_event.domain.EventType;
 import jakarta.persistence.*;
@@ -23,11 +25,13 @@ public class DetectionEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "camera_id", nullable = false)
-    private Integer cameraId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "camera_id", nullable = false)
+    private Camera camera;
 
-    @Column(name = "danger_zone_id")
-    private Integer dangerZoneId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "danger_zone_id")
+    private DangerZone dangerZone;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false)
