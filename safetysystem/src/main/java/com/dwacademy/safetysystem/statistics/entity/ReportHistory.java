@@ -1,5 +1,6 @@
 package com.dwacademy.safetysystem.statistics.entity;
 
+import com.dwacademy.safetysystem.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,8 +23,9 @@ public class ReportHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.EAGER)
     @Column(name = "member_id", nullable = false)
-    private Long memberId;
+    private Member member;
 
     @Column(name = "report_type", nullable = false)
     private String reportType;
