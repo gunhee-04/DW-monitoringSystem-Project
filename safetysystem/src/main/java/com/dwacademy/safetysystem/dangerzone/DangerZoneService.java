@@ -1,5 +1,7 @@
 package com.dwacademy.safetysystem.dangerzone;
 
+import com.dwacademy.safetysystem.camera.Camera;
+import com.dwacademy.safetysystem.camera.CameraService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,12 +17,13 @@ import java.util.List;
 public class DangerZoneService {
 
     private final DangerZoneRepository zoneRepository;
+    private final CameraService cameraService;
 
     // 목록 (활성 구역만)
     public List<DangerZone> findByCamera(Long cameraId) {
         log.info("--- [DangerZoneService] findByCamera() --- cameraId={}", cameraId);
         validateCameraId(cameraId);
-        return zoneRepository.findByCameraIdAndIsActiveTrue(cameraId);
+        return zoneRepository.findByCamera_IdAndIsActiveTrue(cameraId);
     }
 
     // 상세
@@ -39,8 +42,10 @@ public class DangerZoneService {
 
         validateDto(dto);
 
+        Camera camera = cameraService.findById(dto.getCameraId());
+
         DangerZone zone = DangerZone.builder()
-                .cameraId(dto.getCameraId())
+                .camera(camera)
                 .zoneName(dto.getZoneName())
                 .zoneType(dto.getZoneType())
                 .x1(dto.getX1())
@@ -67,11 +72,13 @@ public class DangerZoneService {
         validateId(id);
         validateDto(dto);
 
+        Camera camera = cameraService.findById(dto.getCameraId());
+
         DangerZone zone = getZoneOrThrow(id);
 
         DangerZone updated = DangerZone.builder()
                 .id(zone.getId())
-                .cameraId(dto.getCameraId())
+                .camera(camera)
                 .zoneName(dto.getZoneName())
                 .zoneType(dto.getZoneType())
                 .x1(dto.getX1())
@@ -108,7 +115,7 @@ public class DangerZoneService {
 
         validateCameraId(cameraId);
 
-        return zoneRepository.findFirstByCameraIdAndIsActiveTrueOrderByUpdatedAtDesc(cameraId)
+        return zoneRepository.findFirstByCamera_IdAndIsActiveTrueOrderByUpdatedAtDesc(cameraId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "카메라 ID " + cameraId + "번에 대한 활성 위험구역을 찾을 수 없습니다."
                 ));
@@ -118,7 +125,7 @@ public class DangerZoneService {
     public DangerZoneDto toDto(DangerZone dangerZone) {
         return DangerZoneDto.builder()
                 .zoneId(dangerZone.getId())
-                .cameraId(dangerZone.getCameraId())
+                .cameraId(dangerZone.getCamera().getId())
                 .zoneName(dangerZone.getZoneName())
                 .zoneType(dangerZone.getZoneType())
                 .x1(dangerZone.getX1())

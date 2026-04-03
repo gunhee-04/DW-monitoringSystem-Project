@@ -4,6 +4,8 @@ import com.dwacademy.safetysystem.statistics.entity.ReportHistory;
 import com.dwacademy.safetysystem.statistics.service.ReportExcelService;
 import com.dwacademy.safetysystem.statistics.service.ReportHistoryService;
 import com.dwacademy.safetysystem.statistics.service.ReportPdfService;
+import com.dwacademy.safetysystem.member.entity.Member;
+import com.dwacademy.safetysystem.member.repository.MemberRepository;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,13 +22,17 @@ public class ReportDownloadController {
     private final ReportPdfService reportPdfService;
     private final ReportExcelService reportExcelService;
     private final ReportHistoryService reportHistoryService;
+    private final MemberRepository memberRepository;
 
     public ReportDownloadController(ReportPdfService reportPdfService,
                                     ReportExcelService reportExcelService,
-                                    ReportHistoryService reportHistoryService) {
+                                    ReportHistoryService reportHistoryService,
+                                    MemberRepository memberRepository
+    ) {
         this.reportPdfService = reportPdfService;
         this.reportExcelService = reportExcelService;
         this.reportHistoryService = reportHistoryService;
+        this.memberRepository = memberRepository;
     }
 
     @GetMapping("/pdf")
@@ -42,7 +48,10 @@ public class ReportDownloadController {
         String fileName = "crowd_report_" + camera + "_" + date + ".pdf";
 
         ReportHistory history = new ReportHistory();
-        history.setMemberId(1L); // 로그인 연동 전까지 임시
+        Member member = memberRepository.findById(1L)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+
+        history.setMember(member);
         history.setReportType("PDF");
         history.setCategory("CROWD_STAT");
         history.setStartDate(start);
@@ -69,7 +78,10 @@ public class ReportDownloadController {
         String fileName = "crowd_report_" + camera + "_" + date + ".xlsx";
 
         ReportHistory history = new ReportHistory();
-        history.setMemberId(1L);
+        Member member = memberRepository.findById(1L)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+
+        history.setMember(member);
         history.setReportType("EXCEL");
         history.setCategory("CROWD_STAT");
         history.setStartDate(start);

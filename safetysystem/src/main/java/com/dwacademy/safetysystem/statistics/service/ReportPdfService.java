@@ -82,8 +82,8 @@ public class ReportPdfService {
 
             for (CrowdStat stat : stats) {
                 addBodyCell(table, valueOf(stat.getId()), smallFont, Element.ALIGN_CENTER);
-                addBodyCell(table, valueOf(stat.getCameraId()), smallFont, Element.ALIGN_CENTER);
-                addBodyCell(table, valueOf(stat.getDangerZoneId()), smallFont, Element.ALIGN_CENTER);
+                addBodyCell(table, valueOf(stat.getCamera()), smallFont, Element.ALIGN_CENTER);
+                addBodyCell(table, valueOf(stat.getDangerZone()), smallFont, Element.ALIGN_CENTER);
                 addBodyCell(table,
                         stat.getMeasuredAt() != null ? stat.getMeasuredAt().format(formatter) : "",
                         smallFont, Element.ALIGN_CENTER);

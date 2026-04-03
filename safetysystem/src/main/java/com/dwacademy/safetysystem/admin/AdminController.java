@@ -179,7 +179,7 @@ public class AdminController {
     public String zoneUpdate(@PathVariable Long id, Model model) {
         try {
             DangerZone zone = zoneService.findById(id);
-            Camera camera = cameraService.findById(zone.getCameraId());
+            Camera camera = zone.getCamera();
 
             model.addAttribute("dto", zoneService.toDto(zone));
             model.addAttribute("streamUrl", camera.getStreamUrl());
