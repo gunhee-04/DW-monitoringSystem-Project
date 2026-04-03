@@ -32,12 +32,8 @@ public class ReportDownloadController {
     @GetMapping("/pdf")
     public ResponseEntity<byte[]> downloadPdf(
             @RequestParam(required = false) Long cameraId,
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime start,
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime end
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end
     ) {
         byte[] pdfBytes = reportPdfService.generateCrowdStatPdf(cameraId, start, end);
 
@@ -46,7 +42,7 @@ public class ReportDownloadController {
         String fileName = "crowd_report_" + camera + "_" + date + ".pdf";
 
         ReportHistory history = new ReportHistory();
-        history.setMemberId(1L);
+        history.setMemberId(1L); // 로그인 연동 전까지 임시
         history.setReportType("PDF");
         history.setCategory("CROWD_STAT");
         history.setStartDate(start);
@@ -63,12 +59,8 @@ public class ReportDownloadController {
     @GetMapping("/excel")
     public ResponseEntity<byte[]> downloadExcel(
             @RequestParam(required = false) Long cameraId,
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime start,
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime end
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end
     ) {
         byte[] excelBytes = reportExcelService.generateCrowdStatExcel(cameraId, start, end);
 

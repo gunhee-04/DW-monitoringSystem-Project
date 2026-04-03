@@ -82,7 +82,7 @@
             }
         }
 
-        function toggleAlertPanel() {
+        async function toggleAlertPanel() {
             const panel = document.getElementById("alert-panel");
             const badge = document.getElementById("alert-badge");
 
@@ -103,6 +103,119 @@
                     badge.innerText = "0";
                     badge.style.display = "none";
                 }
+
+                try {
+                    await fetch("/alerts/read-all", {
+                        method: "PATCH"
+                    });
+                } catch (e) {
+                    console.error("전체 읽음 처리 실패:", e);
+                }
+            }
+        }
+
+        function formatAlertTime(dateTimeString) {
+            if (!dateTimeString) return "-";
+
+            const date = new Date(dateTimeString);
+            if (Number.isNaN(date.getTime())) {
+                return dateTimeString;
+            }
+
+            return date.toLocaleString("ko-KR");
+        }
+
+        async function markAlertAsRead(alertId, element) {
+            try {
+                const res = await fetch(`/alerts/${alertId}/read`, {
+                    method: "PATCH"
+                });
+
+                if (!res.ok) {
+                    throw new Error("읽음 처리 실패");
+                }
+
+                if (element) {
+                    element.style.opacity = "0.55";
+                }
+            } catch (e) {
+                console.error("알림 읽음 처리 실패:", e);
+            }
+        }
+
+        function addAlertToPanel(alert) {
+            const alertList = document.getElementById("alert-list");
+            const badge = document.getElementById("alert-badge");
+
+            if (!alertList) return;
+
+            const empty = alertList.querySelector(".alert-empty");
+            if (empty) {
+                empty.remove();
+            }
+
+            const severity = (alert.severity || "").toUpperCase();
+            let severityClass = "medium";
+            let severityText = "MEDIUM";
+
+            if (severity === "HIGH") {
+                severityClass = "high";
+                severityText = "HIGH";
+            } else if (severity === "MEDIUM") {
+                severityClass = "medium";
+                severityText = "MEDIUM";
+            }
+
+            const item = document.createElement("div");
+            item.className = `alert-item ${severityClass}`;
+            item.setAttribute("data-alert-id", alert.id);
+
+            item.innerHTML = `
+                <div class="alert-item-header">
+                    <div class="alert-item-title">${alert.alertMessage ?? "중요 알림"}</div>
+                    <span class="alert-item-badge ${severityClass}">${severityText}</span>
+                </div>
+                <div class="alert-item-body">
+                    <div>시간: ${formatAlertTime(alert.createdAt)}</div>
+                    <div>장소: ${alert.location ?? "-"}</div>
+                    <div>드론: ${alert.droneId ?? "-"}</div>
+                </div>
+                <div class="alert-item-actions">
+                    <button class="alert-confirm-btn">확인</button>
+                </div>
+            `;
+
+            const confirmBtn = item.querySelector(".alert-confirm-btn");
+            confirmBtn.addEventListener("click", async function () {
+                await markAlertAsRead(alert.id, item);
+
+                item.style.opacity = "0.5";
+                item.classList.add("read");
+
+                // 🔥 버튼 비활성화
+                confirmBtn.disabled = true;
+                confirmBtn.innerText = "확인됨";
+
+                const badge = document.getElementById("alert-badge");
+
+                if (badge) {
+                    let current = parseInt(badge.innerText || "0", 10) || 0;
+                    current = Math.max(0, current - 1);
+                    badge.innerText = String(current);
+
+                    if (current === 0) {
+                        badge.style.display = "none";
+                    }
+                }
+            });
+
+            alertList.prepend(item);
+
+            if (badge) {
+                let current = parseInt(badge.innerText || "0", 10) || 0;
+                current = current + 1;
+                badge.innerText = String(current);
+                badge.style.display = "inline-flex";
             }
         }
 
@@ -122,4 +235,5 @@
             }
         });
     </script>
+
 </div>

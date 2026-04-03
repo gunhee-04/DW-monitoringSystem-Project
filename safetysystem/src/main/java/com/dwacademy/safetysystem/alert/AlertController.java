@@ -19,7 +19,12 @@ public class AlertController {
     public List<AlertResponseDto> getRecentAlerts() {
         return alertService.getRecentAlerts()
                 .stream()
-                .map(AlertResponseDto::new)
+                .map(alert -> {
+                    String location = "위치없음"; // 일단 테스트용
+                    String droneId = "드론없음";
+
+                    return new AlertResponseDto(alert, location, droneId);
+                })
                 .toList();
     }
 

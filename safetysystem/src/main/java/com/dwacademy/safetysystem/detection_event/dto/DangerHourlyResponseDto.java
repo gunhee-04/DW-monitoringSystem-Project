@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DangerHourlyResponseDto {
 
-    private String hour;                // 09:00
-    private long intrusionCount;        // 해당 시간 침입 횟수
-    private double averageStayDuration; // 해당 시간 평균 체류 시간
+    private String hour;
+    private long intrusionCount;
+    private double averageStayDuration;
+    private long cumulativeIntrusionCount;
 }
