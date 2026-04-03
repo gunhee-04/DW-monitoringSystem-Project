@@ -1,5 +1,6 @@
 package com.dwacademy.safetysystem.detection_event.service;
 
+import com.dwacademy.safetysystem.alert.AlertService;
 import com.dwacademy.safetysystem.camera.Camera;
 import com.dwacademy.safetysystem.camera.CameraRepository;
 import com.dwacademy.safetysystem.dangerzone.DangerZone;
@@ -39,6 +40,7 @@ public class DetectionService {
     private final StatisticsService statisticsService;
     private final CameraRepository cameraRepository;
     private final DangerZoneService dangerZoneService;
+    private final AlertService alertService;
 
     @Value("${kakao.rest-api-key:}")
     private String kakaoRestApiKey;
@@ -96,6 +98,8 @@ public class DetectionService {
                 entity.getEventLongitude(),
                 entity.getEventAddress());
 
+
+
         if (level == EventLevel.HIGH) {
             entity.setIsRead(0);
             log.info(">>> 🔔 [위험] 발생할 때마다 알림 전송");
@@ -105,6 +109,10 @@ public class DetectionService {
         }
 
         DetectionEntity saved = repository.save(entity);
+
+        if (level == EventLevel.HIGH) {
+            alertService.createAlert(saved, dto.getEventType(), level.name(), message);
+        }
 
         try {
             statisticsService.saveFromDetection(saved);
@@ -258,11 +266,6 @@ public class DetectionService {
                         .name("newDetection")
                         .data(response));
 
-                if (saved.getIsRead() == 0) {
-                    emitter.send(SseEmitter.event()
-                            .name("danger_alert")
-                            .data(response));
-                }
             } catch (Exception e) {
                 deadEmitters.add(emitter);
             }

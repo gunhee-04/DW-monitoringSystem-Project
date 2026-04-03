@@ -1,14 +1,13 @@
 package com.dwacademy.safetysystem.alert;
 
-import com.dwacademy.safetysystem.camera.CameraRepository;
 import com.dwacademy.safetysystem.detection_event.controller.SseController;
 import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
 import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
-import com.dwacademy.safetysystem.detection_event.repository.DetectionEventRepository;
 import com.dwacademy.safetysystem.detection_event.service.DetectionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,14 +19,12 @@ public class AlertService {
             org.slf4j.LoggerFactory.getLogger(AlertService.class);
 
     private final AlertLogRepository alertRepository;
-    private final DetectionService detectionService;
+
 
     public AlertService(
-            AlertLogRepository alertRepository,
-            DetectionService detectionService
+            AlertLogRepository alertRepository
     ) {
         this.alertRepository = alertRepository;
-        this.detectionService = detectionService;
     }
 
     // 최근 알림 조회
@@ -56,15 +53,8 @@ public class AlertService {
         );
     }
 
-    /**
-     * 이벤트 발생 시 알림 생성
-     * @param detectionEventId detection_event 테이블 ID
-     * @param alertType 이벤트 타입 (예: INTRUSION)
-     * @param severityStr 위험도 문자열 (예: NORMAL, MEDIUM, HIGH)
-     * @param message 전달받은 메시지
-     */
     @Transactional
-    public void createAlert(Long detectionEventId, String alertType, String severityStr, String message) {
+    public void createAlert(DetectionEntity detectionEntity, String alertType, String severityStr, String message) {
 
         // 지금 구조상 종 알림/팝업은 HIGH만 생성
         // 나중에 MEDIUM도 띄우고 싶으면 이 조건에서 MEDIUM 제거하면 됨
@@ -87,8 +77,6 @@ public class AlertService {
                 case NORMAL -> "✅ 정상 상태";
             };
         }
-
-        DetectionEntity detectionEntity = detectionService.findById(detectionEventId);
 
         AlertLog alert = new AlertLog();
         alert.setDetectionEntity(detectionEntity);
@@ -167,7 +155,12 @@ public class AlertService {
                 }
             }
 
-            if ("-".equals(location)) {
+            if (
+                    "-".equals(location)
+                            || location.contains("좌표(")
+                            || location.contains("0.0")
+                            || "위치 정보 없음".equals(location)
+            ) {
                 if ("CAM-01".equals(droneId)) {
                     location = "서울특별시 중구 세종대로 110 서울시청";
                 } else if ("CAM-02".equals(droneId)) {

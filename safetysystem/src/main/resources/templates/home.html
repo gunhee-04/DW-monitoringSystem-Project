@@ -2046,85 +2046,70 @@
         const container = document.getElementById("floating-alert-container");
         if (!container) return;
 
-        const alreadyExists = container.querySelector(`[data-alert-id="${alert.id}"]`);
+        const alertId = alert.id ?? `${alert.created_at}-${alert.event_level}-${alert.address}`;
+        const alreadyExists = container.querySelector(`[data-alert-id="${alertId}"]`);
         if (alreadyExists) return;
 
-        const severity = (alert.severity || "").toUpperCase();
+        const severity = (alert.severity || alert.event_level || "").toUpperCase();
         if (severity !== "HIGH" && severity !== "MEDIUM") return;
-        if (alert.isRead) return;
+
+        const isRead = alert.isRead ?? alert.is_read ?? false;
+        if (isRead) return;
 
         const severityClass = severity === "HIGH" ? "high" : "medium";
         const severityText = severity === "HIGH" ? "HIGH" : "MEDIUM";
 
+        const title =
+            alert.alertMessage ||
+            alert.message ||
+            alert.status_text ||
+            "중요 알림";
+
+        const createdAt = alert.createdAt || alert.created_at || "-";
+        const location =
+            alert.location ||
+            alert.address ||
+            alert.camera_location ||
+            "-";
+
+        const peopleCount = alert.peopleCount ?? alert.people_count ?? alert.detectedCount ?? 0;
+
         const card = document.createElement("div");
         card.className = `floating-alert-card ${severityClass}`;
-        card.setAttribute("data-alert-id", alert.id);
-
-        const formattedTime = typeof formatAlertTime === "function"
-            ? formatAlertTime(alert.createdAt)
-            : (alert.createdAt ?? "-");
+        card.setAttribute("data-alert-id", alertId);
 
         card.innerHTML = `
             <div class="floating-alert-header">
-                <div class="floating-alert-title">${alert.alertMessage ?? "중요 알림"}</div>
-                <div class="floating-alert-badge">${severityText}</div>
+                <div class="floating-alert-title">${title}</div>
+                <span class="floating-alert-badge ${severityClass}">${severityText}</span>
             </div>
             <div class="floating-alert-body">
-                <div>시간: ${formattedTime}</div>
-                <div>장소: ${alert.location ?? "-"}</div>
-                <div>드론: ${alert.droneId ?? "-"}</div>
+                <div>시간: ${formatAlertTime(createdAt)}</div>
+                <div>장소: ${location}</div>
+                <div>인원: ${peopleCount}명</div>
             </div>
             <div class="floating-alert-actions">
-                <button class="floating-alert-confirm-btn">확인</button>
+                <button class="alert-confirm-btn">확인</button>
             </div>
         `;
 
-        const confirmBtn = card.querySelector(".floating-alert-confirm-btn");
+        const alerts = container.querySelectorAll(".floating-alert-card");
+
+        const MAX_ALERT = 3;
+
+        if (alerts.length >= MAX_ALERT) {
+            alerts[alerts.length - 1].remove(); // 가장 오래된 것 제거
+        }
+
+        const confirmBtn = card.querySelector(".alert-confirm-btn");
         confirmBtn.addEventListener("click", async function () {
-            try {
-                const res = await fetch(`/alerts/${alert.id}/read`, {
-                    method: "PATCH"
-                });
-
-                if (!res.ok) {
-                    throw new Error("팝업 알림 읽음 처리 실패");
-                }
-
-                confirmBtn.disabled = true;
-                confirmBtn.innerText = "확인됨";
-                card.remove();
-
-                const panelItem = document.querySelector(`.alert-item[data-alert-id="${alert.id}"]`);
-                if (panelItem) {
-                    panelItem.style.opacity = "0.55";
-                    panelItem.classList.add("read");
-
-                    const panelBtn = panelItem.querySelector(".alert-confirm-btn");
-                    if (panelBtn) {
-                        panelBtn.disabled = true;
-                        panelBtn.innerText = "확인됨";
-                    }
-                }
-
-                const badge = document.getElementById("alert-badge");
-                if (badge) {
-                    let current = parseInt(badge.innerText || "0", 10) || 0;
-                    current = Math.max(0, current - 1);
-                    if (typeof updateAlertBadge === "function") {
-                        updateAlertBadge(current);
-                    }
-                }
-            } catch (e) {
-                console.error("팝업 알림 처리 실패:", e);
+            if (alert.id) {
+                await markAlertAsRead(alert.id, card);
             }
+            card.remove();
         });
 
         container.prepend(card);
-
-        const cards = container.querySelectorAll(".floating-alert-card");
-        if (cards.length > 5) {
-            cards[cards.length - 1].remove();
-        }
     }
 
 

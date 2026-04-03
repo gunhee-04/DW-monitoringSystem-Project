@@ -142,21 +142,18 @@
             }
         }
 
-        function addAlertToPanel(alert) {
+         function addAlertToPanel(alert) {
             const alertList = document.getElementById("alert-list");
             if (!alertList) return;
 
             const empty = alertList.querySelector(".alert-empty");
-            if (empty) {
-                empty.remove();
-            }
+            if (empty) empty.remove();
 
-            const exists = alertList.querySelector(`[data-alert-id="${alert.id}"]`);
-            if (exists) {
-                return;
-            }
+            const alertId = alert.id ?? `${alert.created_at}-${alert.event_level}-${alert.address}`;
+            const exists = alertList.querySelector(`[data-alert-id="${alertId}"]`);
+            if (exists) return;
 
-            const severity = (alert.severity || "").toUpperCase();
+            const severity = (alert.severity || alert.event_level || "").toUpperCase();
             let severityClass = "medium";
             let severityText = "MEDIUM";
 
@@ -170,19 +167,41 @@
                 return;
             }
 
+            const title =
+                alert.alertMessage ||
+                alert.message ||
+                alert.status_text ||
+                "중요 알림";
+
+            const createdAt = alert.createdAt || alert.created_at || "-";
+            const location =
+                alert.location ||
+                alert.address ||
+                alert.camera_location ||
+                "-";
+
+            const droneId =
+                alert.droneId ||
+                alert.drone_id ||
+                alert.cameraId ||
+                alert.camera_id ||
+                "-";
+
+            const isRead = alert.isRead ?? alert.is_read ?? false;
+
             const item = document.createElement("div");
             item.className = `alert-item ${severityClass}`;
-            item.setAttribute("data-alert-id", alert.id);
+            item.setAttribute("data-alert-id", alertId);
 
             item.innerHTML = `
                 <div class="alert-item-header">
-                    <div class="alert-item-title">${alert.alertMessage ?? "중요 알림"}</div>
+                    <div class="alert-item-title">${title}</div>
                     <span class="alert-item-badge ${severityClass}">${severityText}</span>
                 </div>
                 <div class="alert-item-body">
-                    <div>시간: ${formatAlertTime(alert.createdAt)}</div>
-                    <div>장소: ${alert.location ?? "-"}</div>
-                    <div>드론: ${alert.droneId ?? "-"}</div>
+                    <div>시간: ${formatAlertTime(createdAt)}</div>
+                    <div>장소: ${location}</div>
+                    <div>드론: ${droneId}</div>
                 </div>
                 <div class="alert-item-actions">
                     <button class="alert-confirm-btn">확인</button>
@@ -191,7 +210,9 @@
 
             const confirmBtn = item.querySelector(".alert-confirm-btn");
             confirmBtn.addEventListener("click", async function () {
-                await markAlertAsRead(alert.id, item);
+                if (alert.id) {
+                    await markAlertAsRead(alert.id, item);
+                }
 
                 confirmBtn.disabled = true;
                 confirmBtn.innerText = "확인됨";
@@ -203,13 +224,11 @@
                     updateAlertBadge(current);
                 }
 
-                const floating = document.querySelector(`.floating-alert-card[data-alert-id="${alert.id}"]`);
-                if (floating) {
-                    floating.remove();
-                }
+                const floating = document.querySelector(`.floating-alert-card[data-alert-id="${alertId}"]`);
+                if (floating) floating.remove();
             });
 
-            if (alert.isRead) {
+            if (isRead) {
                 item.style.opacity = "0.55";
                 item.classList.add("read");
                 confirmBtn.disabled = true;
