@@ -24,7 +24,7 @@ public class ReportHistory {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @Column(name = "member_id", nullable = false)
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
     @Column(name = "report_type", nullable = false)
