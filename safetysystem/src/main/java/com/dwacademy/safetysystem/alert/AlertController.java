@@ -17,15 +17,7 @@ public class AlertController {
     // 최근 알림
     @GetMapping("/recent")
     public List<AlertResponseDto> getRecentAlerts() {
-        return alertService.getRecentAlerts()
-                .stream()
-                .map(alert -> {
-                    String location = "위치없음"; // 일단 테스트용
-                    String droneId = "드론없음";
-
-                    return new AlertResponseDto(alert, location, droneId);
-                })
-                .toList();
+        return alertService.getRecentAlertDtos();
     }
 
     // 읽음 처리
