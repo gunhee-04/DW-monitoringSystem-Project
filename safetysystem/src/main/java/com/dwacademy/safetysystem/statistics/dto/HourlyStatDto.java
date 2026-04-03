@@ -10,4 +10,5 @@ public class HourlyStatDto {
     private String hour;
     private Integer totalPeopleCount;
     private Double averageDensityValue;
+    private Double increaseRate;
 }
