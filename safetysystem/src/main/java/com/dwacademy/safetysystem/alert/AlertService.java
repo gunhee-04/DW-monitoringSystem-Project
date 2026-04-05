@@ -137,10 +137,9 @@ public class AlertService {
     public AlertResponseDto toDto(AlertLog alert) {
         String location = "-";
         String droneId = "-";
+        DetectionEntity detection = alert.getDetectionEntity();
 
-        if (alert.getDetectionEntity() != null) {
-            DetectionEntity detection = alert.getDetectionEntity();
-
+        if (detection != null) {
             if (detection.getEventAddress() != null && !detection.getEventAddress().isBlank()) {
                 location = detection.getEventAddress();
             }
@@ -169,9 +168,11 @@ public class AlertService {
                     location = "서울특별시 종로구 세종대로 일대";
                 }
             }
+
+            return new AlertResponseDto(alert, detection, location, droneId);
         }
 
-        return new AlertResponseDto(alert, location, droneId);
+        return new AlertResponseDto(alert, null, location, droneId);
     }
 
 }
