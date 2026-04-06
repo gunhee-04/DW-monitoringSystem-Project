@@ -21,5 +21,5 @@ public interface CrowdStatRepository extends JpaRepository<CrowdStat, Long> {
     List<CrowdStat> findByCamera_IdAndMeasuredAtBetween(Long cameraId, LocalDateTime start, LocalDateTime end);
 
     // 기간 + 구역별 조회도 나중에 쓸 수 있어서 있으면 좋음
-    List<CrowdStat> findByDangerZoneIdAndMeasuredAtBetween(Long dangerZoneId, LocalDateTime start, LocalDateTime end);
+    List<CrowdStat> findByDangerZone_IdAndMeasuredAtBetween(Long dangerZoneId, LocalDateTime start, LocalDateTime end);
 }
