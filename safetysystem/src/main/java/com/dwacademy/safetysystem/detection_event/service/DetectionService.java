@@ -100,7 +100,7 @@ public class DetectionService {
 
 
 
-        if (level == EventLevel.HIGH) {
+        if (level == EventLevel.HIGH || level == EventLevel.MEDIUM) {
             entity.setIsRead(0);
             log.info(">>> 🔔 [위험] 발생할 때마다 알림 전송");
         } else {
@@ -266,10 +266,16 @@ public class DetectionService {
                         .name("newDetection")
                         .data(response));
 
-            } catch (Exception e) {
-                deadEmitters.add(emitter);
+                if (saved.getEventLevel() == EventLevel.HIGH ||
+                        saved.getEventLevel() == EventLevel.MEDIUM) {
+                    emitter.send(SseEmitter.event()
+                            .name("danger_alert")
+                            .data(response));
+                    }
+                } catch (Exception e) {
+                    deadEmitters.add(emitter);
+                }
             }
-        }
 
         SseController.emitters.removeAll(deadEmitters);
     }

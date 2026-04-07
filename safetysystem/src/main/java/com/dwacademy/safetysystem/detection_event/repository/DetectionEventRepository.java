@@ -17,8 +17,6 @@ public interface DetectionEventRepository extends JpaRepository<DetectionEntity,
     List<DetectionEntity> findByEventLevelOrderByIdDesc(EventLevel eventLevel);
     List<DetectionEntity> findAllByOrderByIdDesc();
 
-    List<DetectionEntity> findByEventTypeOrderByIdDesc(EventType eventType);
-
     List<DetectionEntity> findByEventTypeAndEventTimeBetweenOrderByIdDesc(
             EventType eventType, Long start, Long end);
 

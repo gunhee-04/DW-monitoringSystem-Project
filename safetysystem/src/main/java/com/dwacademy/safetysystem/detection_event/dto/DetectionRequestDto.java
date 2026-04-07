@@ -61,7 +61,6 @@ public class DetectionRequestDto {
     public DetectionEntity toEntity(String customMessage, EventLevel calculatedLevel) {
         EventType type = parseEventType(this.eventType);
         Long finalTime = parseEventTime(this.eventTime);
-        Integer numericCameraId = parseCameraId(this.cameraId);
         int intrusionVal = EventType.INTRUSION.equals(type) ? 1 : 0;
 
         String finalAddress = normalizeAddress(this.eventAddress, this.eventLatitude, this.eventLongitude);
@@ -116,22 +115,6 @@ public class DetectionRequestDto {
         return System.currentTimeMillis() / 1000;
     }
 
-    private Integer parseCameraId(String rawCameraId) {
-        if (rawCameraId == null || rawCameraId.isBlank()) {
-            return 1;
-        }
-
-        try {
-            // "CAM-02" -> "02" -> 2
-            String onlyNumber = rawCameraId.replaceAll("[^0-9]", "");
-            if (onlyNumber.isBlank()) {
-                return 1;
-            }
-            return Integer.parseInt(onlyNumber);
-        } catch (Exception e) {
-            return 1;
-        }
-    }
 
     private String normalizeAddress(String address, Double latitude, Double longitude) {
         if (address != null && !address.isBlank()) {

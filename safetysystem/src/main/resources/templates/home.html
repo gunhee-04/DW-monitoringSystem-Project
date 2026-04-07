@@ -1964,8 +1964,10 @@
             const data = JSON.parse(event.data);
 
             state.realtimeLogs.unshift(data);
-
             renderLogs();
+
+            // 화면 팝업 띄우기
+            addFloatingAlert(data);
         });
 
         eventSource.onerror = (e) => {
@@ -2101,6 +2103,8 @@
             alerts[alerts.length - 1].remove(); // 가장 오래된 것 제거
         }
 
+        container.prepend(card);
+
         const confirmBtn = card.querySelector(".alert-confirm-btn");
         confirmBtn.addEventListener("click", async function () {
             if (alert.id) {
@@ -2109,9 +2113,14 @@
             card.remove();
         });
 
-        container.prepend(card);
+            if (severity === "MEDIUM") {
+        setTimeout(() => {
+            if (card.parentNode) {
+                card.remove();
+            }
+        }, 5000);
     }
-
+}
 
     /*
       사용 예시:
