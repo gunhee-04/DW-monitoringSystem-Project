@@ -521,7 +521,7 @@
             <div class="panel-title">🎥 실시간 드론 영상</div>
             <div class="video-frame">
                 <img id="stream-video"
-                     src="http://localhost:5001/video"
+                     src="http://192.168.0.144:5001/video"
                      alt="드론 영상"
                      onerror="this.src='https://dummyimage.com/1200x700/0f172a/ffffff&text=Drone+Offline'">
 
@@ -713,7 +713,7 @@
 <div id="floating-alert-container" class="floating-alert-container"></div>
 
 <script>
-    const API_BASE = "http://localhost:8081";
+    src="http://192.168.0.144:5001/video"
 
     const state = {
         mode: "crowd",
@@ -754,8 +754,8 @@
             lat: 37.5665,
             lng: 126.9780,
             address: "서울특별시 중구 세종대로 110 서울시청",
-            switchUrl: "http://localhost:5001/switch/webcam",
-            videoUrl: "http://localhost:5001/video",
+            switchUrl: "http://192.168.0.144:5001/switch/webcam",
+            videoUrl: "http://192.168.0.144:5001/video",
             mode: "crowd",
             cameraId: 1
         },
@@ -764,8 +764,8 @@
             lat: 37.5651,
             lng: 126.9895,
             address: "서울특별시 중구 을지로 281 DDP",
-            switchUrl: "http://localhost:5001/switch/drone1",
-            videoUrl: "http://localhost:5001/video",
+            switchUrl: "http://192.168.0.144:5001/switch/drone1",
+            videoUrl: "http://192.168.0.144:5001/video",
             mode: "crowd",
             cameraId: 2
         },
@@ -774,8 +774,8 @@
             lat: 37.5700,
             lng: 126.9820,
             address: "서울특별시 종로구 세종대로 일대",
-            switchUrl: "http://localhost:5001/switch/drone2",
-            videoUrl: "http://localhost:5001/video",
+            switchUrl: "http://192.168.0.144:5001/switch/drone2",
+            videoUrl: "http://192.168.0.144:5001/video",
             mode: "danger",
             cameraId: 3
         }
