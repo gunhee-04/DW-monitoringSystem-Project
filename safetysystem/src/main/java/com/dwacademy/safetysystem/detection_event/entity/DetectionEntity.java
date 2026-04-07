@@ -7,6 +7,7 @@ import com.dwacademy.safetysystem.detection_event.domain.EventType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -83,6 +84,10 @@ public class DetectionEntity {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     public String getFormattedEventTime() {
         if (this.eventTime == null) return "-";
