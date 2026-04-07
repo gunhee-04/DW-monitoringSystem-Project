@@ -2,10 +2,12 @@ package com.dwacademy.safetysystem.alert;
 
 import com.dwacademy.safetysystem.detection_event.domain.EventLevel;
 import com.dwacademy.safetysystem.detection_event.entity.DetectionEntity;
+import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
+
 
 @Entity
 @Getter
@@ -37,6 +39,10 @@ public class AlertLog {
     private LocalDateTime createdAt;
 
     private LocalDateTime readAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @PrePersist
     public void prePersist() {
