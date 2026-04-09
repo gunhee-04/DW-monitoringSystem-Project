@@ -35,7 +35,6 @@ public class CameraApiService {
                                 .y2(zone.getY2())
                                 .build()
                 )
-                .streamUrl(camera.getStreamUrl())  //추가
                 .build();
     }
 }
