@@ -11,7 +11,9 @@ public class CameraApiResponseDto {
 
     private Integer intrusionSeconds;
     private RoiDto roi;
-
+    
+    private String streamUrl;  // 추가
+    
     //roi객체에 순서 제대로 들어갈 수 있게 build
     @Getter
     @AllArgsConstructor
