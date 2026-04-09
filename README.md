@@ -1,11 +1,7 @@
 
 ---
 
-##  DW-monitoringSystem-Project README 
 
-`DW-monitoringSystem-Project`는 `safetysystem`이라는 Gradle 프로젝트로 구성되어 있고, Java 17 / Spring Boot 4.0.4 / Thymeleaf / Spring Web MVC / Spring Data JPA / Spring Security / Validation / MySQL / Log4j2를 사용하며, 기본 포트는 `8081`, DB는 `safetysystem`으로 설정돼 있어. 관리자 화면에서는 카메라와 위험구역 CRUD를 제공하고, API로는 카메라 설정 조회와 상태 변경을 지원해. :contentReference[oaicite:1]{index=1}
-
-```md
 # DW-monitoringSystem-Project
 
 ## 프로젝트 소개
