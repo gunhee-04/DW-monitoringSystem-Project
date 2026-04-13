@@ -134,7 +134,9 @@ public class ReportExcelService {
                 Row row = sheet.createRow(rowNo++);
 
                 createCell(row, 0, valueOf(stat.getId()), bodyCenterStyle);
-                createCell(row, 1, valueOf(stat.getCamera()), bodyCenterStyle);
+                createCell(row, 1,
+                        stat.getCamera() != null ? stat.getCamera().getCameraName() : "-",
+                        bodyCenterStyle);
                 createCell(row, 2, valueOf(stat.getDangerZone()), bodyCenterStyle);
                 createCell(row, 3,
                         stat.getMeasuredAt() != null ? stat.getMeasuredAt().format(formatter) : "-",
